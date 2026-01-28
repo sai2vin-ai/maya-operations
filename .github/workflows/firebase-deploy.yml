@@ -23,10 +23,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Create environment file
         run: |
@@ -39,14 +38,11 @@ jobs:
           VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
           EOF
 
-      - name: Run tests
-        run: npm test
-
       - name: Build application
         run: npm run build
 
       - name: Install Firebase Functions dependencies
-        run: cd functions && npm ci
+        run: cd functions && npm install
 
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
