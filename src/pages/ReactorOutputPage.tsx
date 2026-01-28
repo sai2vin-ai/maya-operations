@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getBatches } from '../services/batchService';
-import type { Batch, BatchOutput, MaterialCategory } from '../types';
+import type { Batch, MaterialCategory } from '../types';
 
 interface OutputSummary {
     category: MaterialCategory;
