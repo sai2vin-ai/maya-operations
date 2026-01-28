@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Custom CSS Variables for Pyrolysis Ops */
+:root {
+  /* Primary colors - Industrial Blue */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+
+  /* Accent colors - Industrial Orange */
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+
+  /* Status colors */
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-danger: #ef4444;
+
+  /* Dark mode base */
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-tertiary: #334155;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-border: #475569;
+}
+
+/* Base styles */
+body {
+  @apply bg-slate-900 text-slate-100 antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Utility classes for the app */
+.glass-card {
+  @apply bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl;
+}
+
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-blue-500/25;
+}
+
+.btn-secondary {
+  @apply bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+.btn-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+.input-field {
+  @apply bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+}
+
+.status-badge {
+  @apply px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-active {
+  @apply bg-green-500/20 text-green-400;
+}
+
+.status-pending {
+  @apply bg-yellow-500/20 text-yellow-400;
+}
+
+.status-inactive {
+  @apply bg-red-500/20 text-red-400;
+}

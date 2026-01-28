@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'SUPER_ADMIN';
+    }
+    
+    function isManager() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['SUPER_ADMIN', 'PLANT_MANAGER'];
+    }
+    
+    function isSupervisor() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR'];
+    }
+    
+    function isActiveUser() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'ACTIVE';
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId) || isManager();
+      
+      // Only admins can create/update users
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isOwner(userId) && onlyAllowedFields());
+      allow delete: if isAdmin();
+      
+      function onlyAllowedFields() {
+        // Regular users can only update certain fields
+        let allowedFields = ['name', 'phone', 'profilePhoto', 'updatedAt'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedFields);
+      }
+    }
+    
+    // Devices collection
+    match /devices/{deviceId} {
+      allow read: if isActiveUser();
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Gate Entries collection
+    match /gateEntries/{entryId} {
+      allow read: if isActiveUser();
+      
+      // Gate operators, supervisors, managers can create entries
+      allow create: if isActiveUser() && 
+                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in 
+                      ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR'];
+      
+      // Only supervisors+ can update/delete
+      allow update, delete: if isSupervisor();
+    }
+    
+    // Reactors collection
+    match /reactors/{reactorId} {
+      allow read: if isActiveUser();
+      allow create, delete: if isManager();
+      allow update: if isSupervisor();
+    }
+    
+    // Batches collection
+    match /batches/{batchId} {
+      allow read: if isActiveUser();
+      
+      // Reactor operators, supervisors, managers can create/update batches
+      allow create, update: if isActiveUser() && 
+                              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in 
+                              ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'];
+      
+      // Only managers can delete batches
+      allow delete: if isManager();
+    }
+    
+    // Audit Logs collection (read-only for users, written by functions)
+    match /auditLogs/{logId} {
+      allow read: if isManager();
+      allow write: if false; // Only Cloud Functions can write
+    }
+    
+    // Inventory collection
+    match /inventory/{itemId} {
+      allow read: if isActiveUser();
+      allow create, update, delete: if isSupervisor();
+    }
+    
+    // Maintenance collection
+    match /maintenance/{recordId} {
+      allow read: if isActiveUser();
+      allow create, update: if isSupervisor();
+      allow delete: if isManager();
+    }
+    
+    // Shifts collection
+    match /shifts/{shiftId} {
+      allow read: if isActiveUser();
+      allow create, update, delete: if isManager();
+    }
+  }
+}
