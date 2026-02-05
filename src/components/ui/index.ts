@@ -15,3 +15,5 @@ export type { ButtonVariant, ButtonSize } from './Button';
 export { PageLayout, Card, Section, Grid, Divider } from './Layout';
 export { Skeleton, SkeletonText, SkeletonCard, SkeletonList, SkeletonTable, SkeletonStats, SkeletonForm } from './Skeleton';
 export { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, MobileCard, MobileCardRow, ResponsiveTable } from './Table';
+export { TextInput, SelectField, TextArea, Checkbox, FormGroup, FormRow, FieldLabel, FieldError, FieldHint } from './FormFields';
+export { Breadcrumb, CompactBreadcrumb } from './Breadcrumb';

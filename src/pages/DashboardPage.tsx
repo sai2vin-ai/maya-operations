@@ -1,9 +1,37 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+
+// Key for storing recent modules in localStorage
+const RECENT_MODULES_KEY = 'recent-modules';
+const MAX_RECENT_MODULES = 3;
+
+// Get recent modules from localStorage
+function getRecentModules(): string[] {
+    try {
+        const stored = localStorage.getItem(RECENT_MODULES_KEY);
+        return stored ? JSON.parse(stored) : [];
+    } catch {
+        return [];
+    }
+}
+
+// Save module to recent list
+function saveRecentModule(moduleId: string): void {
+    try {
+        const recent = getRecentModules();
+        const updated = [moduleId, ...recent.filter(id => id !== moduleId)].slice(0, MAX_RECENT_MODULES);
+        localStorage.setItem(RECENT_MODULES_KEY, JSON.stringify(updated));
+    } catch {
+        // Ignore localStorage errors
+    }
+}
 
 export default function DashboardPage() {
     const { userData, logout } = useAuth();
     const navigate = useNavigate();
+    // Use lazy initializer to load recent modules from localStorage
+    const [recentModules] = useState<string[]>(getRecentModules);
 
     const handleLogout = async () => {
         try {
@@ -12,6 +40,11 @@ export default function DashboardPage() {
         } catch (err) {
             console.error('Logout failed:', err);
         }
+    };
+
+    const handleModuleClick = (moduleId: string) => {
+        saveRecentModule(moduleId);
+        navigate(`/${moduleId}`);
     };
 
     // Role-based dashboard cards
@@ -134,21 +167,37 @@ export default function DashboardPage() {
                 {/* Module Cards */}
                 <h3 className="text-lg font-semibold text-white mb-4">Quick Access</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {modules.map((module) => (
-                        <button
-                            key={module.id}
-                            className="glass-card p-6 text-left hover:bg-slate-700/50 transition-all group"
-                            onClick={() => navigate(`/${module.id}`)}
-                        >
-                            <div className={`w-12 h-12 bg-gradient-to-br ${module.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                                <span className="text-2xl">{module.icon}</span>
-                            </div>
-                            <h4 className="text-white font-semibold mb-1">{module.name}</h4>
-                            <p className="text-slate-400 text-sm">
-                                Click to open {module.name.toLowerCase()}
-                            </p>
-                        </button>
-                    ))}
+                    {modules.map((module, index) => {
+                        const isRecent = recentModules.includes(module.id);
+                        const recentIndex = recentModules.indexOf(module.id);
+
+                        return (
+                            <button
+                                key={module.id}
+                                className={`
+                                    glass-card p-6 text-left transition-all group animate-fade-in-up
+                                    ${isRecent ? 'ring-2 ring-blue-500/50 bg-slate-700/30' : 'hover:bg-slate-700/50'}
+                                `}
+                                style={{ animationDelay: `${index * 50}ms` }}
+                                onClick={() => handleModuleClick(module.id)}
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className={`w-12 h-12 bg-gradient-to-br ${module.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                        <span className="text-2xl">{module.icon}</span>
+                                    </div>
+                                    {isRecent && (
+                                        <span className="text-xs text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded-full">
+                                            {recentIndex === 0 ? 'Recent' : 'Visited'}
+                                        </span>
+                                    )}
+                                </div>
+                                <h4 className="text-white font-semibold mb-1">{module.name}</h4>
+                                <p className="text-slate-400 text-sm">
+                                    Click to open {module.name.toLowerCase()}
+                                </p>
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Current Shift Info */}
