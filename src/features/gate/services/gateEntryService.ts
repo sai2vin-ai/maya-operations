@@ -15,8 +15,16 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import type { GateEntry, EntryType, MaterialCategory, GateEntryStatus } from '../types';
 import type { FirestoreDocData } from '../../../types';
+import { validateFile, generateSafeFilename } from '../../../utils/validation';
 
 const GATE_ENTRIES_COLLECTION = 'gateEntries';
+
+// File upload configuration
+const UPLOAD_CONFIG = {
+    maxSizeMB: 10,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+};
 
 // Generate entry number like GE-2026-0001
 async function generateEntryNumber(): Promise<string> {
@@ -101,11 +109,17 @@ export async function getEntriesByStatus(status: GateEntryStatus): Promise<GateE
     })) as GateEntry[];
 }
 
-// Upload vehicle photo
+// Upload vehicle photo with validation
 export async function uploadVehiclePhoto(file: File, entryNumber: string): Promise<string> {
-    const timestamp = Date.now();
-    const extension = file.name.split('.').pop();
-    const path = `gate-entries/${entryNumber}/vehicle_${timestamp}.${extension}`;
+    // Validate file before upload
+    const validation = validateFile(file, UPLOAD_CONFIG);
+    if (!validation.isValid) {
+        throw new Error(validation.error || 'Invalid file');
+    }
+
+    // Generate safe filename to prevent path traversal
+    const safeFilename = generateSafeFilename(file.name, 'vehicle');
+    const path = `gate-entries/${entryNumber}/${safeFilename}`;
 
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
@@ -113,10 +127,25 @@ export async function uploadVehiclePhoto(file: File, entryNumber: string): Promi
     return await getDownloadURL(storageRef);
 }
 
-// Capture photo from canvas/camera
+// Capture photo from canvas/camera with validation
 export async function uploadPhotoFromBlob(blob: Blob, entryNumber: string, type: 'vehicle' | 'weighbridge'): Promise<string> {
-    const timestamp = Date.now();
-    const path = `gate-entries/${entryNumber}/${type}_${timestamp}.jpg`;
+    // Validate blob size
+    const maxSizeBytes = UPLOAD_CONFIG.maxSizeMB * 1024 * 1024;
+    if (blob.size > maxSizeBytes) {
+        throw new Error(`File size must be less than ${UPLOAD_CONFIG.maxSizeMB}MB`);
+    }
+    if (blob.size === 0) {
+        throw new Error('File is empty');
+    }
+
+    // Validate MIME type
+    if (!UPLOAD_CONFIG.allowedTypes.includes(blob.type)) {
+        throw new Error(`File type not allowed. Allowed: ${UPLOAD_CONFIG.allowedTypes.join(', ')}`);
+    }
+
+    // Generate safe filename
+    const safeFilename = generateSafeFilename(`${type}.jpg`, type);
+    const path = `gate-entries/${entryNumber}/${safeFilename}`;
 
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, blob);

@@ -5,33 +5,37 @@ service firebase.storage {
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
+    // Check if user has ACTIVE status in Firestore
     function isActiveUser() {
-      return isAuthenticated();
+      return isAuthenticated() &&
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.status == 'ACTIVE';
     }
-    
-    // Gate entries photos
+
+    // Validate image file
+    function isValidImage(maxSizeMB) {
+      return request.resource.size < maxSizeMB * 1024 * 1024 &&
+             request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+    }
+
+    // Gate entries photos - only active users can upload
     match /gate-entries/{entryId}/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if isActiveUser() && 
-                     request.resource.size < 10 * 1024 * 1024 && // Max 10MB
-                     request.resource.contentType.matches('image/.*');
+      allow write: if isActiveUser() && isValidImage(10);
     }
-    
-    // Batch photos
+
+    // Batch photos - only active users can upload
     match /batches/{batchId}/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if isActiveUser() && 
-                     request.resource.size < 10 * 1024 * 1024 &&
-                     request.resource.contentType.matches('image/.*');
+      allow write: if isActiveUser() && isValidImage(10);
     }
-    
-    // User profile photos
+
+    // User profile photos - user can only upload to their own folder
     match /users/{userId}/profile/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if request.auth.uid == userId && 
-                     request.resource.size < 5 * 1024 * 1024 &&
-                     request.resource.contentType.matches('image/.*');
+      allow write: if request.auth.uid == userId &&
+                     isActiveUser() &&
+                     isValidImage(5);
     }
   }
 }
