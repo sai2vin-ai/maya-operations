@@ -5,7 +5,7 @@ import { getReactorById } from '../services/reactorService';
 import { createBatch } from '../services/batchService';
 import type { Reactor } from '../types';
 
-export function BatchCreatePage() {
+export default function BatchCreatePage() {
     const { reactorId } = useParams<{ reactorId: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();

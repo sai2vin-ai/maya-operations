@@ -13,7 +13,7 @@ interface OutputSummary {
     count: number;
 }
 
-export function ReactorOutputPage() {
+export default function ReactorOutputPage() {
     const navigate = useNavigate();
     const [batches, setBatches] = useState<Batch[]>([]);
     const [loading, setLoading] = useState(true);

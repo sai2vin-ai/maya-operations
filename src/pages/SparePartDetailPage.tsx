@@ -15,7 +15,7 @@ import {
 } from '../services/sparePartsService';
 import type { SparePart, SparePartTransaction, SparePartCategory } from '../types';
 
-export function SparePartDetailPage() {
+export default function SparePartDetailPage() {
     const { partId } = useParams<{ partId: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();

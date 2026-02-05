@@ -9,7 +9,7 @@ interface ReactorWithBatch extends Reactor {
     activeBatch?: Batch | null;
 }
 
-export function ReactorDashboardPage() {
+export default function ReactorDashboardPage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
     const [reactors, setReactors] = useState<ReactorWithBatch[]>([]);

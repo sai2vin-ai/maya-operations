@@ -1,39 +1,20 @@
-// Weighbridge Dashboard Page
-// Shows today's entries, pending entries, and quick actions for RM IN / FG OUT
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPendingEntries, getTodayEntries } from '../services/weighbridgeService';
+import { useTodayEntries, usePendingEntries } from '../hooks';
 import type { WeighbridgeEntry } from '../types';
+import {
+    PageHeader,
+    LoadingSpinner,
+    ErrorAlert,
+} from '../components/ui';
 
-export function WeighbridgePage() {
+export default function WeighbridgePage() {
     const navigate = useNavigate();
-    const [entries, setEntries] = useState<WeighbridgeEntry[]>([]);
-    const [pendingEntries, setPendingEntries] = useState<WeighbridgeEntry[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'RM_IN' | 'FG_OUT'>('all');
 
-    useEffect(() => {
-        loadEntries();
-    }, []);
-
-    const loadEntries = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const [allEntries, pending] = await Promise.all([
-                getTodayEntries(),
-                getPendingEntries(),
-            ]);
-            setEntries(allEntries);
-            setPendingEntries(pending);
-        } catch (err: any) {
-            setError(err.message || 'Failed to load entries');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // React Query hooks
+    const { data: entries = [], isLoading, error, refetch } = useTodayEntries();
+    const { data: pendingEntries = [] } = usePendingEntries();
 
     const formatDate = (timestamp: any) => {
         if (!timestamp) return '-';
@@ -61,180 +42,172 @@ export function WeighbridgePage() {
 
     const filteredEntries = filter === 'all'
         ? entries
-        : entries.filter(e => e.entryType === filter);
+        : entries.filter((e: WeighbridgeEntry) => e.entryType === filter);
 
-    const todayRmIn = entries.filter(e => e.entryType === 'RM_IN' && e.status === 'COMPLETED');
-    const todayFgOut = entries.filter(e => e.entryType === 'FG_OUT' && e.status === 'COMPLETED');
-    const totalRmInWeight = todayRmIn.reduce((sum, e) => sum + (e.netWeight || 0), 0);
-    const totalFgOutWeight = todayFgOut.reduce((sum, e) => sum + (e.netWeight || 0), 0);
-
-    if (loading) {
-        return (
-            <div className="p-6 flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading weighbridge...</p>
-                </div>
-            </div>
-        );
-    }
+    const todayRmIn = entries.filter((e: WeighbridgeEntry) => e.entryType === 'RM_IN' && e.status === 'COMPLETED');
+    const todayFgOut = entries.filter((e: WeighbridgeEntry) => e.entryType === 'FG_OUT' && e.status === 'COMPLETED');
+    const totalRmInWeight = todayRmIn.reduce((sum: number, e: WeighbridgeEntry) => sum + (e.netWeight || 0), 0);
+    const totalFgOutWeight = todayFgOut.reduce((sum: number, e: WeighbridgeEntry) => sum + (e.netWeight || 0), 0);
 
     return (
-        <div className="p-6 max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/dashboard')} className="text-slate-400 hover:text-white">
-                        ← Back
-                    </button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">🚚 Weighbridge</h1>
-                        <p className="text-slate-400">Today's entries • {entries.length} total</p>
-                    </div>
-                </div>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            <PageHeader
+                title="Weighbridge"
+                subtitle={`Today's entries | ${entries.length} total`}
+                backTo="/dashboard"
+            />
 
-            {/* Error */}
-            {error && (
-                <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-4">
-                    <p className="text-red-400">{error}</p>
-                </div>
-            )}
+            <main className="p-4 max-w-6xl mx-auto">
+                {/* Error */}
+                {error && (
+                    <ErrorAlert
+                        message={error.message || 'Failed to load entries'}
+                        onDismiss={() => refetch()}
+                    />
+                )}
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <button
-                    onClick={() => navigate('/weighbridge/new?type=RM_IN')}
-                    className="glass-card p-6 text-left hover:bg-slate-700/50 transition-all group"
-                >
-                    <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">📥</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white mb-1">Raw Material IN</h3>
-                    <p className="text-slate-400">Record incoming raw materials</p>
-                    <p className="text-cyan-400 mt-2">{todayRmIn.length} entries • {(totalRmInWeight / 1000).toFixed(2)} TONS today</p>
-                </button>
+                {/* Loading */}
+                {isLoading && <LoadingSpinner />}
 
-                <button
-                    onClick={() => navigate('/weighbridge/new?type=FG_OUT')}
-                    className="glass-card p-6 text-left hover:bg-slate-700/50 transition-all group"
-                >
-                    <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">📤</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white mb-1">Finished Goods OUT</h3>
-                    <p className="text-slate-400">Record outgoing finished goods</p>
-                    <p className="text-orange-400 mt-2">{todayFgOut.length} entries • {(totalFgOutWeight / 1000).toFixed(2)} TONS today</p>
-                </button>
-            </div>
-
-            {/* Pending Entries */}
-            {pendingEntries.length > 0 && (
-                <div className="glass-card p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">⏳ Pending Second Weight</h2>
-                    <div className="space-y-2">
-                        {pendingEntries.map(entry => (
-                            <div
-                                key={entry.id}
-                                onClick={() => navigate(`/weighbridge/${entry.id}`)}
-                                className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-colors"
+                {!isLoading && (
+                    <>
+                        {/* Quick Actions */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <button
+                                onClick={() => navigate('/weighbridge/new?type=RM_IN')}
+                                className="glass-card p-6 text-left hover:bg-slate-700/50 transition-all group"
                             >
-                                <div className="flex items-center gap-3">
-                                    <span className={`px-2 py-1 rounded text-xs ${getTypeBadge(entry.entryType)}`}>
-                                        {entry.entryType === 'RM_IN' ? 'IN' : 'OUT'}
-                                    </span>
-                                    <div>
-                                        <span className="text-white font-medium">{entry.vehicleNumber}</span>
-                                        <span className="text-slate-500 text-sm ml-2">{entry.entryNumber}</span>
-                                    </div>
+                                <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span className="text-2xl">📥</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-slate-400">
-                                        {entry.grossWeight ? `Gross: ${entry.grossWeight} KG` : ''}
-                                        {entry.tareWeight ? `Tare: ${entry.tareWeight} KG` : ''}
-                                    </span>
-                                    <span className={`px-2 py-1 rounded-full border text-xs ${getStatusBadge(entry.status)}`}>
-                                        {entry.status === 'FIRST_WEIGHT' ? 'Awaiting 2nd Weight' : entry.status}
-                                    </span>
+                                <h3 className="text-xl font-semibold text-white mb-1">Raw Material IN</h3>
+                                <p className="text-slate-400">Record incoming raw materials</p>
+                                <p className="text-cyan-400 mt-2">{todayRmIn.length} entries | {(totalRmInWeight / 1000).toFixed(2)} TONS today</p>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/weighbridge/new?type=FG_OUT')}
+                                className="glass-card p-6 text-left hover:bg-slate-700/50 transition-all group"
+                            >
+                                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span className="text-2xl">📤</span>
+                                </div>
+                                <h3 className="text-xl font-semibold text-white mb-1">Finished Goods OUT</h3>
+                                <p className="text-slate-400">Record outgoing finished goods</p>
+                                <p className="text-orange-400 mt-2">{todayFgOut.length} entries | {(totalFgOutWeight / 1000).toFixed(2)} TONS today</p>
+                            </button>
+                        </div>
+
+                        {/* Pending Entries */}
+                        {pendingEntries.length > 0 && (
+                            <div className="glass-card p-6 mb-6">
+                                <h2 className="text-lg font-semibold text-white mb-4">Pending Second Weight</h2>
+                                <div className="space-y-2">
+                                    {pendingEntries.map((entry: WeighbridgeEntry) => (
+                                        <div
+                                            key={entry.id}
+                                            onClick={() => navigate(`/weighbridge/${entry.id}`)}
+                                            className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className={`px-2 py-1 rounded text-xs ${getTypeBadge(entry.entryType)}`}>
+                                                    {entry.entryType === 'RM_IN' ? 'IN' : 'OUT'}
+                                                </span>
+                                                <div>
+                                                    <span className="text-white font-medium">{entry.vehicleNumber}</span>
+                                                    <span className="text-slate-500 text-sm ml-2">{entry.entryNumber}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-slate-400">
+                                                    {entry.grossWeight ? `Gross: ${entry.grossWeight} KG` : ''}
+                                                    {entry.tareWeight ? `Tare: ${entry.tareWeight} KG` : ''}
+                                                </span>
+                                                <span className={`px-2 py-1 rounded-full border text-xs ${getStatusBadge(entry.status)}`}>
+                                                    {entry.status === 'FIRST_WEIGHT' ? 'Awaiting 2nd Weight' : entry.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                        )}
 
-            {/* Filter Tabs */}
-            <div className="flex gap-2 mb-4">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'}`}
-                >
-                    All
-                </button>
-                <button
-                    onClick={() => setFilter('RM_IN')}
-                    className={`px-4 py-2 rounded-lg ${filter === 'RM_IN' ? 'bg-cyan-500 text-white' : 'bg-slate-700 text-slate-300'}`}
-                >
-                    RM IN
-                </button>
-                <button
-                    onClick={() => setFilter('FG_OUT')}
-                    className={`px-4 py-2 rounded-lg ${filter === 'FG_OUT' ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-300'}`}
-                >
-                    FG OUT
-                </button>
-            </div>
+                        {/* Filter Tabs */}
+                        <div className="flex gap-2 mb-4">
+                            <button
+                                onClick={() => setFilter('all')}
+                                className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'}`}
+                            >
+                                All
+                            </button>
+                            <button
+                                onClick={() => setFilter('RM_IN')}
+                                className={`px-4 py-2 rounded-lg ${filter === 'RM_IN' ? 'bg-cyan-500 text-white' : 'bg-slate-700 text-slate-300'}`}
+                            >
+                                RM IN
+                            </button>
+                            <button
+                                onClick={() => setFilter('FG_OUT')}
+                                className={`px-4 py-2 rounded-lg ${filter === 'FG_OUT' ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-300'}`}
+                            >
+                                FG OUT
+                            </button>
+                        </div>
 
-            {/* Entries List */}
-            <div className="glass-card p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">Today's Entries</h2>
-                {filteredEntries.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-slate-700/50">
-                                <tr>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Entry #</th>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Type</th>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Vehicle</th>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Material</th>
-                                    <th className="text-right p-3 text-slate-300 font-medium">Net Weight</th>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Time</th>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-700">
-                                {filteredEntries.map(entry => (
-                                    <tr
-                                        key={entry.id}
-                                        className="hover:bg-slate-700/30 cursor-pointer transition-colors"
-                                        onClick={() => navigate(`/weighbridge/${entry.id}`)}
-                                    >
-                                        <td className="p-3 text-white font-mono">{entry.entryNumber}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-1 rounded text-xs ${getTypeBadge(entry.entryType)}`}>
-                                                {entry.entryType === 'RM_IN' ? '📥 IN' : '📤 OUT'}
-                                            </span>
-                                        </td>
-                                        <td className="p-3 text-white">{entry.vehicleNumber}</td>
-                                        <td className="p-3 text-slate-300">{entry.materialName || '-'}</td>
-                                        <td className="p-3 text-right text-white font-medium">
-                                            {entry.netWeight ? `${entry.netWeight.toLocaleString()} KG` : '-'}
-                                        </td>
-                                        <td className="p-3 text-slate-400">{formatDate(entry.createdAt)}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-1 rounded-full border text-xs ${getStatusBadge(entry.status)}`}>
-                                                {entry.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="text-slate-500 text-center py-8">No entries today. Create one to get started!</p>
+                        {/* Entries List */}
+                        <div className="glass-card p-6">
+                            <h2 className="text-lg font-semibold text-white mb-4">Today's Entries</h2>
+                            {filteredEntries.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-slate-700/50">
+                                            <tr>
+                                                <th className="text-left p-3 text-slate-300 font-medium">Entry #</th>
+                                                <th className="text-left p-3 text-slate-300 font-medium">Type</th>
+                                                <th className="text-left p-3 text-slate-300 font-medium">Vehicle</th>
+                                                <th className="text-left p-3 text-slate-300 font-medium">Material</th>
+                                                <th className="text-right p-3 text-slate-300 font-medium">Net Weight</th>
+                                                <th className="text-left p-3 text-slate-300 font-medium">Time</th>
+                                                <th className="text-left p-3 text-slate-300 font-medium">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-700">
+                                            {filteredEntries.map((entry: WeighbridgeEntry) => (
+                                                <tr
+                                                    key={entry.id}
+                                                    className="hover:bg-slate-700/30 cursor-pointer transition-colors"
+                                                    onClick={() => navigate(`/weighbridge/${entry.id}`)}
+                                                >
+                                                    <td className="p-3 text-white font-mono">{entry.entryNumber}</td>
+                                                    <td className="p-3">
+                                                        <span className={`px-2 py-1 rounded text-xs ${getTypeBadge(entry.entryType)}`}>
+                                                            {entry.entryType === 'RM_IN' ? '📥 IN' : '📤 OUT'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-3 text-white">{entry.vehicleNumber}</td>
+                                                    <td className="p-3 text-slate-300">{entry.materialName || '-'}</td>
+                                                    <td className="p-3 text-right text-white font-medium">
+                                                        {entry.netWeight ? `${entry.netWeight.toLocaleString()} KG` : '-'}
+                                                    </td>
+                                                    <td className="p-3 text-slate-400">{formatDate(entry.createdAt)}</td>
+                                                    <td className="p-3">
+                                                        <span className={`px-2 py-1 rounded-full border text-xs ${getStatusBadge(entry.status)}`}>
+                                                            {entry.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <p className="text-slate-500 text-center py-8">No entries today. Create one to get started!</p>
+                            )}
+                        </div>
+                    </>
                 )}
-            </div>
+            </main>
         </div>
     );
 }

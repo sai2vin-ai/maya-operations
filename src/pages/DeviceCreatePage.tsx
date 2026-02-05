@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createDevice, DEVICE_TYPES, OPERATING_SYSTEMS } from '../services/deviceService';
 import type { DeviceType, OperatingSystem } from '../types';
 
-export function DeviceCreatePage() {
+export default function DeviceCreatePage() {
     const navigate = useNavigate();
     const { userData: currentUser } = useAuth();
 

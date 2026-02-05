@@ -11,7 +11,7 @@ import {
 } from '../services/gateEntryService';
 import type { GateEntry, MaterialCategory, GateEntryStatus } from '../types';
 
-export function GateEntryDetailPage() {
+export default function GateEntryDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();

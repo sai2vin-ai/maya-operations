@@ -10,7 +10,7 @@ import {
 } from '../services/deviceService';
 import type { Device, DeviceType, DeviceStatus, OperatingSystem } from '../types';
 
-export function DeviceDetailPage() {
+export default function DeviceDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 

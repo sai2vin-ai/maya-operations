@@ -14,7 +14,7 @@ import {
 import { getInventoryItemsByCategory } from '../services/inventoryService';
 import type { WeighbridgeEntry, WeighbridgeEntryType, InventoryItem } from '../types';
 
-export function WeighbridgeEntryPage() {
+export default function WeighbridgeEntryPage() {
     const { entryId } = useParams<{ entryId: string }>();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();

@@ -7,7 +7,7 @@ import { auth, db } from '../lib/firebase';
 import { USER_ROLES } from '../services/userService';
 import type { UserRole } from '../types';
 
-export function UserCreatePage() {
+export default function UserCreatePage() {
     const navigate = useNavigate();
     const { userData: currentUser } = useAuth();
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROLE_DEFINITIONS, MODULES, ROLE_COLORS, type RoleDefinition, type ModuleKey } from '../config/roles';
 
-export function RolesPage() {
+export default function RolesPage() {
     const navigate = useNavigate();
     const [selectedRole, setSelectedRole] = useState<RoleDefinition | null>(null);
     const [viewMode, setViewMode] = useState<'cards' | 'matrix'>('cards');
