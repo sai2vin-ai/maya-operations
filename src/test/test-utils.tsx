@@ -3,7 +3,8 @@ import React from 'react';
 import { render, type RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import type { User, Device, InventoryItem, SparePart, GateEntry, Batch, Reactor, WeighbridgeEntry } from '../types';
+import type { Timestamp } from 'firebase/firestore';
+import type { User, Device, InventoryItem, SparePart, GateEntry, Batch, Reactor, WeighbridgeEntry, MaterialCategory } from '../types';
 
 // Create a fresh QueryClient for each test
 function createTestQueryClient() {
@@ -74,7 +75,7 @@ export async function waitForLoadingToFinish() {
 }
 
 // Mock Firestore Timestamp that satisfies the Timestamp interface
-export function mockTimestamp(date: Date = new Date()) {
+export function mockTimestamp(date: Date = new Date()): Timestamp {
     const seconds = Math.floor(date.getTime() / 1000);
     const nanoseconds = (date.getTime() % 1000) * 1000000;
     return {
@@ -82,11 +83,11 @@ export function mockTimestamp(date: Date = new Date()) {
         nanoseconds,
         toDate: () => date,
         toMillis: () => date.getTime(),
-        isEqual: (other: { seconds: number; nanoseconds: number }) =>
+        isEqual: (other: Timestamp) =>
             other.seconds === seconds && other.nanoseconds === nanoseconds,
-        toJSON: () => ({ seconds, nanoseconds, type: 'timestamp' }),
+        toJSON: () => ({ seconds, nanoseconds }),
         valueOf: () => `Timestamp(seconds=${seconds}, nanoseconds=${nanoseconds})`,
-    };
+    } as unknown as Timestamp;
 }
 
 // Mock data factories - with explicit type assertions for proper TypeScript compatibility
@@ -159,7 +160,7 @@ export const mockGateEntry = (overrides: Partial<GateEntry> = {}): GateEntry => 
     entryType: 'IN',
     vehicleNumber: 'KA01AB1234',
     status: 'PENDING',
-    materialCategory: 'TW-WHOLE',
+    materialCategory: 'TW-WHOLE' as MaterialCategory,
     quantity: 5000,
     unit: 'KG',
     entryTime: mockTimestamp(),
