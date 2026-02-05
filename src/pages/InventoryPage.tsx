@@ -1,59 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    getInventoryItems,
-    getLowStockItems,
-    INVENTORY_CATEGORIES,
-} from '../services/inventoryService';
+import { useInventory } from '../hooks';
+import { INVENTORY_CATEGORIES } from '../services/inventoryService';
 import type { InventoryItem, InventoryCategory } from '../types';
+import {
+    PageHeader,
+    LoadingSpinner,
+    ErrorAlert,
+    EmptyState,
+} from '../components/ui';
 
-export function InventoryPage() {
+const InventoryFilters = [
+    { value: 'all', label: 'All', activeColor: 'blue' },
+    { value: 'RAW_MATERIAL', label: 'Raw', activeColor: 'purple' },
+    { value: 'FINISHED_PRODUCT', label: 'Products', activeColor: 'green' },
+    { value: 'low-stock', label: 'Low Stock', activeColor: 'yellow' },
+];
+
+export default function InventoryPage() {
     const navigate = useNavigate();
-    const [items, setItems] = useState<InventoryItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'low-stock' | InventoryCategory>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [lowStockCount, setLowStockCount] = useState(0);
 
-    useEffect(() => {
-        loadItems();
-    }, []);
+    // React Query hook
+    const { data: items = [], isLoading, error, refetch } = useInventory({ category: filter, searchQuery });
 
-    const loadItems = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const fetchedItems = await getInventoryItems();
-            setItems(fetchedItems);
-
-            // Get low stock count
-            const lowStock = await getLowStockItems();
-            setLowStockCount(lowStock.length);
-        } catch (err: any) {
-            setError(err.message || 'Failed to load inventory');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const filteredItems = items.filter(item => {
-        // Category/status filter
-        if (filter === 'low-stock' && item.currentStock > item.minimumStock) return false;
-        if (filter !== 'all' && filter !== 'low-stock' && item.category !== filter) return false;
-
-        // Search filter
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            return (
-                item.name?.toLowerCase().includes(query) ||
-                item.code?.toLowerCase().includes(query) ||
-                item.location?.toLowerCase().includes(query)
-            );
-        }
-
-        return true;
-    });
+    // Get all items without filters for summary stats
+    const { data: allItems = [] } = useInventory({});
 
     const getCategoryLabel = (category: InventoryCategory) => {
         return INVENTORY_CATEGORIES.find(c => c.value === category)?.label || category;
@@ -111,24 +84,37 @@ export function InventoryPage() {
         }
     };
 
-    // Summary stats
-    const totalItems = items.length;
-    const rawMaterialItems = items.filter(i => i.category === 'RAW_MATERIAL');
-    const finishedProductItems = items.filter(i => i.category === 'FINISHED_PRODUCT');
+    const getFilterButtonClass = (filterValue: string, isActive: boolean) => {
+        if (isActive) {
+            const colorMap: Record<string, string> = {
+                blue: 'bg-blue-600 text-white',
+                purple: 'bg-purple-600 text-white',
+                green: 'bg-green-600 text-white',
+                yellow: 'bg-yellow-600 text-white',
+            };
+            const filterDef = InventoryFilters.find(f => f.value === filterValue);
+            return colorMap[filterDef?.activeColor || 'blue'] || 'bg-blue-600 text-white';
+        }
+        return 'bg-slate-700 text-slate-300 hover:bg-slate-600';
+    };
+
+    // Summary stats from all items
+    const totalItems = allItems.length;
+    const rawMaterialItems = allItems.filter(i => i.category === 'RAW_MATERIAL');
+    const finishedProductItems = allItems.filter(i => i.category === 'FINISHED_PRODUCT');
+    const lowStockCount = allItems.filter(i => i.currentStock <= i.minimumStock).length;
 
     // Calculate total stock quantities
     const totalRawMaterialStock = rawMaterialItems.reduce((sum, item) => {
-        // Convert to KG for consistency
         let qty = item.currentStock || 0;
         if (item.unit === 'TONS') qty *= 1000;
         return sum + qty;
     }, 0);
 
     const totalFinishedGoodsStock = finishedProductItems.reduce((sum, item) => {
-        // Convert to KG for consistency
         let qty = item.currentStock || 0;
         if (item.unit === 'TONS') qty *= 1000;
-        if (item.unit === 'KL') qty *= 1000; // Approximate
+        if (item.unit === 'KL') qty *= 1000;
         return sum + qty;
     }, 0);
 
@@ -137,24 +123,11 @@ export function InventoryPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-            {/* Header */}
-            <header className="glass-card m-4 p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                        >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <div>
-                            <h1 className="text-xl font-bold text-white">Inventory</h1>
-                            <p className="text-sm text-slate-400">{totalItems} items tracked</p>
-                        </div>
-                    </div>
-
+            <PageHeader
+                title="Inventory"
+                subtitle={`${totalItems} items tracked`}
+                backTo="/dashboard"
+                actions={
                     <button
                         onClick={() => navigate('/inventory/new')}
                         className="btn-primary flex items-center gap-2"
@@ -164,8 +137,8 @@ export function InventoryPage() {
                         </svg>
                         <span className="hidden sm:inline">Add Item</span>
                     </button>
-                </div>
-            </header>
+                }
+            />
 
             <main className="p-4">
                 {/* Stock Overview Cards - Large */}
@@ -311,69 +284,46 @@ export function InventoryPage() {
                         </div>
 
                         <div className="flex gap-2 flex-wrap">
-                            <button
-                                onClick={() => setFilter('all')}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                    }`}
-                            >
-                                All
-                            </button>
-                            <button
-                                onClick={() => setFilter('RAW_MATERIAL')}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === 'RAW_MATERIAL' ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                    }`}
-                            >
-                                Raw
-                            </button>
-                            <button
-                                onClick={() => setFilter('FINISHED_PRODUCT')}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === 'FINISHED_PRODUCT' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                    }`}
-                            >
-                                Products
-                            </button>
-                            <button
-                                onClick={() => setFilter('low-stock')}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === 'low-stock' ? 'bg-yellow-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                    }`}
-                            >
-                                Low Stock
-                            </button>
+                            {InventoryFilters.map((f) => (
+                                <button
+                                    key={f.value}
+                                    onClick={() => setFilter(f.value as 'all' | 'low-stock' | InventoryCategory)}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all ${getFilterButtonClass(f.value, filter === f.value)}`}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                    <div className="glass-card p-4 mb-4 border border-red-500/50 bg-red-500/10">
-                        <p className="text-red-400">{error}</p>
-                    </div>
+                    <ErrorAlert
+                        message={error.message || 'Failed to load inventory'}
+                        onDismiss={() => refetch()}
+                    />
                 )}
 
                 {/* Loading */}
-                {loading && (
-                    <div className="flex justify-center py-12">
-                        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                )}
+                {isLoading && <LoadingSpinner />}
 
                 {/* Items List */}
-                {!loading && (
+                {!isLoading && (
                     <div className="space-y-3">
-                        {filteredItems.length === 0 ? (
-                            <div className="glass-card p-8 text-center">
-                                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        {items.length === 0 ? (
+                            <EmptyState
+                                icon={
                                     <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                     </svg>
-                                </div>
-                                <h3 className="text-white font-semibold mb-2">No items found</h3>
-                                <p className="text-slate-400">
-                                    {searchQuery ? 'Try a different search term' : 'Add your first inventory item'}
-                                </p>
-                            </div>
+                                }
+                                title="No items found"
+                                description={searchQuery ? 'Try a different search term' : 'Add your first inventory item'}
+                                action={!searchQuery ? { label: 'Add Item', onClick: () => navigate('/inventory/new') } : undefined}
+                            />
                         ) : (
-                            filteredItems.map((item) => {
+                            items.map((item) => {
                                 const stockStatus = getStockStatus(item);
                                 return (
                                     <div

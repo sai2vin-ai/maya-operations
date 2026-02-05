@@ -1,41 +1,57 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
 import { SyncStatusIndicator, OfflineBanner } from './components/SyncStatus';
-import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { UsersPage } from './pages/UsersPage';
-import { UserDetailPage } from './pages/UserDetailPage';
-import { UserCreatePage } from './pages/UserCreatePage';
-import { DevicesPage } from './pages/DevicesPage';
-import { DeviceDetailPage } from './pages/DeviceDetailPage';
-import { DeviceCreatePage } from './pages/DeviceCreatePage';
-import { GateEntriesPage } from './pages/GateEntriesPage';
-import { GateEntryCreatePage } from './pages/GateEntryCreatePage';
-import { GateEntryDetailPage } from './pages/GateEntryDetailPage';
-import { ReactorDashboardPage } from './pages/ReactorDashboardPage';
-import { BatchCreatePage } from './pages/BatchCreatePage';
-import { BatchWorkflowPage } from './pages/BatchWorkflowPage';
-import { ReactorOutputPage } from './pages/ReactorOutputPage';
-import { InventoryPage } from './pages/InventoryPage';
-import { InventoryItemCreatePage } from './pages/InventoryItemCreatePage';
-import { InventoryItemDetailPage } from './pages/InventoryItemDetailPage';
-import { SparePartsPage } from './pages/SparePartsPage';
-import { SparePartCreatePage } from './pages/SparePartCreatePage';
-import { SparePartDetailPage } from './pages/SparePartDetailPage';
-import { WeighbridgePage } from './pages/WeighbridgePage';
-import { WeighbridgeEntryPage } from './pages/WeighbridgeEntryPage';
-import { RolesPage } from './pages/RolesPage';
+import { LoadingSpinner } from './components/ui';
+import { queryClient } from './lib/queryClient';
 import './index.css';
+
+// Lazy load all pages - Platform pages stay in src/pages
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const RolesPage = lazy(() => import('./pages/RolesPage'));
+
+// Feature pages - lazy loaded from feature modules
+const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
+const UserDetailPage = lazy(() => import('./features/users/pages/UserDetailPage'));
+const UserCreatePage = lazy(() => import('./features/users/pages/UserCreatePage'));
+
+const DevicesPage = lazy(() => import('./features/devices/pages/DevicesPage'));
+const DeviceDetailPage = lazy(() => import('./features/devices/pages/DeviceDetailPage'));
+const DeviceCreatePage = lazy(() => import('./features/devices/pages/DeviceCreatePage'));
+
+const GateEntriesPage = lazy(() => import('./features/gate/pages/GateEntriesPage'));
+const GateEntryCreatePage = lazy(() => import('./features/gate/pages/GateEntryCreatePage'));
+const GateEntryDetailPage = lazy(() => import('./features/gate/pages/GateEntryDetailPage'));
+
+const ReactorDashboardPage = lazy(() => import('./features/reactor/pages/ReactorDashboardPage'));
+const BatchCreatePage = lazy(() => import('./features/reactor/pages/BatchCreatePage'));
+const BatchWorkflowPage = lazy(() => import('./features/reactor/pages/BatchWorkflowPage'));
+const ReactorOutputPage = lazy(() => import('./features/reactor/pages/ReactorOutputPage'));
+
+const InventoryPage = lazy(() => import('./features/inventory/pages/InventoryPage'));
+const InventoryItemCreatePage = lazy(() => import('./features/inventory/pages/InventoryItemCreatePage'));
+const InventoryItemDetailPage = lazy(() => import('./features/inventory/pages/InventoryItemDetailPage'));
+
+const SparePartsPage = lazy(() => import('./features/spare-parts/pages/SparePartsPage'));
+const SparePartCreatePage = lazy(() => import('./features/spare-parts/pages/SparePartCreatePage'));
+const SparePartDetailPage = lazy(() => import('./features/spare-parts/pages/SparePartDetailPage'));
+
+const WeighbridgePage = lazy(() => import('./features/weighbridge/pages/WeighbridgePage'));
+const WeighbridgeEntryPage = lazy(() => import('./features/weighbridge/pages/WeighbridgeEntryPage'));
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <OfflineProvider>
-          <OfflineBanner />
-          <Routes>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <OfflineProvider>
+            <OfflineBanner />
+            <Suspense fallback={<LoadingSpinner fullScreen message="Loading..." />}>
+              <Routes>
             {/* Public Routes */}
             <Route
               path="/login"
@@ -269,11 +285,13 @@ function App() {
 
             {/* 404 - Not Found */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-          <SyncStatusIndicator />
-        </OfflineProvider>
-      </AuthProvider>
-    </BrowserRouter>
+              </Routes>
+            </Suspense>
+            <SyncStatusIndicator />
+          </OfflineProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

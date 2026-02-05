@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createGateEntry, uploadPhotoFromBlob, MATERIAL_CATEGORIES } from '../services/gateEntryService';
 import type { EntryType, MaterialCategory } from '../types';
 
-export function GateEntryCreatePage() {
+export default function GateEntryCreatePage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
 

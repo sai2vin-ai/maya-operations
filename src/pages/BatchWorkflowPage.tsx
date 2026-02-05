@@ -6,7 +6,7 @@ import { MATERIAL_CATEGORIES, getGateEntries } from '../services/gateEntryServic
 import { getInventoryItemsByCategory } from '../services/inventoryService';
 import type { Batch, MaterialCategory, InventoryItem, GateEntry } from '../types';
 
-export function BatchWorkflowPage() {
+export default function BatchWorkflowPage() {
     const { batchId } = useParams<{ batchId: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();

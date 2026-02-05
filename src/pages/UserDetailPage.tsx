@@ -10,7 +10,7 @@ import {
 } from '../services/userService';
 import type { User, UserRole, UserStatus } from '../types';
 
-export function UserDetailPage() {
+export default function UserDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { userData: currentUser } = useAuth();

@@ -4,7 +4,7 @@ import { createInventoryItem, INVENTORY_CATEGORIES, COMMON_UNITS } from '../serv
 import { useAuth } from '../contexts/AuthContext';
 import type { InventoryCategory } from '../types';
 
-export function InventoryItemCreatePage() {
+export default function InventoryItemCreatePage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
     const [loading, setLoading] = useState(false);

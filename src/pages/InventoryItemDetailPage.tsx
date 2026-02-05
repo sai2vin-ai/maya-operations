@@ -11,7 +11,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import type { InventoryItem, InventoryTransaction, InventoryCategory, TransactionType } from '../types';
 
-export function InventoryItemDetailPage() {
+export default function InventoryItemDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();

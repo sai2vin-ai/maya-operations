@@ -11,7 +11,7 @@ import {
 } from '../services/sparePartsService';
 import type { SparePartCategory } from '../types';
 
-export function SparePartCreatePage() {
+export default function SparePartCreatePage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
 
