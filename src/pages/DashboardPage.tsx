@@ -28,6 +28,8 @@ export default function DashboardPage() {
             { id: 'users', name: 'User Management', icon: '👥', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], color: 'from-blue-500 to-blue-600' },
             { id: 'devices', name: 'Device Management', icon: '📱', roles: ['SUPER_ADMIN'], color: 'from-purple-500 to-purple-600' },
             { id: 'maintenance', name: 'Maintenance', icon: '🔧', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'], color: 'from-yellow-500 to-yellow-600' },
+            { id: 'audit', name: 'Audit Logs', icon: '📋', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], color: 'from-slate-500 to-slate-600' },
+            { id: 'reports', name: 'Reports', icon: '📈', roles: ['SUPER_ADMIN'], color: 'from-red-500 to-red-600' },
         ];
 
         return allModules.filter(module =>

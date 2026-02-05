@@ -3,6 +3,7 @@ import React from 'react';
 import { render, type RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
+import type { User, Device, InventoryItem, SparePart, GateEntry, Batch, Reactor, WeighbridgeEntry } from '../types';
 
 // Create a fresh QueryClient for each test
 function createTestQueryClient() {
@@ -88,14 +89,14 @@ export function mockTimestamp(date: Date = new Date()) {
     };
 }
 
-// Mock data factories
-export const mockUser = (overrides = {}) => ({
+// Mock data factories - with explicit type assertions for proper TypeScript compatibility
+export const mockUser = (overrides: Partial<User> = {}): User => ({
     id: 'user-1',
     name: 'John Doe',
     email: 'john@example.com',
     phone: '1234567890',
-    role: 'REACTOR_OPERATOR' as const,
-    status: 'ACTIVE' as const,
+    role: 'REACTOR_OPERATOR',
+    status: 'ACTIVE',
     employeeId: 'EMP001',
     allowedDeviceIds: [],
     createdAt: mockTimestamp(),
@@ -103,28 +104,28 @@ export const mockUser = (overrides = {}) => ({
     updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
-});
+} as User);
 
-export const mockDevice = (overrides = {}) => ({
+export const mockDevice = (overrides: Partial<Device> = {}): Device => ({
     id: 'device-1',
     deviceId: 'DEV-001',
     name: 'Test Device',
-    deviceType: 'MOBILE' as const,
-    os: 'ANDROID' as const,
+    deviceType: 'MOBILE',
+    os: 'ANDROID',
     osVersion: '13',
     appVersion: '1.0.0',
     fcmToken: '',
-    status: 'ACTIVE' as const,
+    status: 'ACTIVE',
     registeredAt: mockTimestamp(),
     registeredBy: 'admin',
     ...overrides,
-});
+} as Device);
 
-export const mockInventoryItem = (overrides = {}) => ({
+export const mockInventoryItem = (overrides: Partial<InventoryItem> = {}): InventoryItem => ({
     id: 'item-1',
     code: 'INV-RM-0001',
     name: 'Waste Tyres',
-    category: 'RAW_MATERIAL' as const,
+    category: 'RAW_MATERIAL',
     unit: 'KG',
     currentStock: 5000,
     minimumStock: 1000,
@@ -134,13 +135,13 @@ export const mockInventoryItem = (overrides = {}) => ({
     updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
-});
+} as InventoryItem);
 
-export const mockSparePart = (overrides = {}) => ({
+export const mockSparePart = (overrides: Partial<SparePart> = {}): SparePart => ({
     id: 'part-1',
     partNumber: 'MOT-001',
     name: 'Motor 5HP',
-    category: 'MOTOR' as const,
+    category: 'MOTOR',
     unit: 'PCS',
     currentStock: 5,
     minimumStock: 2,
@@ -150,30 +151,30 @@ export const mockSparePart = (overrides = {}) => ({
     updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
-});
+} as SparePart);
 
-export const mockGateEntry = (overrides = {}) => ({
+export const mockGateEntry = (overrides: Partial<GateEntry> = {}): GateEntry => ({
     id: 'entry-1',
     entryNumber: 'GE-2026-0001',
-    entryType: 'IN' as const,
+    entryType: 'IN',
     vehicleNumber: 'KA01AB1234',
-    status: 'PENDING' as const,
-    materialCategory: 'TW-WHOLE' as const,
+    status: 'PENDING',
+    materialCategory: 'TW-WHOLE',
     quantity: 5000,
-    unit: 'KG' as const,
+    unit: 'KG',
     entryTime: mockTimestamp(),
     createdAt: mockTimestamp(),
     createdBy: 'admin',
     updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
-});
+} as GateEntry);
 
-export const mockBatch = (overrides = {}) => ({
+export const mockBatch = (overrides: Partial<Batch> = {}): Batch => ({
     id: 'batch-1',
     batchNumber: 'M1-20260128-001',
     reactorId: 'reactor-1',
-    status: 'IN_PROGRESS' as const,
+    status: 'IN_PROGRESS',
     currentStep: 3,
     totalSteps: 14,
     stepHistory: [],
@@ -184,13 +185,13 @@ export const mockBatch = (overrides = {}) => ({
     updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
-});
+} as Batch);
 
-export const mockReactor = (overrides = {}) => ({
+export const mockReactor = (overrides: Partial<Reactor> = {}): Reactor => ({
     id: 'reactor-1',
     reactorNumber: 'M1',
     name: 'Main Reactor 1',
-    status: 'IDLE' as const,
+    status: 'IDLE',
     capacity: 10000,
     totalBatchCount: 150,
     createdAt: mockTimestamp(),
@@ -198,15 +199,15 @@ export const mockReactor = (overrides = {}) => ({
     updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
-});
+} as Reactor);
 
-export const mockWeighbridgeEntry = (overrides = {}) => ({
+export const mockWeighbridgeEntry = (overrides: Partial<WeighbridgeEntry> = {}): WeighbridgeEntry => ({
     id: 'wb-1',
     entryNumber: 'WB-2026-00001',
-    entryType: 'RM_IN' as const,
+    entryType: 'RM_IN',
     vehicleNumber: 'KA01AB1234',
-    status: 'PENDING' as const,
-    unit: 'KG' as const,
+    status: 'PENDING',
+    unit: 'KG',
     grossWeight: null,
     tareWeight: null,
     netWeight: null,
@@ -215,4 +216,4 @@ export const mockWeighbridgeEntry = (overrides = {}) => ({
     updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
-});
+} as WeighbridgeEntry);
