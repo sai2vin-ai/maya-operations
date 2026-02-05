@@ -9,6 +9,7 @@ import {
     MATERIAL_CATEGORIES,
     ENTRY_STATUSES,
 } from '../services/gateEntryService';
+import { InputDialog } from '../../../components/ui';
 import type { GateEntry, MaterialCategory, GateEntryStatus } from '../types';
 
 export default function GateEntryDetailPage() {
@@ -22,6 +23,7 @@ export default function GateEntryDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
     const [formData, setFormData] = useState({
         materialCategory: '' as MaterialCategory | '',
@@ -123,17 +125,19 @@ export default function GateEntryDetailPage() {
         }
     };
 
-    const handleCancel = async () => {
-        if (!id || !userData?.id) return;
+    const handleCancelClick = () => {
+        setCancelDialogOpen(true);
+    };
 
-        const reason = window.prompt('Enter cancellation reason:');
-        if (!reason) return;
+    const handleCancelConfirm = async (reason: string) => {
+        if (!id || !userData?.id) return;
 
         try {
             setSaving(true);
             setError(null);
             await cancelGateEntry(id, reason, userData.id);
             setSuccess('Entry cancelled');
+            setCancelDialogOpen(false);
             await loadEntry(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to cancel entry');
@@ -515,7 +519,7 @@ export default function GateEntryDetailPage() {
                                 Mark Completed
                             </button>
                             <button
-                                onClick={handleCancel}
+                                onClick={handleCancelClick}
                                 disabled={saving}
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all flex items-center gap-2"
                             >
@@ -528,6 +532,20 @@ export default function GateEntryDetailPage() {
                     </div>
                 )}
             </main>
+
+            {/* Cancel Dialog */}
+            <InputDialog
+                isOpen={cancelDialogOpen}
+                title="Cancel Entry"
+                message="Please provide a reason for cancelling this gate entry."
+                placeholder="Enter cancellation reason..."
+                confirmLabel="Cancel Entry"
+                cancelLabel="Go Back"
+                variant="danger"
+                onConfirm={handleCancelConfirm}
+                onCancel={() => setCancelDialogOpen(false)}
+                loading={saving}
+            />
         </div>
     );
 }

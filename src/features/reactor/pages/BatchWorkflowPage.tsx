@@ -4,6 +4,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { getBatchById, completeStep, uploadStepPhoto, recordOutput, cancelBatch, BATCH_STEPS, getBatchStatusInfo, type CompleteStepData } from '../services/batchService';
 import { MATERIAL_CATEGORIES, getGateEntries } from '../../gate/services/gateEntryService';
 import { getInventoryItemsByCategory } from '../../inventory/services/inventoryService';
+import { InputDialog } from '../../../components/ui';
 import type { Batch, MaterialCategory } from '../types';
 import type { InventoryItem } from '../../inventory/types';
 import type { GateEntry } from '../../gate/types';
@@ -18,6 +19,7 @@ export default function BatchWorkflowPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
     // Step completion form
     const [stepNotes, setStepNotes] = useState('');
@@ -257,15 +259,17 @@ export default function BatchWorkflowPage() {
         }
     };
 
-    const handleCancelBatch = async () => {
-        if (!batch || !userData?.id) return;
+    const handleCancelBatchClick = () => {
+        setCancelDialogOpen(true);
+    };
 
-        const reason = window.prompt('Enter cancellation reason:');
-        if (!reason) return;
+    const handleCancelBatchConfirm = async (reason: string) => {
+        if (!batch || !userData?.id) return;
 
         try {
             setSaving(true);
             await cancelBatch(batch.id, reason, userData.id);
+            setCancelDialogOpen(false);
             navigate('/reactor');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to cancel batch');
@@ -718,7 +722,7 @@ export default function BatchWorkflowPage() {
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
                         <button
-                            onClick={handleCancelBatch}
+                            onClick={handleCancelBatchClick}
                             disabled={saving}
                             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all"
                         >
@@ -727,6 +731,20 @@ export default function BatchWorkflowPage() {
                     </div>
                 )}
             </main>
+
+            {/* Cancel Dialog */}
+            <InputDialog
+                isOpen={cancelDialogOpen}
+                title="Cancel Batch"
+                message="Please provide a reason for cancelling this batch."
+                placeholder="Enter cancellation reason..."
+                confirmLabel="Cancel Batch"
+                cancelLabel="Go Back"
+                variant="danger"
+                onConfirm={handleCancelBatchConfirm}
+                onCancel={() => setCancelDialogOpen(false)}
+                loading={saving}
+            />
         </div>
     );
 }

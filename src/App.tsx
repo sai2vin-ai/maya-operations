@@ -5,7 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
 import { SyncStatusIndicator, OfflineBanner } from './components/SyncStatus';
-import { LoadingSpinner } from './components/ui';
+import { LoadingSpinner, ToastProvider } from './components/ui';
 import { queryClient } from './lib/queryClient';
 import './index.css';
 
@@ -53,6 +53,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <OfflineProvider>
+            <ToastProvider>
             <OfflineBanner />
             <Suspense fallback={<LoadingSpinner fullScreen message="Loading..." />}>
               <Routes>
@@ -312,6 +313,7 @@ function App() {
               </Routes>
             </Suspense>
             <SyncStatusIndicator />
+            </ToastProvider>
           </OfflineProvider>
         </AuthProvider>
       </BrowserRouter>

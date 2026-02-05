@@ -9,6 +9,7 @@ import {
     LoadingSpinner,
     ErrorAlert,
     EmptyState,
+    InputDialog,
 } from '../../../components/ui';
 
 const GateEntryFilters = [
@@ -22,6 +23,8 @@ export default function GateEntriesPage() {
     const { userData } = useAuth();
     const [filter, setFilter] = useState<'all' | GateEntryStatus>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [cancellingEntryId, setCancellingEntryId] = useState<string | null>(null);
 
     // React Query hooks
     const { data: entries = [], isLoading, error, refetch } = useGateEntries({ status: filter, searchQuery });
@@ -37,16 +40,26 @@ export default function GateEntriesPage() {
         }
     };
 
-    const handleCancel = async (entryId: string) => {
-        if (!userData?.id) return;
-        const reason = window.prompt('Enter cancellation reason:');
-        if (!reason) return;
+    const handleCancelClick = (entryId: string) => {
+        setCancellingEntryId(entryId);
+        setCancelDialogOpen(true);
+    };
+
+    const handleCancelConfirm = async (reason: string) => {
+        if (!userData?.id || !cancellingEntryId) return;
 
         try {
-            await cancelEntry.mutateAsync({ entryId, reason, updatedBy: userData.id });
+            await cancelEntry.mutateAsync({ entryId: cancellingEntryId, reason, updatedBy: userData.id });
+            setCancelDialogOpen(false);
+            setCancellingEntryId(null);
         } catch {
             // Error handled by mutation
         }
+    };
+
+    const handleCancelDialogClose = () => {
+        setCancelDialogOpen(false);
+        setCancellingEntryId(null);
     };
 
     const getMaterialLabel = (category?: string) => {
@@ -229,7 +242,7 @@ export default function GateEntriesPage() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleCancel(entry.id);
+                                                                handleCancelClick(entry.id);
                                                             }}
                                                             disabled={cancelEntry.isPending}
                                                             className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
@@ -250,6 +263,20 @@ export default function GateEntriesPage() {
                     </div>
                 )}
             </main>
+
+            {/* Cancel Dialog */}
+            <InputDialog
+                isOpen={cancelDialogOpen}
+                title="Cancel Entry"
+                message="Please provide a reason for cancelling this gate entry."
+                placeholder="Enter cancellation reason..."
+                confirmLabel="Cancel Entry"
+                cancelLabel="Go Back"
+                variant="danger"
+                onConfirm={handleCancelConfirm}
+                onCancel={handleCancelDialogClose}
+                loading={cancelEntry.isPending}
+            />
         </div>
     );
 }
