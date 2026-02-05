@@ -191,7 +191,7 @@ export function useAuth() {
 }
 
 // Helper function to get user-friendly error messages
-function getAuthErrorMessage(errorCode: string): string {
+function getAuthErrorMessage(errorCode: string | undefined): string {
     switch (errorCode) {
         case 'auth/invalid-email':
             return 'Invalid email address';

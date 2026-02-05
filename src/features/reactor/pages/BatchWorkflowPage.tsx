@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { getBatchById, completeStep, uploadStepPhoto, recordOutput, cancelBatch, BATCH_STEPS, getBatchStatusInfo } from '../services/batchService';
+import { getBatchById, completeStep, uploadStepPhoto, recordOutput, cancelBatch, BATCH_STEPS, getBatchStatusInfo, type CompleteStepData } from '../services/batchService';
 import { MATERIAL_CATEGORIES, getGateEntries } from '../../gate/services/gateEntryService';
 import { getInventoryItemsByCategory } from '../../inventory/services/inventoryService';
 import type { Batch, MaterialCategory } from '../types';
@@ -175,7 +175,7 @@ export default function BatchWorkflowPage() {
             }
 
             // Build step data based on step type
-            const stepData: Record<string, unknown> = {
+            const stepData: CompleteStepData = {
                 stepNumber: nextStep,
                 notes: stepNotes || undefined,
                 photoUrls: photoUrls.length > 0 ? photoUrls : undefined,

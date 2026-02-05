@@ -72,6 +72,22 @@ export async function waitForLoadingToFinish() {
     return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+// Mock Firestore Timestamp that satisfies the Timestamp interface
+export function mockTimestamp(date: Date = new Date()) {
+    const seconds = Math.floor(date.getTime() / 1000);
+    const nanoseconds = (date.getTime() % 1000) * 1000000;
+    return {
+        seconds,
+        nanoseconds,
+        toDate: () => date,
+        toMillis: () => date.getTime(),
+        isEqual: (other: { seconds: number; nanoseconds: number }) =>
+            other.seconds === seconds && other.nanoseconds === nanoseconds,
+        toJSON: () => ({ seconds, nanoseconds, type: 'timestamp' }),
+        valueOf: () => `Timestamp(seconds=${seconds}, nanoseconds=${nanoseconds})`,
+    };
+}
+
 // Mock data factories
 export const mockUser = (overrides = {}) => ({
     id: 'user-1',
@@ -82,9 +98,9 @@ export const mockUser = (overrides = {}) => ({
     status: 'ACTIVE' as const,
     employeeId: 'EMP001',
     allowedDeviceIds: [],
-    createdAt: { toDate: () => new Date() },
+    createdAt: mockTimestamp(),
     createdBy: 'admin',
-    updatedAt: { toDate: () => new Date() },
+    updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
 });
@@ -99,7 +115,7 @@ export const mockDevice = (overrides = {}) => ({
     appVersion: '1.0.0',
     fcmToken: '',
     status: 'ACTIVE' as const,
-    registeredAt: { toDate: () => new Date() },
+    registeredAt: mockTimestamp(),
     registeredBy: 'admin',
     ...overrides,
 });
@@ -113,9 +129,9 @@ export const mockInventoryItem = (overrides = {}) => ({
     currentStock: 5000,
     minimumStock: 1000,
     location: 'Storage A',
-    createdAt: { toDate: () => new Date() },
+    createdAt: mockTimestamp(),
     createdBy: 'admin',
-    updatedAt: { toDate: () => new Date() },
+    updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
 });
@@ -129,9 +145,9 @@ export const mockSparePart = (overrides = {}) => ({
     currentStock: 5,
     minimumStock: 2,
     location: 'Rack A-1',
-    createdAt: { toDate: () => new Date() },
+    createdAt: mockTimestamp(),
     createdBy: 'admin',
-    updatedAt: { toDate: () => new Date() },
+    updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
 });
@@ -142,13 +158,13 @@ export const mockGateEntry = (overrides = {}) => ({
     entryType: 'IN' as const,
     vehicleNumber: 'KA01AB1234',
     status: 'PENDING' as const,
-    materialCategory: 'TW-WHOLE',
+    materialCategory: 'TW-WHOLE' as const,
     quantity: 5000,
     unit: 'KG' as const,
-    entryTime: { toDate: () => new Date() },
-    createdAt: { toDate: () => new Date() },
+    entryTime: mockTimestamp(),
+    createdAt: mockTimestamp(),
     createdBy: 'admin',
-    updatedAt: { toDate: () => new Date() },
+    updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
 });
@@ -162,10 +178,10 @@ export const mockBatch = (overrides = {}) => ({
     totalSteps: 14,
     stepHistory: [],
     outputs: [],
-    startTime: { toDate: () => new Date() },
-    createdAt: { toDate: () => new Date() },
+    startTime: mockTimestamp(),
+    createdAt: mockTimestamp(),
     createdBy: 'admin',
-    updatedAt: { toDate: () => new Date() },
+    updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
 });
@@ -177,9 +193,9 @@ export const mockReactor = (overrides = {}) => ({
     status: 'IDLE' as const,
     capacity: 10000,
     totalBatchCount: 150,
-    createdAt: { toDate: () => new Date() },
+    createdAt: mockTimestamp(),
     createdBy: 'admin',
-    updatedAt: { toDate: () => new Date() },
+    updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
 });
@@ -194,9 +210,9 @@ export const mockWeighbridgeEntry = (overrides = {}) => ({
     grossWeight: null,
     tareWeight: null,
     netWeight: null,
-    createdAt: { toDate: () => new Date() },
+    createdAt: mockTimestamp(),
     createdBy: 'admin',
-    updatedAt: { toDate: () => new Date() },
+    updatedAt: mockTimestamp(),
     updatedBy: 'admin',
     ...overrides,
 });
