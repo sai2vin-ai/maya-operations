@@ -56,8 +56,8 @@ export default function SparePartCreatePage() {
             }, userData.id);
 
             navigate(`/spare-parts/${partId}`);
-        } catch (err: any) {
-            setError(err.message || 'Failed to create spare part');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create spare part');
         } finally {
             setSaving(false);
         }

@@ -2,7 +2,7 @@
 // Run with: npx ts-node --esm src/scripts/clearReactorData.ts
 
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, deleteDoc, doc, Firestore } from 'firebase/firestore';
 
 // Firebase config - same as your app
 const firebaseConfig = {
@@ -14,7 +14,7 @@ const firebaseConfig = {
     appId: "1:xxxxxxxxxxxx:web:xxxxxxxxxxxx"
 };
 
-async function clearCollection(db: any, collectionName: string) {
+async function clearCollection(db: Firestore, collectionName: string) {
     console.log(`Clearing collection: ${collectionName}...`);
     const colRef = collection(db, collectionName);
     const snapshot = await getDocs(colRef);

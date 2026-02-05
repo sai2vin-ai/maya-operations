@@ -16,7 +16,7 @@ export default function LoginPage() {
         try {
             await loginWithEmail(email, password);
             // Redirect happens automatically via ProtectedRoute
-        } catch (err) {
+        } catch {
             // Error is already set in context
         } finally {
             setLocalLoading(false);

@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import type { InventoryItem, InventoryTransaction, InventoryCategory, TransactionType } from '../types';
+import { getTimestampMillis, type FirestoreDocData } from '../../../types';
 
 const INVENTORY_ITEMS_COLLECTION = 'inventoryItems';
 const INVENTORY_TRANSACTIONS_COLLECTION = 'inventoryTransactions';
@@ -144,7 +145,7 @@ export async function createInventoryItem(
     const itemId = code.replace(/-/g, '_');
     const itemRef = doc(db, INVENTORY_ITEMS_COLLECTION, itemId);
 
-    const itemDoc: Record<string, any> = {
+    const itemDoc: FirestoreDocData = {
         code,
         name: data.name,
         category: data.category,
@@ -191,7 +192,7 @@ export async function updateInventoryItem(
 ): Promise<void> {
     const itemRef = doc(db, INVENTORY_ITEMS_COLLECTION, itemId);
 
-    const updateData: Record<string, any> = {
+    const updateData: FirestoreDocData = {
         updatedAt: Timestamp.now(),
         updatedBy,
     };
@@ -202,7 +203,7 @@ export async function updateInventoryItem(
     if (data.maximumStock != null) updateData.maximumStock = data.maximumStock;
     if (data.location) updateData.location = data.location;
 
-    await updateDoc(itemRef, updateData);
+    await updateDoc(itemRef, updateData as Record<string, unknown>);
 }
 
 // ============================================
@@ -226,8 +227,8 @@ export async function getItemTransactions(itemId: string, limitCount: number = 5
 
     // Sort in-memory by createdAt desc
     return transactions.sort((a, b) => {
-        const aTime = a.createdAt && (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0;
-        const bTime = b.createdAt && (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0;
+        const aTime = getTimestampMillis(a.createdAt);
+        const bTime = getTimestampMillis(b.createdAt);
         return bTime - aTime;
     });
 }
@@ -289,7 +290,7 @@ export async function recordTransaction(
 
         // Create transaction record
         const txnRef = doc(db, INVENTORY_TRANSACTIONS_COLLECTION, txnId);
-        const txnDoc: Record<string, any> = {
+        const txnDoc: FirestoreDocData = {
             itemId: data.itemId,
             transactionType: data.transactionType,
             quantity: data.quantity,

@@ -47,8 +47,8 @@ export default function InventoryItemCreatePage() {
             }, userData.id);
 
             navigate('/inventory');
-        } catch (err: any) {
-            setError(err.message || 'Failed to create inventory item');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create inventory item');
         } finally {
             setLoading(false);
         }

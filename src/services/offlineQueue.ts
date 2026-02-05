@@ -12,7 +12,7 @@ export interface PendingOperation {
     type: 'CREATE' | 'UPDATE' | 'DELETE';
     collection: string;
     documentId: string;
-    data: Record<string, any>;
+    data: Record<string, unknown>;
     timestamp: number;
     retryCount: number;
     status: 'PENDING' | 'SYNCING' | 'FAILED';
@@ -63,7 +63,7 @@ export async function addToQueue(
     type: PendingOperation['type'],
     collection: string,
     documentId: string,
-    data: Record<string, any>
+    data: Record<string, unknown>
 ): Promise<string> {
     const database = await initOfflineDB();
 

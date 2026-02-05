@@ -39,8 +39,8 @@ export default function BatchCreatePage() {
             } else {
                 setError('Reactor not found');
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to load reactor');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load reactor');
         } finally {
             setLoading(false);
         }
@@ -70,8 +70,8 @@ export default function BatchCreatePage() {
 
             // Navigate to batch workflow
             navigate(`/batch/${batchId}`);
-        } catch (err: any) {
-            setError(err.message || 'Failed to create batch');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create batch');
         } finally {
             setSaving(false);
         }

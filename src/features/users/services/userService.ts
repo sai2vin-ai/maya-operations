@@ -85,7 +85,7 @@ export async function createUser(data: CreateUserData, createdBy: string): Promi
     };
 
     // Use the Auth UID as the document ID
-    await updateDoc(doc(db, USERS_COLLECTION, uid), userDoc as any);
+    await updateDoc(doc(db, USERS_COLLECTION, uid), userDoc as Record<string, unknown>);
 
     return uid;
 }
@@ -112,7 +112,7 @@ export async function createUserDocument(
         updatedBy: createdBy,
     };
 
-    await updateDoc(userRef, userDoc as any);
+    await updateDoc(userRef, userDoc as Record<string, unknown>);
 }
 
 // Update user

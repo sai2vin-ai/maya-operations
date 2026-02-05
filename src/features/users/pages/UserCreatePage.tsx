@@ -73,16 +73,17 @@ export default function UserCreatePage() {
             });
 
             navigate('/users');
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error creating user:', err);
-            if (err.code === 'auth/email-already-in-use') {
+            const firebaseError = err as { code?: string; message?: string };
+            if (firebaseError.code === 'auth/email-already-in-use') {
                 setError('An account with this email already exists');
-            } else if (err.code === 'auth/invalid-email') {
+            } else if (firebaseError.code === 'auth/invalid-email') {
                 setError('Invalid email address');
-            } else if (err.code === 'auth/weak-password') {
+            } else if (firebaseError.code === 'auth/weak-password') {
                 setError('Password is too weak');
             } else {
-                setError(err.message || 'Failed to create user');
+                setError(err instanceof Error ? err.message : 'Failed to create user');
             }
         } finally {
             setSaving(false);

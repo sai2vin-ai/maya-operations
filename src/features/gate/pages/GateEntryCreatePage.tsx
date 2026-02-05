@@ -51,8 +51,8 @@ export default function GateEntryCreatePage() {
                 await videoRef.current.play();
             }
             setCameraActive(true);
-        } catch (err: any) {
-            setError('Could not access camera: ' + err.message);
+        } catch (err) {
+            setError('Could not access camera: ' + (err instanceof Error ? err.message : 'Unknown error'));
         }
     };
 
@@ -140,9 +140,9 @@ export default function GateEntryCreatePage() {
             }
 
             navigate('/gate');
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error creating gate entry:', err);
-            setError(err.message || 'Failed to create gate entry');
+            setError(err instanceof Error ? err.message : 'Failed to create gate entry');
         } finally {
             setSaving(false);
         }

@@ -55,8 +55,8 @@ export default function UserDetailPage() {
             } else {
                 setError('User not found');
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to load user');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load user');
         } finally {
             setLoading(false);
         }
@@ -80,8 +80,8 @@ export default function UserDetailPage() {
             setSuccess('User updated successfully');
             setIsEditing(false);
             await loadUser(id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to update user');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to update user');
         } finally {
             setSaving(false);
         }
@@ -95,8 +95,8 @@ export default function UserDetailPage() {
             setError(null);
             await sendPasswordReset(user.email);
             setSuccess('Password reset email sent');
-        } catch (err: any) {
-            setError(err.message || 'Failed to send password reset');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to send password reset');
         } finally {
             setSaving(false);
         }

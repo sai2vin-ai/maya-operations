@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
@@ -73,8 +74,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setError(null);
             setLoading(true);
             await signInWithEmailAndPassword(auth, email, password);
-        } catch (err: any) {
-            const errorMessage = getAuthErrorMessage(err.code);
+        } catch (err) {
+            const firebaseError = err as { code?: string };
+            const errorMessage = getAuthErrorMessage(firebaseError.code);
             setError(errorMessage);
             throw new Error(errorMessage);
         } finally {
@@ -97,8 +99,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             const confirmationResult = await signInWithPhoneNumber(auth, phone, recaptchaVerifier);
             return confirmationResult;
-        } catch (err: any) {
-            const errorMessage = getAuthErrorMessage(err.code);
+        } catch (err) {
+            const firebaseError = err as { code?: string };
+            const errorMessage = getAuthErrorMessage(firebaseError.code);
             setError(errorMessage);
             throw new Error(errorMessage);
         }
@@ -110,8 +113,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setError(null);
             setLoading(true);
             await confirmationResult.confirm(otp);
-        } catch (err: any) {
-            const errorMessage = getAuthErrorMessage(err.code);
+        } catch (err) {
+            const firebaseError = err as { code?: string };
+            const errorMessage = getAuthErrorMessage(firebaseError.code);
             setError(errorMessage);
             throw new Error(errorMessage);
         } finally {
@@ -124,7 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             setError(null);
             await signOut(auth);
-        } catch (err: any) {
+        } catch (err) {
             setError('Failed to logout');
             throw err;
         }
@@ -138,8 +142,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             setError(null);
             await updatePassword(currentUser, newPassword);
-        } catch (err: any) {
-            const errorMessage = getAuthErrorMessage(err.code);
+        } catch (err) {
+            const firebaseError = err as { code?: string };
+            const errorMessage = getAuthErrorMessage(firebaseError.code);
             setError(errorMessage);
             throw new Error(errorMessage);
         }

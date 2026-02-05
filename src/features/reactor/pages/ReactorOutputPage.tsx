@@ -29,8 +29,8 @@ export default function ReactorOutputPage() {
             setError(null);
             const fetchedBatches = await getBatches(100);
             setBatches(fetchedBatches);
-        } catch (err: any) {
-            setError(err.message || 'Failed to load batches');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load batches');
         } finally {
             setLoading(false);
         }
@@ -75,9 +75,10 @@ export default function ReactorOutputPage() {
         return Array.from(summaryMap.values());
     };
 
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: unknown) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const ts = timestamp as { toDate?: () => Date };
+        const date = ts.toDate ? ts.toDate() : new Date(timestamp as string | number);
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 

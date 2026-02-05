@@ -63,8 +63,8 @@ describe('batchService', () => {
         });
 
         it('should have correct temperature thresholds for safety-critical steps', () => {
-            const ventingStep = BATCH_STEPS.find(s => s.stepNumber === 10) as any;
-            const carbonStep = BATCH_STEPS.find(s => s.stepNumber === 11) as any;
+            const ventingStep = BATCH_STEPS.find(s => s.stepNumber === 10) as { tempThreshold?: number };
+            const carbonStep = BATCH_STEPS.find(s => s.stepNumber === 11) as { tempThreshold?: number };
             expect(ventingStep?.tempThreshold).toBe(200);
             expect(carbonStep?.tempThreshold).toBe(70);
         });
@@ -172,7 +172,8 @@ describe('batchService', () => {
         });
 
         it('should return default (CREATED) for unknown status', () => {
-            const info = getBatchStatusInfo('UNKNOWN' as any);
+            // Test with invalid value
+            const info = getBatchStatusInfo('UNKNOWN' as unknown as Parameters<typeof getBatchStatusInfo>[0]);
             expect(info.value).toBe('CREATED');
         });
     });

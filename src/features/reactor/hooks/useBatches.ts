@@ -44,7 +44,7 @@ export interface BatchFilters {
 // Hook to fetch all batches
 export function useBatches(limit?: number) {
     return useQuery({
-        queryKey: batchKeys.list({ limit } as any),
+        queryKey: batchKeys.list({ limit } as BatchFilters),
         queryFn: () => getBatches(limit),
     });
 }

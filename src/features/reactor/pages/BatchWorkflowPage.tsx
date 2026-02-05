@@ -94,8 +94,8 @@ export default function BatchWorkflowPage() {
             } else {
                 setError('Batch not found');
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to load batch');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load batch');
         } finally {
             setLoading(false);
         }
@@ -113,8 +113,8 @@ export default function BatchWorkflowPage() {
                 await videoRef.current.play();
             }
             setCameraActive(true);
-        } catch (err: any) {
-            setError('Could not access camera: ' + err.message);
+        } catch (err) {
+            setError('Could not access camera: ' + (err instanceof Error ? err.message : 'Unknown error'));
         }
     };
 
@@ -175,7 +175,7 @@ export default function BatchWorkflowPage() {
             }
 
             // Build step data based on step type
-            const stepData: any = {
+            const stepData: Record<string, unknown> = {
                 stepNumber: nextStep,
                 notes: stepNotes || undefined,
                 photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
@@ -219,8 +219,8 @@ export default function BatchWorkflowPage() {
             setSelectedGateEntryIds([]);
 
             await loadBatch(batch.id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to complete step');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to complete step');
         } finally {
             setSaving(false);
         }
@@ -250,8 +250,8 @@ export default function BatchWorkflowPage() {
             setOutputInventoryItemId('');
 
             await loadBatch(batch.id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to record output');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to record output');
         } finally {
             setSaving(false);
         }
@@ -267,8 +267,8 @@ export default function BatchWorkflowPage() {
             setSaving(true);
             await cancelBatch(batch.id, reason, userData.id);
             navigate('/reactor');
-        } catch (err: any) {
-            setError(err.message || 'Failed to cancel batch');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to cancel batch');
         } finally {
             setSaving(false);
         }
@@ -426,7 +426,7 @@ export default function BatchWorkflowPage() {
                         {/* Step Description */}
                         {'description' in currentStepInfo && (
                             <p className="text-slate-400 mb-4 text-sm">
-                                {(currentStepInfo as any).description}
+                                {(currentStepInfo as { description?: string }).description}
                             </p>
                         )}
 
@@ -545,7 +545,7 @@ export default function BatchWorkflowPage() {
                                 </label>
                                 {'tempThreshold' in currentStepInfo && (
                                     <p className="text-xs text-yellow-400 mt-2">
-                                        ⚠️ Temperature must be at {(currentStepInfo as any).tempThreshold}°C before proceeding
+                                        ⚠️ Temperature must be at {(currentStepInfo as { tempThreshold?: number }).tempThreshold}°C before proceeding
                                     </p>
                                 )}
                             </div>

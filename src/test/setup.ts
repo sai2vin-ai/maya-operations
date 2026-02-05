@@ -15,10 +15,11 @@ Object.defineProperty(navigator, 'onLine', {
 });
 
 // Mock window event listeners
-const listeners: Record<string, Function[]> = {};
+type EventCallback = (...args: unknown[]) => void;
+const listeners: Record<string, EventCallback[]> = {};
 window.addEventListener = vi.fn((event, callback) => {
     if (!listeners[event]) listeners[event] = [];
-    listeners[event].push(callback as Function);
+    listeners[event].push(callback as EventCallback);
 });
 window.removeEventListener = vi.fn((event, callback) => {
     if (listeners[event]) {

@@ -16,9 +16,10 @@ export default function WeighbridgePage() {
     const { data: entries = [], isLoading, error, refetch } = useTodayEntries();
     const { data: pendingEntries = [] } = usePendingEntries();
 
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: unknown) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const ts = timestamp as { toDate?: () => Date };
+        const date = ts.toDate ? ts.toDate() : new Date(timestamp as string | number);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
