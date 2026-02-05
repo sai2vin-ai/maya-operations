@@ -26,6 +26,7 @@ import { SparePartCreatePage } from './pages/SparePartCreatePage';
 import { SparePartDetailPage } from './pages/SparePartDetailPage';
 import { WeighbridgePage } from './pages/WeighbridgePage';
 import { WeighbridgeEntryPage } from './pages/WeighbridgeEntryPage';
+import { RolesPage } from './pages/RolesPage';
 import './index.css';
 
 function App() {
@@ -223,6 +224,16 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}>
                   <ComingSoon title="Maintenance" />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Roles & Permissions Route */}
+            <Route
+              path="/roles"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                  <RolesPage />
                 </ProtectedRoute>
               }
             />
