@@ -232,7 +232,7 @@ function App() {
             <Route
               path="/roles"
               element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
                   <RolesPage />
                 </ProtectedRoute>
               }
