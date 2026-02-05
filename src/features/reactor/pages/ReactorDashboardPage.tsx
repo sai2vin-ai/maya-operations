@@ -39,8 +39,8 @@ export default function ReactorDashboardPage() {
             );
 
             setReactors(reactorsWithBatches);
-        } catch (err: any) {
-            setError(err.message || 'Failed to load reactors');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load reactors');
         } finally {
             setLoading(false);
         }
@@ -60,8 +60,8 @@ export default function ReactorDashboardPage() {
             setNewReactorName('');
             setShowAddReactor(false);
             await loadReactors();
-        } catch (err: any) {
-            setError(err.message || 'Failed to add reactor');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to add reactor');
         } finally {
             setAdding(false);
         }

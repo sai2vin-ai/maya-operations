@@ -57,9 +57,10 @@ export default function GateEntriesPage() {
         return ENTRY_STATUSES.find(s => s.value === status) || { label: status, color: 'gray' };
     };
 
-    const formatTime = (timestamp: any) => {
+    const formatTime = (timestamp: unknown) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const ts = timestamp as { toDate?: () => Date };
+        const date = ts.toDate ? ts.toDate() : new Date(timestamp as string | number);
         return date.toLocaleString('en-IN', {
             day: '2-digit',
             month: 'short',

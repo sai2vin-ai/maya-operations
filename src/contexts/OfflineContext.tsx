@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Offline Context
  * Provides offline/online status and sync functionality to the app
@@ -85,10 +86,11 @@ export function OfflineProvider({ children }: OfflineProviderProps) {
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
-        // Initial stats
-        refreshStats();
+        // Initial stats - schedule async to avoid setState in effect body
+        const timeoutId = setTimeout(refreshStats, 0);
 
         return () => {
+            clearTimeout(timeoutId);
             destroySyncService();
             unsubscribeSyncState();
             window.removeEventListener('online', handleOnline);

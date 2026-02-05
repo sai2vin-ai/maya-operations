@@ -15,6 +15,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import { updateReactorStatus, incrementBatchCount } from './reactorService';
 import type { Batch, BatchStatus, BatchOutput, MaterialCategory } from '../types';
+import type { FirestoreDocData } from '../../../types';
 
 const BATCHES_COLLECTION = 'batches';
 
@@ -125,7 +126,7 @@ export async function createBatch(data: CreateBatchData, createdBy: string): Pro
     const batchRef = doc(db, BATCHES_COLLECTION, batchId);
 
     // Build batch doc, only including defined values
-    const batchDoc: Record<string, any> = {
+    const batchDoc: FirestoreDocData = {
         batchNumber,
         reactorId: data.reactorId,
         status: 'CREATED',
@@ -199,7 +200,7 @@ export async function completeStep(
     if (!stepInfo) throw new Error('Invalid step number');
 
     // Build step object without undefined values
-    const newStep: Record<string, any> = {
+    const newStep: FirestoreDocData = {
         stepNumber: stepData.stepNumber,
         stepName: stepInfo.stepName,
         completedAt: Timestamp.now(),
@@ -234,7 +235,7 @@ export async function completeStep(
     }
 
     const batchRef = doc(db, BATCHES_COLLECTION, batchId);
-    const updateData: Record<string, any> = {
+    const updateData: FirestoreDocData = {
         currentStep: newCurrentStep,
         stepHistory: updatedHistory,
         status: newStatus,

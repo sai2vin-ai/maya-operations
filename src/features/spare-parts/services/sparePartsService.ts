@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import type { SparePart, SparePartTransaction, SparePartCategory, SparePartTransactionType } from '../types';
+import { getTimestampMillis, type FirestoreDocData } from '../../../types';
 
 const SPARE_PARTS_COLLECTION = 'spareParts';
 const SPARE_PARTS_TRANSACTIONS_COLLECTION = 'sparePartTransactions';
@@ -181,7 +182,7 @@ export async function updateSparePart(
 ): Promise<void> {
     const partRef = doc(db, SPARE_PARTS_COLLECTION, partId);
 
-    const updateData: Record<string, any> = {
+    const updateData: FirestoreDocData = {
         updatedAt: Timestamp.now(),
         updatedBy,
     };
@@ -197,7 +198,7 @@ export async function updateSparePart(
     if (data.location !== undefined) updateData.location = data.location || null;
     if (data.unitPrice !== undefined) updateData.unitPrice = data.unitPrice || null;
 
-    await updateDoc(partRef, updateData);
+    await updateDoc(partRef, updateData as Record<string, unknown>);
 }
 
 // Record transaction data interface
@@ -289,8 +290,8 @@ export async function getSparePartTransactions(
 
     // Sort in-memory by createdAt desc
     return transactions.sort((a, b) => {
-        const aTime = a.createdAt && (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0;
-        const bTime = b.createdAt && (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0;
+        const aTime = getTimestampMillis(a.createdAt);
+        const bTime = getTimestampMillis(b.createdAt);
         return bTime - aTime;
     });
 }

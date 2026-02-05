@@ -85,8 +85,8 @@ export default function WeighbridgeEntryPage() {
             } else {
                 setError('Entry not found');
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to load entry');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load entry');
         } finally {
             setLoading(false);
         }
@@ -123,8 +123,8 @@ export default function WeighbridgeEntryPage() {
 
             setSuccess('Entry created!');
             navigate(`/weighbridge/${id}`);
-        } catch (err: any) {
-            setError(err.message || 'Failed to create entry');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create entry');
         } finally {
             setSaving(false);
         }
@@ -152,8 +152,8 @@ export default function WeighbridgeEntryPage() {
             // Reload entry
             await loadEntry(entryId);
             setWeight('');
-        } catch (err: any) {
-            setError(err.message || 'Failed to record weight');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to record weight');
         } finally {
             setSaving(false);
         }
@@ -167,16 +167,17 @@ export default function WeighbridgeEntryPage() {
             setSaving(true);
             await cancelWeighbridgeEntry(entryId, userData.id);
             navigate('/weighbridge');
-        } catch (err: any) {
-            setError(err.message || 'Failed to cancel entry');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to cancel entry');
         } finally {
             setSaving(false);
         }
     };
 
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: unknown) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const ts = timestamp as { toDate?: () => Date };
+        const date = ts.toDate ? ts.toDate() : new Date(timestamp as string | number);
         return date.toLocaleString();
     };
 

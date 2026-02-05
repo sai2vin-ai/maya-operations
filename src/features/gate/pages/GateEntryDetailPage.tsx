@@ -64,8 +64,8 @@ export default function GateEntryDetailPage() {
             } else {
                 setError('Entry not found');
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to load entry');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load entry');
         } finally {
             setLoading(false);
         }
@@ -100,8 +100,8 @@ export default function GateEntryDetailPage() {
             setSuccess('Entry updated successfully');
             setIsEditing(false);
             await loadEntry(id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to update entry');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to update entry');
         } finally {
             setSaving(false);
         }
@@ -116,8 +116,8 @@ export default function GateEntryDetailPage() {
             await completeGateEntry(id, userData.id);
             setSuccess('Entry marked as completed');
             await loadEntry(id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to complete entry');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to complete entry');
         } finally {
             setSaving(false);
         }
@@ -135,8 +135,8 @@ export default function GateEntryDetailPage() {
             await cancelGateEntry(id, reason, userData.id);
             setSuccess('Entry cancelled');
             await loadEntry(id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to cancel entry');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to cancel entry');
         } finally {
             setSaving(false);
         }
@@ -162,9 +162,10 @@ export default function GateEntryDetailPage() {
         setSuccess(null);
     };
 
-    const formatTime = (timestamp: any) => {
+    const formatTime = (timestamp: unknown) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const ts = timestamp as { toDate?: () => Date };
+        const date = ts.toDate ? ts.toDate() : new Date(timestamp as string | number);
         return date.toLocaleString('en-IN');
     };
 

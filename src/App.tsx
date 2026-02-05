@@ -43,6 +43,10 @@ const SparePartDetailPage = lazy(() => import('./features/spare-parts/pages/Spar
 const WeighbridgePage = lazy(() => import('./features/weighbridge/pages/WeighbridgePage'));
 const WeighbridgeEntryPage = lazy(() => import('./features/weighbridge/pages/WeighbridgeEntryPage'));
 
+// Audit & Reports
+const AuditLogsPage = lazy(() => import('./features/audit/pages/AuditLogsPage'));
+const ReportsDashboardPage = lazy(() => import('./features/reports/pages/ReportsDashboardPage'));
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -276,6 +280,26 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}>
                   <WeighbridgeEntryPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Audit Logs Route */}
+            <Route
+              path="/audit"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                  <AuditLogsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Reports Route */}
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                  <ReportsDashboardPage />
                 </ProtectedRoute>
               }
             />

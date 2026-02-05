@@ -67,8 +67,8 @@ export default function InventoryItemDetailPage() {
             setEditMinStock(fetchedItem.minimumStock);
             setEditMaxStock(fetchedItem.maximumStock || '');
             setEditLocation(fetchedItem.location || '');
-        } catch (err: any) {
-            setError(err.message || 'Failed to load item');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load item');
         } finally {
             setLoading(false);
         }
@@ -98,8 +98,8 @@ export default function InventoryItemDetailPage() {
             setTransactionQty(0);
             setTransactionReason('');
             await loadItemData();
-        } catch (err: any) {
-            alert(err.message || 'Failed to record transaction');
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to record transaction');
         } finally {
             setTransactionLoading(false);
         }
@@ -122,8 +122,8 @@ export default function InventoryItemDetailPage() {
 
             setShowEditModal(false);
             await loadItemData();
-        } catch (err: any) {
-            alert(err.message || 'Failed to update item');
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to update item');
         } finally {
             setEditLoading(false);
         }
@@ -147,9 +147,10 @@ export default function InventoryItemDetailPage() {
         return { label: 'In Stock', bg: 'bg-green-500/20 text-green-400' };
     };
 
-    const formatTime = (timestamp: any) => {
+    const formatTime = (timestamp: unknown) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const ts = timestamp as { toDate?: () => Date };
+        const date = ts.toDate ? ts.toDate() : new Date(timestamp as string | number);
         return date.toLocaleString('en-IN', {
             day: '2-digit',
             month: 'short',

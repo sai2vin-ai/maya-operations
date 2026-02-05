@@ -17,6 +17,7 @@ import {
 import { db } from '../../../lib/firebase';
 import { recordTransaction } from '../../inventory/services/inventoryService';
 import type { WeighbridgeEntry, WeighbridgeEntryType, WeighbridgeEntryStatus } from '../types';
+import { getTimestampMillis, type FirestoreDocData } from '../../../types';
 
 const WEIGHBRIDGE_COLLECTION = 'weighbridgeEntries';
 
@@ -65,8 +66,8 @@ export async function getWeighbridgeEntriesByType(entryType: WeighbridgeEntryTyp
 
     // Sort in-memory by createdAt desc
     return entries.sort((a, b) => {
-        const aTime = a.createdAt && (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0;
-        const bTime = b.createdAt && (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0;
+        const aTime = getTimestampMillis(a.createdAt);
+        const bTime = getTimestampMillis(b.createdAt);
         return bTime - aTime;
     });
 }
@@ -83,8 +84,8 @@ export async function getPendingEntries(): Promise<WeighbridgeEntry[]> {
     })) as WeighbridgeEntry[];
 
     return entries.sort((a, b) => {
-        const aTime = a.createdAt && (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0;
-        const bTime = b.createdAt && (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0;
+        const aTime = getTimestampMillis(a.createdAt);
+        const bTime = getTimestampMillis(b.createdAt);
         return bTime - aTime;
     });
 }
@@ -161,7 +162,7 @@ export async function recordFirstWeight(
 ): Promise<void> {
     const entryRef = doc(db, WEIGHBRIDGE_COLLECTION, entryId);
 
-    const updateData: Record<string, any> = {
+    const updateData: FirestoreDocData = {
         status: 'FIRST_WEIGHT',
         firstWeightTime: Timestamp.now(),
         updatedAt: Timestamp.now(),
@@ -174,7 +175,7 @@ export async function recordFirstWeight(
         updateData.tareWeight = data.weight;
     }
 
-    await updateDoc(entryRef, updateData);
+    await updateDoc(entryRef, updateData as Record<string, unknown>);
 }
 
 // Record second weight and complete entry
@@ -206,7 +207,7 @@ export async function recordSecondWeightAndComplete(
 
     const netWeight = Math.abs(grossWeight - tareWeight);
 
-    const updateData: Record<string, any> = {
+    const updateData: FirestoreDocData = {
         grossWeight,
         tareWeight,
         netWeight,
@@ -222,7 +223,7 @@ export async function recordSecondWeightAndComplete(
         updateData.tareWeight = data.weight;
     }
 
-    await updateDoc(entryRef, updateData);
+    await updateDoc(entryRef, updateData as Record<string, unknown>);
 
     // Update inventory if linked to an inventory item
     if (entry.inventoryItemId) {
@@ -294,8 +295,8 @@ export async function getTodayEntries(): Promise<WeighbridgeEntry[]> {
     })) as WeighbridgeEntry[];
 
     return entries.sort((a, b) => {
-        const aTime = a.createdAt && (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0;
-        const bTime = b.createdAt && (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0;
+        const aTime = getTimestampMillis(a.createdAt);
+        const bTime = getTimestampMillis(b.createdAt);
         return bTime - aTime;
     });
 }

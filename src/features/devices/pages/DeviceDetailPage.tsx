@@ -56,8 +56,8 @@ export default function DeviceDetailPage() {
             } else {
                 setError('Device not found');
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to load device');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load device');
         } finally {
             setLoading(false);
         }
@@ -81,8 +81,8 @@ export default function DeviceDetailPage() {
             setSuccess('Device updated successfully');
             setIsEditing(false);
             await loadDevice(id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to update device');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to update device');
         } finally {
             setSaving(false);
         }
@@ -97,8 +97,8 @@ export default function DeviceDetailPage() {
             await revokeDevice(id);
             setSuccess('Device revoked');
             await loadDevice(id);
-        } catch (err: any) {
-            setError(err.message || 'Failed to revoke device');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to revoke device');
         } finally {
             setSaving(false);
         }

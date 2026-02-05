@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import type { Reactor, ReactorStatus } from '../types';
+import type { FirestoreDocData } from '../../../types';
 
 const REACTORS_COLLECTION = 'reactors';
 
@@ -83,7 +84,7 @@ export async function updateReactorStatus(
 ): Promise<void> {
     const reactorRef = doc(db, REACTORS_COLLECTION, reactorId);
 
-    const updateData: any = {
+    const updateData: FirestoreDocData = {
         status,
         updatedAt: Timestamp.now(),
     };
@@ -96,7 +97,7 @@ export async function updateReactorStatus(
         updateData.updatedBy = updatedBy;
     }
 
-    await updateDoc(reactorRef, updateData);
+    await updateDoc(reactorRef, updateData as Record<string, unknown>);
 }
 
 // Set reactor to maintenance

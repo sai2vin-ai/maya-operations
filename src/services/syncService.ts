@@ -46,7 +46,7 @@ async function processOperation(operation: PendingOperation): Promise<void> {
     const docRef = doc(db, operation.collection, operation.documentId);
 
     switch (operation.type) {
-        case 'CREATE':
+        case 'CREATE': {
             // Check if document already exists (conflict resolution)
             const existingDoc = await getDoc(docRef);
             if (existingDoc.exists()) {
@@ -72,8 +72,9 @@ async function processOperation(operation: PendingOperation): Promise<void> {
                 });
             }
             break;
+        }
 
-        case 'UPDATE':
+        case 'UPDATE': {
             // Check if document still exists
             const docToUpdate = await getDoc(docRef);
             if (docToUpdate.exists()) {
@@ -92,14 +93,16 @@ async function processOperation(operation: PendingOperation): Promise<void> {
                 // If existing is newer, skip (already updated by someone else)
             }
             break;
+        }
 
-        case 'DELETE':
+        case 'DELETE': {
             // Check if document exists before deleting
             const docToDelete = await getDoc(docRef);
             if (docToDelete.exists()) {
                 await deleteDoc(docRef);
             }
             break;
+        }
     }
 }
 
@@ -143,9 +146,9 @@ export async function syncPendingOperations(): Promise<{
                 await removeFromQueue(operation.id);
                 synced++;
                 console.log(`Synced operation: ${operation.id}`);
-            } catch (error: any) {
+            } catch (error) {
                 console.error(`Failed to sync operation ${operation.id}:`, error);
-                await updateOperationStatus(operation.id, 'FAILED', error.message);
+                await updateOperationStatus(operation.id, 'FAILED', error instanceof Error ? error.message : 'Unknown error');
                 failed++;
             }
         }

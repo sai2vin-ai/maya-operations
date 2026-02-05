@@ -56,9 +56,9 @@ export default function DeviceCreatePage() {
 
             await createDevice(formData, currentUser?.id || '');
             navigate('/devices');
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error creating device:', err);
-            setError(err.message || 'Failed to register device');
+            setError(err instanceof Error ? err.message : 'Failed to register device');
         } finally {
             setSaving(false);
         }

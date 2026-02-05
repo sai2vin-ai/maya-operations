@@ -353,6 +353,21 @@ export interface Shift extends AuditFields {
 }
 
 // ============================================
+// FIRESTORE HELPERS
+// ============================================
+
+// Helper type for Firestore document data (building documents with optional fields)
+export type FirestoreDocData = Record<string, unknown>;
+
+// Helper to safely get timestamp millis
+export function getTimestampMillis(ts: unknown): number {
+    if (ts && typeof ts === 'object' && 'toMillis' in ts && typeof (ts as { toMillis: () => number }).toMillis === 'function') {
+        return (ts as { toMillis: () => number }).toMillis();
+    }
+    return 0;
+}
+
+// ============================================
 // OFFLINE SYNC TYPES
 // ============================================
 

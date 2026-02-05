@@ -14,6 +14,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import type { GateEntry, EntryType, MaterialCategory, GateEntryStatus } from '../types';
+import type { FirestoreDocData } from '../../../types';
 
 const GATE_ENTRIES_COLLECTION = 'gateEntries';
 
@@ -154,7 +155,7 @@ export async function createGateEntry(data: CreateGateEntryData, createdBy: stri
     }
 
     // Build entry doc, only including defined values
-    const entryDoc: Record<string, any> = {
+    const entryDoc: FirestoreDocData = {
         entryNumber,
         entryType: data.entryType,
         vehicleNumber: data.vehicleNumber.toUpperCase(),
@@ -212,7 +213,7 @@ export async function updateGateEntry(
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
 
     // Build update object, only including defined values
-    const updateData: Record<string, any> = {
+    const updateData: FirestoreDocData = {
         updatedAt: Timestamp.now(),
         updatedBy,
     };

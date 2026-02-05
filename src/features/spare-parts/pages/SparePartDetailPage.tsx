@@ -75,8 +75,8 @@ export default function SparePartDetailPage() {
                 setError('Spare part not found');
             }
             setTransactions(fetchedTransactions);
-        } catch (err: any) {
-            setError(err.message || 'Failed to load spare part');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load spare part');
         } finally {
             setLoading(false);
         }
@@ -103,8 +103,8 @@ export default function SparePartDetailPage() {
             setSuccess('Spare part updated!');
             setEditing(false);
             await loadPart(partId);
-        } catch (err: any) {
-            setError(err.message || 'Failed to update spare part');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to update spare part');
         } finally {
             setSaving(false);
         }
@@ -129,8 +129,8 @@ export default function SparePartDetailPage() {
             setTxnQuantity('');
             setTxnReason('');
             await loadPart(partId);
-        } catch (err: any) {
-            setError(err.message || 'Failed to record receipt');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to record receipt');
         } finally {
             setSaving(false);
         }
@@ -161,8 +161,8 @@ export default function SparePartDetailPage() {
             setTxnMachineName('');
             setTxnIssuedTo('');
             await loadPart(partId);
-        } catch (err: any) {
-            setError(err.message || 'Failed to record issue');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to record issue');
         } finally {
             setSaving(false);
         }
@@ -179,9 +179,10 @@ export default function SparePartDetailPage() {
         return { label: 'In Stock', color: 'bg-green-500/20 text-green-400 border-green-500' };
     };
 
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: unknown) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const ts = timestamp as { toDate?: () => Date };
+        const date = ts.toDate ? ts.toDate() : new Date(timestamp as string | number);
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
