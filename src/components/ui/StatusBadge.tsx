@@ -11,6 +11,9 @@ const statusStyles: Record<string, string> = {
     COMPLETED: 'status-badge status-active',
     CANCELLED: 'status-badge status-inactive',
     IN_PROGRESS: 'status-badge bg-blue-500/20 text-blue-400 border-blue-500/50',
+    OPEN: 'status-badge bg-blue-500/20 text-blue-400 border-blue-500/50',
+    RESOLVED: 'status-badge status-active',
+    CLOSED: 'status-badge status-inactive',
 };
 
 const roleStyles: Record<string, string> = {

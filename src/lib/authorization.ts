@@ -24,7 +24,9 @@ type PermissionAction =
     | 'webhooks:manage'
     | 'spare_parts:create'
     | 'spare_parts:update'
-    | 'spare_parts:transact';
+    | 'spare_parts:transact'
+    | 'bug_reports:create'
+    | 'bug_reports:manage';
 
 const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
     SUPER_ADMIN: [
@@ -36,6 +38,7 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'weighbridge:create', 'weighbridge:update',
         'webhooks:manage',
         'spare_parts:create', 'spare_parts:update', 'spare_parts:transact',
+        'bug_reports:create', 'bug_reports:manage',
     ],
     PLANT_MANAGER: [
         'users:create', 'users:update',
@@ -44,30 +47,39 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'inventory:create', 'inventory:update', 'inventory:transact',
         'weighbridge:create', 'weighbridge:update',
         'spare_parts:create', 'spare_parts:update', 'spare_parts:transact',
+        'bug_reports:create', 'bug_reports:manage',
     ],
     SHIFT_SUPERVISOR: [
         'gate:create', 'gate:update', 'gate:cancel',
         'batch:create', 'batch:complete_step', 'batch:cancel',
         'weighbridge:create', 'weighbridge:update',
+        'bug_reports:create',
     ],
     GATE_OPERATOR: [
         'gate:create', 'gate:update',
         'weighbridge:create', 'weighbridge:update',
+        'bug_reports:create',
     ],
     WEIGHBRIDGE_OPERATOR: [
         'weighbridge:create', 'weighbridge:update',
+        'bug_reports:create',
     ],
     REACTOR_OPERATOR: [
         'batch:create', 'batch:complete_step',
+        'bug_reports:create',
     ],
     STORES_KEEPER: [
         'inventory:create', 'inventory:update', 'inventory:transact',
         'spare_parts:create', 'spare_parts:update', 'spare_parts:transact',
+        'bug_reports:create',
     ],
     MAINTENANCE_TECH: [
         'spare_parts:transact',
+        'bug_reports:create',
     ],
-    VIEWER: [],
+    VIEWER: [
+        'bug_reports:create',
+    ],
 };
 
 /**

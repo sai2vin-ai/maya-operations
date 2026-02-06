@@ -63,6 +63,7 @@ export default function DashboardPage() {
             { id: 'maintenance', name: 'Maintenance', icon: '🔧', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'], color: 'from-yellow-500 to-yellow-600' },
             { id: 'audit', name: 'Audit Logs', icon: '📋', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], color: 'from-slate-500 to-slate-600' },
             { id: 'reports', name: 'Reports', icon: '📈', roles: ['SUPER_ADMIN'], color: 'from-red-500 to-red-600' },
+            { id: 'bug-reports', name: 'Bug Reports', icon: '🐛', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], color: 'from-rose-500 to-rose-600' },
         ];
 
         return allModules.filter(module =>
@@ -91,7 +92,31 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        {/* Report Bug Button */}
+                        <button
+                            onClick={() => navigate('/bug-reports/new')}
+                            className="btn-secondary flex items-center gap-1.5 text-sm"
+                            title="Report a Bug"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <span className="hidden sm:inline">Report Bug</span>
+                        </button>
+
+                        {/* Guide Button */}
+                        <button
+                            onClick={() => navigate('/guide')}
+                            className="btn-secondary flex items-center gap-1.5 text-sm"
+                            title="User Guide"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            <span className="hidden sm:inline">Guide</span>
+                        </button>
+
                         {/* User Info */}
                         <div className="text-right hidden sm:block">
                             <p className="text-foreground font-medium">{userData?.name || 'User'}</p>

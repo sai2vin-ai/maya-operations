@@ -51,6 +51,14 @@ const ReportsDashboardPage = lazy(() => import('./features/reports/pages/Reports
 const WebhooksPage = lazy(() => import('./features/webhooks/pages/WebhooksPage'));
 const WebhookCreatePage = lazy(() => import('./features/webhooks/pages/WebhookCreatePage'));
 
+// Bug Reports
+const BugReportCreatePage = lazy(() => import('./features/bug-reports/pages/BugReportCreatePage'));
+const BugReportsPage = lazy(() => import('./features/bug-reports/pages/BugReportsPage'));
+const BugReportDetailPage = lazy(() => import('./features/bug-reports/pages/BugReportDetailPage'));
+
+// User Guide
+const UserGuidePage = lazy(() => import('./pages/UserGuidePage'));
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -323,6 +331,42 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
                   <WebhookCreatePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Bug Reports Routes */}
+            <Route
+              path="/bug-reports/new"
+              element={
+                <ProtectedRoute>
+                  <BugReportCreatePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bug-reports"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                  <BugReportsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bug-reports/:id"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                  <BugReportDetailPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* User Guide Route */}
+            <Route
+              path="/guide"
+              element={
+                <ProtectedRoute>
+                  <UserGuidePage />
                 </ProtectedRoute>
               }
             />
