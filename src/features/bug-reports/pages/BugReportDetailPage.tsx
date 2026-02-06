@@ -41,7 +41,7 @@ export default function BugReportDetailPage() {
 
     if (!report) {
         return (
-            <div className="min-h-screen page-bg">
+            <div>
                 <PageHeader title="Bug Report Not Found" backTo="/bug-reports" />
                 <div className="px-4 py-8 text-center text-foreground-muted">
                     This bug report does not exist or has been removed.
@@ -58,7 +58,7 @@ export default function BugReportDetailPage() {
         : null;
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title={report.reportNumber}
                 subtitle={report.title}

@@ -37,7 +37,7 @@ export default function SparePartsPage() {
     const lowStockCount = allParts.filter(p => p.currentStock <= p.minimumStock).length;
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Spare Parts"
                 subtitle={`${allParts.length} parts | ${lowStockCount} low stock`}

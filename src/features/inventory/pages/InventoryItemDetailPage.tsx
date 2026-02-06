@@ -40,6 +40,7 @@ export default function InventoryItemDetailPage() {
         if (id) {
             loadItemData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadItemData = async () => {
@@ -162,7 +163,7 @@ export default function InventoryItemDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen page-bg flex items-center justify-center">
+            <div className="flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -170,7 +171,7 @@ export default function InventoryItemDetailPage() {
 
     if (error || !item) {
         return (
-            <div className="min-h-screen page-bg flex items-center justify-center">
+            <div className="flex items-center justify-center">
                 <div className="glass-card p-8 text-center max-w-md">
                     <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -190,7 +191,7 @@ export default function InventoryItemDetailPage() {
     const stockStatus = getStockStatus(item);
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center justify-between">

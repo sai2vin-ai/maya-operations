@@ -59,7 +59,7 @@ export default function BugReportsPage() {
     ];
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Bug Reports"
                 subtitle={`${reports?.length || 0} total reports`}

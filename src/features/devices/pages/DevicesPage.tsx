@@ -48,7 +48,7 @@ export default function DevicesPage() {
     };
 
     return (
-        <div className="min-h-screen page-bg">
+        <div className="">
             <PageHeader
                 title="Device Management"
                 subtitle={`${devices.length} devices registered`}

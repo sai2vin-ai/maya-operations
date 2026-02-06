@@ -74,7 +74,7 @@ export default function WebhooksPage() {
     }
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Webhooks"
                 subtitle="Manage webhook integrations for external systems"

@@ -160,7 +160,7 @@ export default function GateEntryCreatePage() {
     };
 
     return (
-        <div className="min-h-screen page-bg">
+        <div className="">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center gap-3">

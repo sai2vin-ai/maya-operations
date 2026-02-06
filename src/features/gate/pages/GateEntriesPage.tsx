@@ -96,7 +96,7 @@ export default function GateEntriesPage() {
     };
 
     return (
-        <div className="min-h-screen page-bg">
+        <div className="">
             <PageHeader
                 title="Gate Operations"
                 subtitle={`${entries.length} entries total`}

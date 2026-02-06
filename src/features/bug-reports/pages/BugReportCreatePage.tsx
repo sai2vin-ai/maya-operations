@@ -89,7 +89,7 @@ export default function BugReportCreatePage() {
     }
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Report a Bug"
                 subtitle="Help us improve by reporting issues you encounter"

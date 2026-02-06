@@ -24,7 +24,7 @@ export function PageLayout({
     padding = true,
 }: PageLayoutProps) {
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <div className={`${maxWidthStyles[maxWidth]} mx-auto ${padding ? 'p-4' : ''} ${className}`}>
                 {children}
             </div>

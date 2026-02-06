@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { OfflineProvider } from './contexts/OfflineContext';
+import { SidebarProvider } from './contexts/SidebarContext';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
+import { AppLayout } from './components/layout';
 import { SyncStatusIndicator, OfflineBanner } from './components/SyncStatus';
 import { LoadingSpinner, ToastProvider } from './components/ui';
 import { queryClient } from './lib/queryClient';
@@ -67,317 +69,93 @@ function App() {
           <OfflineProvider>
             <ToastProvider>
             <OfflineBanner />
+            <SidebarProvider>
             <Suspense fallback={<LoadingSpinner fullScreen message="Loading..." />}>
               <Routes>
-            {/* Public Routes */}
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <LoginPage />
-                </PublicRoute>
-              }
-            />
+                {/* Public Routes (no sidebar/topbar) */}
+                <Route
+                  path="/login"
+                  element={
+                    <PublicRoute>
+                      <LoginPage />
+                    </PublicRoute>
+                  }
+                />
 
-            {/* Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
+                {/* All protected routes wrapped in AppLayout */}
+                <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                  {/* Dashboard */}
+                  <Route path="/dashboard" element={<DashboardPage />} />
 
-            {/* User Management Routes */}
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
-                  <UsersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/new"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
-                  <UserCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/:id"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
-                  <UserDetailPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* User Management */}
+                  <Route path="/users" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UsersPage /></ProtectedRoute>} />
+                  <Route path="/users/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UserCreatePage /></ProtectedRoute>} />
+                  <Route path="/users/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UserDetailPage /></ProtectedRoute>} />
 
-            {/* Device Management Routes */}
-            <Route
-              path="/devices"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <DevicesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/devices/new"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <DeviceCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/devices/:id"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <DeviceDetailPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Device Management */}
+                  <Route path="/devices" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><DevicesPage /></ProtectedRoute>} />
+                  <Route path="/devices/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><DeviceCreatePage /></ProtectedRoute>} />
+                  <Route path="/devices/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><DeviceDetailPage /></ProtectedRoute>} />
 
-            {/* Gate Operations Routes */}
-            <Route
-              path="/gate"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}>
-                  <GateEntriesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/gate/new"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}>
-                  <GateEntryCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/gate/:id"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}>
-                  <GateEntryDetailPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Gate Operations */}
+                  <Route path="/gate" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntriesPage /></ProtectedRoute>} />
+                  <Route path="/gate/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntryCreatePage /></ProtectedRoute>} />
+                  <Route path="/gate/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntryDetailPage /></ProtectedRoute>} />
 
-            {/* Reactor Operations Routes */}
-            <Route
-              path="/reactor"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}>
-                  <ReactorDashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reactor/:reactorId/new-batch"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}>
-                  <BatchCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/batch/:batchId"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}>
-                  <BatchWorkflowPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reactor/output"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}>
-                  <ReactorOutputPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Reactor Operations */}
+                  <Route path="/reactor" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><ReactorDashboardPage /></ProtectedRoute>} />
+                  <Route path="/reactor/:reactorId/new-batch" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchCreatePage /></ProtectedRoute>} />
+                  <Route path="/batch/:batchId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchWorkflowPage /></ProtectedRoute>} />
+                  <Route path="/reactor/output" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><ReactorOutputPage /></ProtectedRoute>} />
 
-            <Route
-              path="/inventory"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}>
-                  <InventoryPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/inventory/new"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}>
-                  <InventoryItemCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/inventory/:id"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}>
-                  <InventoryItemDetailPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Inventory */}
+                  <Route path="/inventory" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><InventoryPage /></ProtectedRoute>} />
+                  <Route path="/inventory/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><InventoryItemCreatePage /></ProtectedRoute>} />
+                  <Route path="/inventory/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><InventoryItemDetailPage /></ProtectedRoute>} />
 
-            {/* Spare Parts Routes */}
-            <Route
-              path="/spare-parts"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}>
-                  <SparePartsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/spare-parts/new"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}>
-                  <SparePartCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/spare-parts/:partId"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}>
-                  <SparePartDetailPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Spare Parts */}
+                  <Route path="/spare-parts" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}><SparePartsPage /></ProtectedRoute>} />
+                  <Route path="/spare-parts/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><SparePartCreatePage /></ProtectedRoute>} />
+                  <Route path="/spare-parts/:partId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}><SparePartDetailPage /></ProtectedRoute>} />
 
-            <Route
-              path="/maintenance"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}>
-                  <ComingSoon title="Maintenance" />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Maintenance */}
+                  <Route path="/maintenance" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><ComingSoon title="Maintenance" /></ProtectedRoute>} />
 
-            {/* Roles & Permissions Route */}
-            <Route
-              path="/roles"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <RolesPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Roles & Permissions */}
+                  <Route path="/roles" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><RolesPage /></ProtectedRoute>} />
 
-            {/* Weighbridge Routes */}
-            <Route
-              path="/weighbridge"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}>
-                  <WeighbridgePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/weighbridge/new"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}>
-                  <WeighbridgeEntryPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/weighbridge/:entryId"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}>
-                  <WeighbridgeEntryPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Weighbridge */}
+                  <Route path="/weighbridge" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgePage /></ProtectedRoute>} />
+                  <Route path="/weighbridge/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgeEntryPage /></ProtectedRoute>} />
+                  <Route path="/weighbridge/:entryId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgeEntryPage /></ProtectedRoute>} />
 
-            {/* Audit Logs Route */}
-            <Route
-              path="/audit"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
-                  <AuditLogsPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Audit Logs */}
+                  <Route path="/audit" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><AuditLogsPage /></ProtectedRoute>} />
 
-            {/* Reports Route */}
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <ReportsDashboardPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Reports */}
+                  <Route path="/reports" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><ReportsDashboardPage /></ProtectedRoute>} />
 
-            {/* Webhooks Routes */}
-            <Route
-              path="/webhooks"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <WebhooksPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/webhooks/new"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <WebhookCreatePage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Webhooks */}
+                  <Route path="/webhooks" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><WebhooksPage /></ProtectedRoute>} />
+                  <Route path="/webhooks/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><WebhookCreatePage /></ProtectedRoute>} />
 
-            {/* Bug Reports Routes */}
-            <Route
-              path="/bug-reports/new"
-              element={
-                <ProtectedRoute>
-                  <BugReportCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/bug-reports"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
-                  <BugReportsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/bug-reports/:id"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
-                  <BugReportDetailPage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Bug Reports */}
+                  <Route path="/bug-reports/new" element={<BugReportCreatePage />} />
+                  <Route path="/bug-reports" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><BugReportsPage /></ProtectedRoute>} />
+                  <Route path="/bug-reports/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><BugReportDetailPage /></ProtectedRoute>} />
 
-            {/* User Guide Route */}
-            <Route
-              path="/guide"
-              element={
-                <ProtectedRoute>
-                  <UserGuidePage />
-                </ProtectedRoute>
-              }
-            />
+                  {/* User Guide */}
+                  <Route path="/guide" element={<UserGuidePage />} />
+                </Route>
 
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                {/* Redirect root to dashboard */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-            {/* 404 - Not Found */}
-            <Route path="*" element={<NotFound />} />
+                {/* 404 - Not Found */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            </SidebarProvider>
             <SyncStatusIndicator />
             </ToastProvider>
           </OfflineProvider>
@@ -390,7 +168,7 @@ function App() {
 // Coming Soon placeholder component
 function ComingSoon({ title }: { title: string }) {
   return (
-    <div className="min-h-screen page-bg flex items-center justify-center">
+    <div className="flex items-center justify-center min-h-[60vh]">
       <div className="glass-card p-8 text-center max-w-md">
         <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -47,7 +47,7 @@ export default function UserGuidePage() {
     };
 
     return (
-        <div className="min-h-screen page-bg">
+        <div className="">
             <PageHeader
                 title="User Guide"
                 subtitle={`Guide for ${userData?.role?.replace(/_/g, ' ') || 'your role'}`}

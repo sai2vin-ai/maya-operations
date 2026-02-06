@@ -134,7 +134,7 @@ export default function WebhookCreatePage() {
     }
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Create Webhook"
                 subtitle="Set up a new webhook integration"

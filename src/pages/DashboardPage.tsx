@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
+
 // Key for storing recent modules in localStorage
 const RECENT_MODULES_KEY = 'recent-modules';
 const MAX_RECENT_MODULES = 3;
@@ -28,19 +29,10 @@ function saveRecentModule(moduleId: string): void {
 }
 
 export default function DashboardPage() {
-    const { userData, logout } = useAuth();
+    const { userData } = useAuth();
     const navigate = useNavigate();
     // Use lazy initializer to load recent modules from localStorage
     const [recentModules] = useState<string[]>(getRecentModules);
-
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate('/login');
-        } catch (err) {
-            console.error('Logout failed:', err);
-        }
-    };
 
     const handleModuleClick = (moduleId: string) => {
         saveRecentModule(moduleId);
@@ -74,75 +66,10 @@ export default function DashboardPage() {
     const modules = getRoleBasedModules();
 
     return (
-        <div className="min-h-screen page-bg relative overflow-hidden">
+        <div className="relative overflow-hidden">
             {/* Ambient background glows */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/6 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Header */}
-            <header className="glass-card-elevated m-4 p-4 relative z-10">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25">
-                            <span className="text-white font-bold text-xl">P</span>
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-foreground">Pyrolysis Ops</h1>
-                            <p className="text-sm text-foreground-muted">Plant Management System</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 sm:gap-4">
-                        {/* Report Bug Button */}
-                        <button
-                            onClick={() => navigate('/bug-reports/new')}
-                            className="btn-secondary flex items-center gap-1.5 text-sm"
-                            title="Report a Bug"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                            </svg>
-                            <span className="hidden sm:inline">Report Bug</span>
-                        </button>
-
-                        {/* Guide Button */}
-                        <button
-                            onClick={() => navigate('/guide')}
-                            className="btn-secondary flex items-center gap-1.5 text-sm"
-                            title="User Guide"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                            <span className="hidden sm:inline">Guide</span>
-                        </button>
-
-                        {/* User Info */}
-                        <div className="text-right hidden sm:block">
-                            <p className="text-foreground font-medium">{userData?.name || 'User'}</p>
-                            <p className="text-xs text-foreground-muted uppercase tracking-wider">{userData?.role?.replace('_', ' ') || 'Loading...'}</p>
-                        </div>
-
-                        {/* Avatar */}
-                        <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center ring-2 ring-slate-600/50">
-                            <span className="text-white font-medium">
-                                {userData?.name?.charAt(0).toUpperCase() || 'U'}
-                            </span>
-                        </div>
-
-                        {/* Logout Button */}
-                        <button
-                            onClick={handleLogout}
-                            className="btn-secondary flex items-center gap-2"
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            <span className="hidden sm:inline">Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
 
             {/* Main Content */}
             <main className="p-4 relative z-10">

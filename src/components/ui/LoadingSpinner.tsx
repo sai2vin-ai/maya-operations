@@ -20,7 +20,7 @@ export function LoadingSpinner({ size = 'md', message, fullScreen = false }: Loa
 
     if (fullScreen) {
         return (
-            <div className="min-h-screen page-bg flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 {spinner}
             </div>
         );

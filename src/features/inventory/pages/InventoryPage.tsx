@@ -122,7 +122,7 @@ export default function InventoryPage() {
     const finishedProducts = finishedProductItems.length;
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Inventory"
                 subtitle={`${totalItems} items tracked`}

@@ -73,7 +73,7 @@ export default function ReportsDashboardPage() {
     };
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Reports Dashboard"
                 subtitle="Operations summary and analytics"

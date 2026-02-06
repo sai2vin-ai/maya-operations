@@ -46,7 +46,7 @@ export default function UsersPage() {
     };
 
     return (
-        <div className="min-h-screen page-bg">
+        <div className="">
             <PageHeader
                 title="User Management"
                 subtitle={`${users.length} users total`}

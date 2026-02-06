@@ -51,7 +51,7 @@ export default function WeighbridgePage() {
     const totalFgOutWeight = todayFgOut.reduce((sum: number, e: WeighbridgeEntry) => sum + (e.netWeight || 0), 0);
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Weighbridge"
                 subtitle={`Today's entries | ${entries.length} total`}

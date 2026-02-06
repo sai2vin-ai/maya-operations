@@ -80,7 +80,7 @@ export default function AuditLogsPage() {
     const hasActiveFilters = collection || action || searchQuery || startDate || endDate;
 
     return (
-        <div className="min-h-screen page-bg">
+        <div>
             <PageHeader
                 title="Audit Logs"
                 subtitle={`${logs.length} entries${hasActiveFilters ? ' (filtered)' : ''}`}
