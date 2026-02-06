@@ -19,7 +19,12 @@ import { getTimestampMillis, type FirestoreDocData } from '../../../types';
 const INVENTORY_ITEMS_COLLECTION = 'inventoryItems';
 const INVENTORY_TRANSACTIONS_COLLECTION = 'inventoryTransactions';
 
-// Generate item code like INV-RM-0001
+/**
+ * Generates a sequential inventory item code based on category (e.g., "INV-RM-0001").
+ * Queries existing items to determine the next serial for the given category prefix.
+ * @param category - The inventory category used to determine the code prefix
+ * @returns The next available item code
+ */
 async function generateItemCode(category: InventoryCategory): Promise<string> {
     const categoryPrefix: Record<InventoryCategory, string> = {
         'RAW_MATERIAL': 'RM',
@@ -51,7 +56,11 @@ async function generateItemCode(category: InventoryCategory): Promise<string> {
     return `${prefix}-${String(nextNumber).padStart(4, '0')}`;
 }
 
-// Generate transaction ID like TXN-2026-0001
+/**
+ * Generates a sequential transaction ID in the format TXN-{year}-{serial}.
+ * Queries existing transactions to determine the next serial for the current year.
+ * @returns The next available transaction ID (e.g., "TXN-2026-00001")
+ */
 async function generateTransactionId(): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `TXN-${year}`;
@@ -81,7 +90,11 @@ async function generateTransactionId(): Promise<string> {
 // INVENTORY ITEM OPERATIONS
 // ============================================
 
-// Get all inventory items
+/**
+ * Fetches inventory items ordered by code, with an optional limit.
+ * @param limitCount - Maximum number of items to return (default: 100)
+ * @returns Array of inventory items sorted by code ascending
+ */
 export async function getInventoryItems(limitCount: number = 100): Promise<InventoryItem[]> {
     const itemsRef = collection(db, INVENTORY_ITEMS_COLLECTION);
     const q = query(itemsRef, orderBy('code', 'asc'), limit(limitCount));
@@ -93,7 +106,11 @@ export async function getInventoryItems(limitCount: number = 100): Promise<Inven
     })) as InventoryItem[];
 }
 
-// Get inventory items by category - simplified to avoid composite index
+/**
+ * Fetches inventory items filtered by category, sorted by code in memory.
+ * @param category - The inventory category to filter by
+ * @returns Array of matching items sorted by code ascending
+ */
 export async function getInventoryItemsByCategory(category: InventoryCategory): Promise<InventoryItem[]> {
     const itemsRef = collection(db, INVENTORY_ITEMS_COLLECTION);
     const q = query(itemsRef, where('category', '==', category));
@@ -108,7 +125,11 @@ export async function getInventoryItemsByCategory(category: InventoryCategory): 
     return items.sort((a, b) => a.code.localeCompare(b.code));
 }
 
-// Get inventory item by ID
+/**
+ * Fetches a single inventory item by its document ID.
+ * @param itemId - The Firestore document ID
+ * @returns The inventory item, or null if not found
+ */
 export async function getInventoryItemById(itemId: string): Promise<InventoryItem | null> {
     const itemRef = doc(db, INVENTORY_ITEMS_COLLECTION, itemId);
     const snapshot = await getDoc(itemRef);
@@ -120,13 +141,12 @@ export async function getInventoryItemById(itemId: string): Promise<InventoryIte
     return { id: snapshot.id, ...snapshot.data() } as InventoryItem;
 }
 
-// Get low stock items (below minimum)
+/** Returns all inventory items whose current stock is at or below their minimum threshold. */
 export async function getLowStockItems(): Promise<InventoryItem[]> {
     const items = await getInventoryItems();
     return items.filter(item => item.currentStock <= item.minimumStock);
 }
 
-// Create inventory item
 export interface CreateInventoryItemData {
     name: string;
     category: InventoryCategory;
@@ -137,6 +157,13 @@ export interface CreateInventoryItemData {
     initialStock?: number;
 }
 
+/**
+ * Creates a new inventory item with an auto-generated code. If initial stock is provided,
+ * also records a RECEIPT transaction for the opening balance.
+ * @param data - Item data including name, category, unit, and stock thresholds
+ * @param createdBy - UID of the user creating the item
+ * @returns The newly created item's document ID
+ */
 export async function createInventoryItem(
     data: CreateInventoryItemData,
     createdBy: string
@@ -176,7 +203,6 @@ export async function createInventoryItem(
     return itemId;
 }
 
-// Update inventory item
 export interface UpdateInventoryItemData {
     name?: string;
     unit?: string;
@@ -185,6 +211,12 @@ export interface UpdateInventoryItemData {
     location?: string;
 }
 
+/**
+ * Updates an inventory item's metadata (name, unit, stock thresholds, location).
+ * @param itemId - The item document ID to update
+ * @param data - Partial item data to merge
+ * @param updatedBy - UID of the user performing the update
+ */
 export async function updateInventoryItem(
     itemId: string,
     data: UpdateInventoryItemData,
@@ -210,7 +242,12 @@ export async function updateInventoryItem(
 // INVENTORY TRANSACTION OPERATIONS
 // ============================================
 
-// Get transactions for an item - simplified to avoid composite index
+/**
+ * Fetches transactions for a specific inventory item, sorted newest first in memory.
+ * @param itemId - The inventory item document ID to filter by
+ * @param limitCount - Maximum number of transactions to return (default: 50)
+ * @returns Array of transactions sorted by creation time descending
+ */
 export async function getItemTransactions(itemId: string, limitCount: number = 50): Promise<InventoryTransaction[]> {
     const txnRef = collection(db, INVENTORY_TRANSACTIONS_COLLECTION);
     const q = query(
@@ -233,7 +270,11 @@ export async function getItemTransactions(itemId: string, limitCount: number = 5
     });
 }
 
-// Get recent transactions
+/**
+ * Fetches the most recent inventory transactions across all items.
+ * @param limitCount - Maximum number of transactions to return (default: 50)
+ * @returns Array of transactions sorted newest first
+ */
 export async function getRecentTransactions(limitCount: number = 50): Promise<InventoryTransaction[]> {
     const txnRef = collection(db, INVENTORY_TRANSACTIONS_COLLECTION);
     const q = query(txnRef, orderBy('createdAt', 'desc'), limit(limitCount));
@@ -245,7 +286,6 @@ export async function getRecentTransactions(limitCount: number = 50): Promise<In
     })) as InventoryTransaction[];
 }
 
-// Record transaction (with atomic stock update)
 export interface RecordTransactionData {
     itemId: string;
     transactionType: TransactionType;
@@ -256,6 +296,14 @@ export interface RecordTransactionData {
     approvedBy?: string;
 }
 
+/**
+ * Records an inventory transaction and atomically updates the item's stock level using a
+ * Firestore transaction. Issues reduce stock; receipts increase it. Throws if the resulting
+ * balance would be negative.
+ * @param data - Transaction data including item ID, type, quantity, and optional reference
+ * @param recordedBy - UID of the user recording the transaction
+ * @returns The newly created transaction ID
+ */
 export async function recordTransaction(
     data: RecordTransactionData,
     recordedBy: string
@@ -319,7 +367,14 @@ export async function recordTransaction(
     return txnId;
 }
 
-// Receipt from gate entry (raw materials in)
+/**
+ * Records a RECEIPT transaction for raw materials received via a gate entry.
+ * @param itemId - The inventory item ID to receive into
+ * @param quantity - The quantity received
+ * @param gateEntryId - The linked gate entry document ID
+ * @param recordedBy - UID of the user recording the receipt
+ * @returns The newly created transaction ID
+ */
 export async function receiptFromGateEntry(
     itemId: string,
     quantity: number,
@@ -336,7 +391,14 @@ export async function receiptFromGateEntry(
     }, recordedBy);
 }
 
-// Issue to batch (finished products out)
+/**
+ * Records an ISSUE transaction for materials consumed by a batch.
+ * @param itemId - The inventory item ID to issue from
+ * @param quantity - The quantity issued
+ * @param batchId - The linked batch document ID
+ * @param recordedBy - UID of the user recording the issue
+ * @returns The newly created transaction ID
+ */
 export async function issueToBatch(
     itemId: string,
     quantity: number,
@@ -353,7 +415,14 @@ export async function issueToBatch(
     }, recordedBy);
 }
 
-// Receipt from batch (products created)
+/**
+ * Records a RECEIPT transaction for products created by a batch.
+ * @param itemId - The inventory item ID to receive into
+ * @param quantity - The quantity produced
+ * @param batchId - The linked batch document ID
+ * @param recordedBy - UID of the user recording the receipt
+ * @returns The newly created transaction ID
+ */
 export async function receiptFromBatch(
     itemId: string,
     quantity: number,
@@ -370,7 +439,14 @@ export async function receiptFromBatch(
     }, recordedBy);
 }
 
-// Issue to maintenance
+/**
+ * Records an ISSUE transaction for materials consumed by a maintenance job.
+ * @param itemId - The inventory item ID to issue from
+ * @param quantity - The quantity issued
+ * @param jobId - The linked maintenance job document ID
+ * @param recordedBy - UID of the user recording the issue
+ * @returns The newly created transaction ID
+ */
 export async function issueToMaintenance(
     itemId: string,
     quantity: number,
@@ -387,7 +463,15 @@ export async function issueToMaintenance(
     }, recordedBy);
 }
 
-// Stock adjustment
+/**
+ * Records a stock ADJUSTMENT transaction (positive or negative) with approval tracking.
+ * @param itemId - The inventory item ID to adjust
+ * @param quantity - The adjustment quantity (positive to add, negative to subtract)
+ * @param reason - The reason for the adjustment
+ * @param approvedBy - UID of the user who approved the adjustment
+ * @param recordedBy - UID of the user recording the adjustment
+ * @returns The newly created transaction ID
+ */
 export async function adjustStock(
     itemId: string,
     quantity: number,

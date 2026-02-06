@@ -47,6 +47,10 @@ const WeighbridgeEntryPage = lazy(() => import('./features/weighbridge/pages/Wei
 const AuditLogsPage = lazy(() => import('./features/audit/pages/AuditLogsPage'));
 const ReportsDashboardPage = lazy(() => import('./features/reports/pages/ReportsDashboardPage'));
 
+// Webhooks
+const WebhooksPage = lazy(() => import('./features/webhooks/pages/WebhooksPage'));
+const WebhookCreatePage = lazy(() => import('./features/webhooks/pages/WebhookCreatePage'));
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -301,6 +305,24 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
                   <ReportsDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Webhooks Routes */}
+            <Route
+              path="/webhooks"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                  <WebhooksPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/webhooks/new"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                  <WebhookCreatePage />
                 </ProtectedRoute>
               }
             />
