@@ -14,7 +14,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import type { InventoryItem, InventoryTransaction, InventoryCategory, TransactionType } from '../types';
-import { getTimestampMillis, type FirestoreDocData } from '../../../types';
+import { getTimestampMillis, type FirestoreDocData, type UserRole } from '../../../types';
+import { assertAuthorized } from '../../../lib/authorization';
 
 const INVENTORY_ITEMS_COLLECTION = 'inventoryItems';
 const INVENTORY_TRANSACTIONS_COLLECTION = 'inventoryTransactions';
@@ -166,8 +167,10 @@ export interface CreateInventoryItemData {
  */
 export async function createInventoryItem(
     data: CreateInventoryItemData,
-    createdBy: string
+    createdBy: string,
+    callerRole?: UserRole
 ): Promise<string> {
+    assertAuthorized(callerRole, 'inventory:create');
     const code = await generateItemCode(data.category);
     const itemId = code.replace(/-/g, '_');
     const itemRef = doc(db, INVENTORY_ITEMS_COLLECTION, itemId);
@@ -220,8 +223,10 @@ export interface UpdateInventoryItemData {
 export async function updateInventoryItem(
     itemId: string,
     data: UpdateInventoryItemData,
-    updatedBy: string
+    updatedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'inventory:update');
     const itemRef = doc(db, INVENTORY_ITEMS_COLLECTION, itemId);
 
     const updateData: FirestoreDocData = {
@@ -306,8 +311,10 @@ export interface RecordTransactionData {
  */
 export async function recordTransaction(
     data: RecordTransactionData,
-    recordedBy: string
+    recordedBy: string,
+    callerRole?: UserRole
 ): Promise<string> {
+    assertAuthorized(callerRole, 'inventory:transact');
     const txnId = await generateTransactionId();
 
     // Use transaction for atomic update
@@ -477,8 +484,10 @@ export async function adjustStock(
     quantity: number,
     reason: string,
     approvedBy: string,
-    recordedBy: string
+    recordedBy: string,
+    callerRole?: UserRole
 ): Promise<string> {
+    assertAuthorized(callerRole, 'inventory:transact');
     return recordTransaction({
         itemId,
         transactionType: 'ADJUSTMENT',

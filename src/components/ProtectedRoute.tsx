@@ -54,7 +54,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     // Check if user is active (case-insensitive)
     const userStatus = userData.status?.toUpperCase();
     if (userStatus !== 'ACTIVE') {
-        console.log('User status check failed:', { status: userData.status, expected: 'ACTIVE' });
+        // User account is not active
         return (
             <div className="min-h-screen page-bg flex items-center justify-center">
                 <div className="glass-card p-8 text-center max-w-md">

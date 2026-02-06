@@ -16,8 +16,9 @@ import {
     runTransaction,
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import { assertAuthorized } from '../../../lib/authorization';
 import type { SparePart, SparePartTransaction, SparePartCategory, SparePartTransactionType } from '../types';
-import { getTimestampMillis, type FirestoreDocData } from '../../../types';
+import { getTimestampMillis, type FirestoreDocData, type UserRole } from '../../../types';
 
 const SPARE_PARTS_COLLECTION = 'spareParts';
 const SPARE_PARTS_TRANSACTIONS_COLLECTION = 'sparePartTransactions';
@@ -39,24 +40,27 @@ export const SPARE_PART_CATEGORIES: { value: SparePartCategory; label: string }[
 // Common units for spare parts
 export const SPARE_PART_UNITS = ['PCS', 'SET', 'MTR', 'KG', 'LTR', 'PAIR', 'BOX'];
 
-// Generate part number - simplified to avoid composite index requirement
+// Generate part number using range query for efficiency
 export async function generatePartNumber(category: SparePartCategory): Promise<string> {
     const prefix = category.substring(0, 3).toUpperCase();
     const partsRef = collection(db, SPARE_PARTS_COLLECTION);
-    // Simple query without composite index requirement
-    const snapshot = await getDocs(partsRef);
+    const q = query(
+        partsRef,
+        where('partNumber', '>=', prefix + '-'),
+        where('partNumber', '<=', prefix + '-\uf8ff'),
+        orderBy('partNumber', 'desc'),
+        limit(1)
+    );
+    const snapshot = await getDocs(q);
 
-    // Count existing parts with this category prefix
-    let maxNumber = 0;
-    snapshot.docs.forEach(doc => {
-        const part = doc.data() as SparePart;
-        if (part.partNumber && part.partNumber.startsWith(prefix + '-')) {
-            const num = parseInt(part.partNumber.split('-')[1]) || 0;
-            if (num > maxNumber) maxNumber = num;
-        }
-    });
+    let nextNumber = 1;
+    if (!snapshot.empty) {
+        const lastPart = snapshot.docs[0].data() as SparePart;
+        const num = parseInt(lastPart.partNumber.split('-')[1]) || 0;
+        nextNumber = num + 1;
+    }
 
-    return `${prefix}-${String(maxNumber + 1).padStart(3, '0')}`;
+    return `${prefix}-${String(nextNumber).padStart(3, '0')}`;
 }
 
 // Get all spare parts
@@ -121,8 +125,10 @@ export interface CreateSparePartData {
 // Create new spare part
 export async function createSparePart(
     data: CreateSparePartData,
-    createdBy: string
+    createdBy: string,
+    callerRole?: UserRole
 ): Promise<string> {
+    assertAuthorized(callerRole, 'spare_parts:create');
     const partNumber = data.partNumber || await generatePartNumber(data.category);
 
     const partData = {
@@ -178,8 +184,10 @@ export interface UpdateSparePartData {
 export async function updateSparePart(
     partId: string,
     data: UpdateSparePartData,
-    updatedBy: string
+    updatedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'spare_parts:update');
     const partRef = doc(db, SPARE_PARTS_COLLECTION, partId);
 
     const updateData: FirestoreDocData = {
@@ -215,8 +223,10 @@ export interface RecordSparePartTransactionData {
 // Record spare part transaction (receipt or issue)
 export async function recordSparePartTransaction(
     data: RecordSparePartTransactionData,
-    recordedBy: string
+    recordedBy: string,
+    callerRole?: UserRole
 ): Promise<string> {
+    assertAuthorized(callerRole, 'spare_parts:transact');
     return runTransaction(db, async (transaction) => {
         const partRef = doc(db, SPARE_PARTS_COLLECTION, data.partId);
         const partSnap = await transaction.get(partRef);

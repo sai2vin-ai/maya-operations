@@ -3,6 +3,7 @@ import {
     doc,
     getDocs,
     getDoc,
+    setDoc,
     updateDoc,
     query,
     where,
@@ -118,7 +119,7 @@ export async function createUser(data: CreateUserData, createdBy: string, caller
     };
 
     // Use the Auth UID as the document ID
-    await updateDoc(doc(db, USERS_COLLECTION, uid), userDoc as Record<string, unknown>);
+    await setDoc(doc(db, USERS_COLLECTION, uid), userDoc as Record<string, unknown>);
 
     return uid;
 }
@@ -150,7 +151,7 @@ export async function createUserDocument(
         updatedBy: createdBy,
     };
 
-    await updateDoc(userRef, userDoc as Record<string, unknown>);
+    await setDoc(userRef, userDoc as Record<string, unknown>);
 }
 
 export interface UpdateUserData {
@@ -171,8 +172,10 @@ export interface UpdateUserData {
 export async function updateUser(
     userId: string,
     data: UpdateUserData,
-    updatedBy: string
+    updatedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'users:update');
     const userRef = doc(db, USERS_COLLECTION, userId);
 
     await updateDoc(userRef, {
@@ -183,18 +186,18 @@ export async function updateUser(
 }
 
 /** Sets a user's status to INACTIVE. */
-export async function deactivateUser(userId: string, updatedBy: string): Promise<void> {
-    await updateUser(userId, { status: 'INACTIVE' }, updatedBy);
+export async function deactivateUser(userId: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
+    await updateUser(userId, { status: 'INACTIVE' }, updatedBy, callerRole);
 }
 
 /** Sets a user's status to ACTIVE. */
-export async function activateUser(userId: string, updatedBy: string): Promise<void> {
-    await updateUser(userId, { status: 'ACTIVE' }, updatedBy);
+export async function activateUser(userId: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
+    await updateUser(userId, { status: 'ACTIVE' }, updatedBy, callerRole);
 }
 
 /** Soft-deletes a user by deactivating their account. */
-export async function deleteUser(userId: string, updatedBy: string): Promise<void> {
-    await deactivateUser(userId, updatedBy);
+export async function deleteUser(userId: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
+    await deactivateUser(userId, updatedBy, callerRole);
 }
 
 /** Sends a password reset email via Firebase Auth. */

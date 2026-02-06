@@ -7,8 +7,9 @@ import {
     updateDoc,
     query,
     orderBy,
+    where,
+    limit,
     Timestamp,
-    getCountFromServer,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
@@ -16,14 +17,29 @@ import type { BugReport, BugReportStatus, CreateBugReportData } from '../types';
 import type { FirestoreDocData } from '../../../types';
 import { assertAuthorized } from '../../../lib/authorization';
 import type { UserRole } from '../../../types';
+import { generateSafeFilename, validateFile } from '../../../utils/validation';
 
 const BUG_REPORTS_COLLECTION = 'bugReports';
 
 async function getNextReportNumber(): Promise<string> {
     const colRef = collection(db, BUG_REPORTS_COLLECTION);
-    const snapshot = await getCountFromServer(colRef);
-    const count = snapshot.data().count;
-    return `BR-${String(count + 1).padStart(3, '0')}`;
+    const q = query(
+        colRef,
+        where('reportNumber', '>=', 'BR-'),
+        where('reportNumber', '<=', 'BR-\uf8ff'),
+        orderBy('reportNumber', 'desc'),
+        limit(1)
+    );
+    const snapshot = await getDocs(q);
+
+    let nextNumber = 1;
+    if (!snapshot.empty) {
+        const lastReport = snapshot.docs[0].data() as BugReport;
+        const num = parseInt(lastReport.reportNumber.split('-')[1]) || 0;
+        nextNumber = num + 1;
+    }
+
+    return `BR-${String(nextNumber).padStart(3, '0')}`;
 }
 
 export async function createBugReport(
@@ -38,7 +54,16 @@ export async function createBugReport(
 
     let screenshotUrl: string | undefined;
     if (file) {
-        const storageRef = ref(storage, `bug-reports/${reportNumber}/${file.name}`);
+        const validation = validateFile(file, {
+            maxSizeMB: 5,
+            allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+            allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        });
+        if (!validation.isValid) {
+            throw new Error(validation.error || 'Invalid file');
+        }
+        const safeFilename = generateSafeFilename(file.name, 'screenshot');
+        const storageRef = ref(storage, `bug-reports/${reportNumber}/${safeFilename}`);
         await uploadBytes(storageRef, file);
         screenshotUrl = await getDownloadURL(storageRef);
     }

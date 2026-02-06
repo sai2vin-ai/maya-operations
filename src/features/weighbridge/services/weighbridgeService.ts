@@ -18,6 +18,8 @@ import { db } from '../../../lib/firebase';
 import { recordTransaction } from '../../inventory/services/inventoryService';
 import type { WeighbridgeEntry, WeighbridgeEntryType, WeighbridgeEntryStatus } from '../types';
 import { getTimestampMillis, type FirestoreDocData } from '../../../types';
+import { assertAuthorized } from '../../../lib/authorization';
+import type { UserRole } from '../../../types';
 
 const WEIGHBRIDGE_COLLECTION = 'weighbridgeEntries';
 
@@ -27,18 +29,23 @@ async function generateEntryNumber(): Promise<string> {
     const prefix = `WB-${year}`;
 
     const entriesRef = collection(db, WEIGHBRIDGE_COLLECTION);
-    const snapshot = await getDocs(entriesRef);
+    const q = query(
+        entriesRef,
+        where('entryNumber', '>=', prefix),
+        where('entryNumber', '<=', prefix + '\uf8ff'),
+        orderBy('entryNumber', 'desc'),
+        limit(1)
+    );
+    const snapshot = await getDocs(q);
 
-    let maxNumber = 0;
-    snapshot.docs.forEach(doc => {
-        const entry = doc.data() as WeighbridgeEntry;
-        if (entry.entryNumber && entry.entryNumber.startsWith(prefix)) {
-            const num = parseInt(entry.entryNumber.split('-')[2]) || 0;
-            if (num > maxNumber) maxNumber = num;
-        }
-    });
+    let nextNumber = 1;
+    if (!snapshot.empty) {
+        const lastEntry = snapshot.docs[0].data() as WeighbridgeEntry;
+        const num = parseInt(lastEntry.entryNumber.split('-')[2]) || 0;
+        nextNumber = num + 1;
+    }
 
-    return `${prefix}-${String(maxNumber + 1).padStart(5, '0')}`;
+    return `${prefix}-${String(nextNumber).padStart(5, '0')}`;
 }
 
 // Get all weighbridge entries
@@ -116,8 +123,10 @@ export interface CreateWeighbridgeEntryData {
 // Create new weighbridge entry
 export async function createWeighbridgeEntry(
     data: CreateWeighbridgeEntryData,
-    createdBy: string
+    createdBy: string,
+    callerRole?: UserRole
 ): Promise<string> {
+    assertAuthorized(callerRole, 'weighbridge:create');
     const entryNumber = await generateEntryNumber();
 
     const entryData = {
@@ -158,8 +167,10 @@ export interface RecordFirstWeightData {
 export async function recordFirstWeight(
     entryId: string,
     data: RecordFirstWeightData,
-    updatedBy: string
+    updatedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'weighbridge:update');
     const entryRef = doc(db, WEIGHBRIDGE_COLLECTION, entryId);
 
     const updateData: FirestoreDocData = {
@@ -187,8 +198,10 @@ export interface RecordSecondWeightData {
 export async function recordSecondWeightAndComplete(
     entryId: string,
     data: RecordSecondWeightData,
-    updatedBy: string
+    updatedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'weighbridge:update');
     const entryRef = doc(db, WEIGHBRIDGE_COLLECTION, entryId);
     const entry = await getWeighbridgeEntryById(entryId);
 
@@ -205,7 +218,11 @@ export async function recordSecondWeightAndComplete(
         tareWeight = data.weight;
     }
 
-    const netWeight = Math.abs(grossWeight - tareWeight);
+    if (grossWeight < tareWeight) {
+        throw new Error('Gross weight cannot be less than tare weight. Please check the entered values.');
+    }
+
+    const netWeight = grossWeight - tareWeight;
 
     const updateData: FirestoreDocData = {
         grossWeight,
@@ -236,31 +253,26 @@ export async function recordSecondWeightAndComplete(
             quantityInKg = netWeight * 1000;
         }
 
-        try {
-            if (entry.entryType === 'RM_IN') {
-                // Raw material coming IN = RECEIPT to inventory
-                await recordTransaction({
-                    itemId: entry.inventoryItemId,
-                    transactionType: 'RECEIPT',
-                    quantity: quantityInKg,
-                    referenceType: 'GATE_ENTRY',  // Reusing existing reference type
-                    referenceId: entryId,
-                    reason: `Weighbridge IN: ${entry.entryNumber}`,
-                }, updatedBy);
-            } else if (entry.entryType === 'FG_OUT') {
-                // Finished goods going OUT = ISSUE from inventory
-                await recordTransaction({
-                    itemId: entry.inventoryItemId,
-                    transactionType: 'ISSUE',
-                    quantity: quantityInKg,
-                    referenceType: 'GATE_ENTRY',
-                    referenceId: entryId,
-                    reason: `Weighbridge OUT: ${entry.entryNumber}`,
-                }, updatedBy);
-            }
-        } catch (err) {
-            console.error('Failed to update inventory:', err);
-            // Don't throw - the weighbridge entry is still completed
+        if (entry.entryType === 'RM_IN') {
+            // Raw material coming IN = RECEIPT to inventory
+            await recordTransaction({
+                itemId: entry.inventoryItemId,
+                transactionType: 'RECEIPT',
+                quantity: quantityInKg,
+                referenceType: 'GATE_ENTRY',
+                referenceId: entryId,
+                reason: `Weighbridge IN: ${entry.entryNumber}`,
+            }, updatedBy);
+        } else if (entry.entryType === 'FG_OUT') {
+            // Finished goods going OUT = ISSUE from inventory
+            await recordTransaction({
+                itemId: entry.inventoryItemId,
+                transactionType: 'ISSUE',
+                quantity: quantityInKg,
+                referenceType: 'GATE_ENTRY',
+                referenceId: entryId,
+                reason: `Weighbridge OUT: ${entry.entryNumber}`,
+            }, updatedBy);
         }
     }
 }
@@ -268,8 +280,10 @@ export async function recordSecondWeightAndComplete(
 // Cancel entry
 export async function cancelWeighbridgeEntry(
     entryId: string,
-    updatedBy: string
+    updatedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'weighbridge:update');
     const entryRef = doc(db, WEIGHBRIDGE_COLLECTION, entryId);
 
     await updateDoc(entryRef, {

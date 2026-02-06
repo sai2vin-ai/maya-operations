@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { OfflineProvider } from './contexts/OfflineContext';
@@ -177,9 +177,9 @@ function ComingSoon({ title }: { title: string }) {
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2">{title}</h2>
         <p className="text-foreground-muted mb-4">This module is coming soon in the next sprint.</p>
-        <a href="/dashboard" className="btn-primary inline-block">
+        <Link to="/dashboard" className="btn-primary inline-block">
           Back to Dashboard
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -193,9 +193,9 @@ function NotFound() {
         <div className="text-6xl font-bold text-foreground-faint mb-4">404</div>
         <h2 className="text-xl font-bold text-foreground mb-2">Page Not Found</h2>
         <p className="text-foreground-muted mb-4">The page you're looking for doesn't exist.</p>
-        <a href="/dashboard" className="btn-primary inline-block">
+        <Link to="/dashboard" className="btn-primary inline-block">
           Go to Dashboard
-        </a>
+        </Link>
       </div>
     </div>
   );

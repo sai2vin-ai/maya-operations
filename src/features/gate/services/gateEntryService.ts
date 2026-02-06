@@ -14,7 +14,8 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import type { GateEntry, EntryType, MaterialCategory, GateEntryStatus } from '../types';
-import type { FirestoreDocData } from '../../../types';
+import type { FirestoreDocData, UserRole } from '../../../types';
+import { assertAuthorized } from '../../../lib/authorization';
 import { validateFile, generateSafeFilename, validateVehicleNumber, sanitizeString } from '../../../utils/validation';
 
 const GATE_ENTRIES_COLLECTION = 'gateEntries';
@@ -205,7 +206,9 @@ export interface CreateGateEntryData {
  * @param createdBy - UID of the user creating the entry
  * @returns The newly created entry's document ID
  */
-export async function createGateEntry(data: CreateGateEntryData, createdBy: string): Promise<string> {
+export async function createGateEntry(data: CreateGateEntryData, createdBy: string, callerRole?: UserRole): Promise<string> {
+    assertAuthorized(callerRole, 'gate:create');
+
     // Validate vehicle number
     const vehicleValidation = validateVehicleNumber(data.vehicleNumber);
     if (!vehicleValidation.isValid) {
@@ -282,8 +285,11 @@ export interface UpdateGateEntryData {
 export async function updateGateEntry(
     entryId: string,
     data: UpdateGateEntryData,
-    updatedBy: string
+    updatedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'gate:update');
+
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
 
     // Build update object, only including defined values
@@ -292,18 +298,18 @@ export async function updateGateEntry(
         updatedBy,
     };
 
-    // Only add fields that have values
+    // Only add fields that have values (sanitize string inputs)
     if (data.vehiclePhoto) updateData.vehiclePhoto = data.vehiclePhoto;
     if (data.materialCategory) updateData.materialCategory = data.materialCategory;
     if (data.quantity != null) updateData.quantity = data.quantity;
     if (data.unit) updateData.unit = data.unit;
     if (data.weighbridgeReading != null) updateData.weighbridgeReading = data.weighbridgeReading;
     if (data.tareWeight != null) updateData.tareWeight = data.tareWeight;
-    if (data.supplierName) updateData.supplierName = data.supplierName;
-    if (data.driverName) updateData.driverName = data.driverName;
+    if (data.supplierName) updateData.supplierName = sanitizeString(data.supplierName);
+    if (data.driverName) updateData.driverName = sanitizeString(data.driverName);
     if (data.driverPhone) updateData.driverPhone = data.driverPhone;
-    if (data.purpose) updateData.purpose = data.purpose;
-    if (data.notes) updateData.notes = data.notes;
+    if (data.purpose) updateData.purpose = sanitizeString(data.purpose);
+    if (data.notes) updateData.notes = sanitizeString(data.notes);
     if (data.status) updateData.status = data.status;
 
     // Calculate net weight if both readings available
@@ -321,7 +327,9 @@ export async function updateGateEntry(
  * @param entryId - The document ID of the entry to complete
  * @param updatedBy - UID of the user completing the entry
  */
-export async function completeGateEntry(entryId: string, updatedBy: string): Promise<void> {
+export async function completeGateEntry(entryId: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
+    assertAuthorized(callerRole, 'gate:update');
+
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
 
     await updateDoc(entryRef, {
@@ -338,12 +346,18 @@ export async function completeGateEntry(entryId: string, updatedBy: string): Pro
  * @param reason - The reason for cancellation
  * @param updatedBy - UID of the user cancelling the entry
  */
-export async function cancelGateEntry(entryId: string, reason: string, updatedBy: string): Promise<void> {
+export async function cancelGateEntry(entryId: string, reason: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
+    assertAuthorized(callerRole, 'gate:cancel');
+
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
+
+    // Preserve existing notes by appending cancellation reason
+    const existing = await getGateEntryById(entryId);
+    const existingNotes = existing?.notes ? `${existing.notes}\n` : '';
 
     await updateDoc(entryRef, {
         status: 'CANCELLED',
-        notes: reason,
+        notes: `${existingNotes}Cancelled: ${reason}`,
         updatedAt: Timestamp.now(),
         updatedBy,
     });

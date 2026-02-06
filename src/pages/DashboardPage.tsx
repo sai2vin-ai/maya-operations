@@ -1,6 +1,11 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getReactors } from '../features/reactor/services/reactorService';
+import { getBatches } from '../features/reactor/services/batchService';
+import { getTodaysEntries } from '../features/gate/services/gateEntryService';
+import { getLowStockItems } from '../features/inventory/services/inventoryService';
 
 
 // Key for storing recent modules in localStorage
@@ -33,6 +38,32 @@ export default function DashboardPage() {
     const navigate = useNavigate();
     // Use lazy initializer to load recent modules from localStorage
     const [recentModules] = useState<string[]>(getRecentModules);
+
+    // Live dashboard stats
+    const { data: reactors } = useQuery({ queryKey: ['reactors'], queryFn: getReactors, staleTime: 30_000 });
+    const { data: todayBatches } = useQuery({
+        queryKey: ['batches', 'today'],
+        queryFn: () => getBatches(100),
+        staleTime: 30_000,
+        select: (batches) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return batches.filter(b => {
+                const ts = b.startTime as { toDate?: () => Date };
+                const d = ts?.toDate ? ts.toDate() : new Date(b.startTime as unknown as string);
+                return d >= today;
+            });
+        },
+    });
+    const { data: todayGateEntries } = useQuery({ queryKey: ['gateEntries', 'today'], queryFn: getTodaysEntries, staleTime: 30_000 });
+    const { data: lowStockItems } = useQuery({ queryKey: ['inventory', 'lowStock'], queryFn: getLowStockItems, staleTime: 60_000 });
+
+    const activeReactorCount = reactors?.filter(r => r.status === 'IN_BATCH').length ?? 0;
+    const totalReactorCount = reactors?.length ?? 0;
+    const todayBatchCount = todayBatches?.length ?? 0;
+    const inProgressBatchCount = todayBatches?.filter(b => b.status === 'IN_PROGRESS' || b.status === 'COOLING').length ?? 0;
+    const todayGateCount = todayGateEntries?.length ?? 0;
+    const lowStockCount = lowStockItems?.length ?? 0;
 
     const handleModuleClick = (moduleId: string) => {
         saveRecentModule(moduleId);
@@ -96,10 +127,10 @@ export default function DashboardPage() {
                             </div>
                             <span className="status-badge status-active">Online</span>
                         </div>
-                        <p className="text-3xl font-bold text-foreground">4</p>
+                        <p className="text-3xl font-bold text-foreground">{activeReactorCount}</p>
                         <div className="flex items-center gap-1.5 mt-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse-soft" />
-                            <p className="text-sm text-foreground-faint">of 6 total</p>
+                            <p className="text-sm text-foreground-faint">of {totalReactorCount} total</p>
                         </div>
                     </div>
 
@@ -116,10 +147,10 @@ export default function DashboardPage() {
                             </div>
                             <span className="status-badge status-pending">In Progress</span>
                         </div>
-                        <p className="text-3xl font-bold text-foreground">12</p>
+                        <p className="text-3xl font-bold text-foreground">{todayBatchCount}</p>
                         <div className="flex items-center gap-1.5 mt-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse-soft" />
-                            <p className="text-sm text-foreground-faint">3 in progress</p>
+                            <p className="text-sm text-foreground-faint">{inProgressBatchCount} in progress</p>
                         </div>
                     </div>
 
@@ -136,7 +167,7 @@ export default function DashboardPage() {
                             </div>
                             <span className="status-badge status-active">Active</span>
                         </div>
-                        <p className="text-3xl font-bold text-foreground">8</p>
+                        <p className="text-3xl font-bold text-foreground">{todayGateCount}</p>
                         <p className="text-sm text-foreground-faint mt-1">today</p>
                     </div>
 
@@ -149,12 +180,12 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-foreground-muted text-xs font-medium uppercase tracking-wider">Pending Jobs</h3>
+                                <h3 className="text-foreground-muted text-xs font-medium uppercase tracking-wider">Low Stock</h3>
                             </div>
-                            <span className="status-badge status-inactive">Attention</span>
+                            {lowStockCount > 0 ? <span className="status-badge status-inactive">Attention</span> : <span className="status-badge status-active">OK</span>}
                         </div>
-                        <p className="text-3xl font-bold text-foreground">2</p>
-                        <p className="text-sm text-foreground-faint mt-1">maintenance</p>
+                        <p className="text-3xl font-bold text-foreground">{lowStockCount}</p>
+                        <p className="text-sm text-foreground-faint mt-1">items below minimum</p>
                     </div>
                 </div>
 

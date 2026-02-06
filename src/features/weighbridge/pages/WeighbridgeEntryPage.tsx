@@ -53,12 +53,8 @@ export default function WeighbridgeEntryPage() {
             loadEntry(entryId);
         }
         loadInventoryItems();
-    }, [entryId, isNew]);
-
-    useEffect(() => {
-        // Update inventory items based on entry type
-        loadInventoryItems();
-    }, [entryType]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [entryId, isNew, entryType]);
 
     const loadEntry = async (id: string) => {
         try {
@@ -368,18 +364,18 @@ export default function WeighbridgeEntryPage() {
                         <div className="grid grid-cols-3 gap-4 text-center mb-4">
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Gross Weight</p>
-                                <p className="text-2xl font-bold text-foreground">{entry.grossWeight ? `${entry.grossWeight} KG` : '-'}</p>
+                                <p className="text-2xl font-bold text-foreground">{entry.grossWeight ? `${entry.grossWeight} ${entry.unit}` : '-'}</p>
                                 {entry.firstWeightTime && entry.grossWeight && (
                                     <p className="text-xs text-foreground-faint">{formatDate(entry.firstWeightTime)}</p>
                                 )}
                             </div>
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Tare Weight</p>
-                                <p className="text-2xl font-bold text-foreground">{entry.tareWeight ? `${entry.tareWeight} KG` : '-'}</p>
+                                <p className="text-2xl font-bold text-foreground">{entry.tareWeight ? `${entry.tareWeight} ${entry.unit}` : '-'}</p>
                             </div>
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Net Weight</p>
-                                <p className="text-2xl font-bold text-green-400">{entry.netWeight ? `${entry.netWeight} KG` : '-'}</p>
+                                <p className="text-2xl font-bold text-green-400">{entry.netWeight ? `${entry.netWeight} ${entry.unit}` : '-'}</p>
                             </div>
                         </div>
 
@@ -409,7 +405,7 @@ export default function WeighbridgeEntryPage() {
                                         value={weight}
                                         onChange={(e) => setWeight(e.target.value)}
                                         className="input-field flex-1"
-                                        placeholder="Enter weight in KG"
+                                        placeholder={`Enter weight in ${entry?.unit || 'KG'}`}
                                     />
                                     <button
                                         onClick={handleRecordWeight}

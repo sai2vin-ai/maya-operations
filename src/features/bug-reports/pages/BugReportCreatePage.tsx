@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import {
     PageHeader,
     TextInput,
@@ -16,11 +16,14 @@ export default function BugReportCreatePage() {
     const createMutation = useCreateBugReport();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Capture the referring page URL (the page the user was on before navigating here)
+    const referringPage = useMemo(() => document.referrer || '/dashboard', []);
+
     const [formData, setFormData] = useState<CreateBugReportData>({
         title: '',
         description: '',
         priority: 'medium',
-        pageUrl: window.location.href,
+        pageUrl: referringPage,
         browserInfo: navigator.userAgent,
     });
 

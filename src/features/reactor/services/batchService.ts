@@ -3,7 +3,6 @@ import {
     doc,
     getDocs,
     getDoc,
-    setDoc,
     updateDoc,
     query,
     where,
@@ -14,10 +13,11 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
-import { updateReactorStatus } from './reactorService';
+
 import type { Batch, BatchStatus, BatchOutput, MaterialCategory } from '../types';
-import type { FirestoreDocData } from '../../../types';
+import type { FirestoreDocData, UserRole } from '../../../types';
 import { BATCH_STEPS } from '../../../config/batchSteps';
+import { assertAuthorized } from '../../../lib/authorization';
 
 // Re-export for backward compatibility
 export { BATCH_STEPS } from '../../../config/batchSteps';
@@ -36,19 +36,24 @@ async function generateBatchNumber(reactorNumber: string): Promise<string> {
     const prefix = `${reactorNumber}-${dateStr}`;
 
     const batchesRef = collection(db, BATCHES_COLLECTION);
-    const snapshot = await getDocs(batchesRef);
+    const q = query(
+        batchesRef,
+        where('batchNumber', '>=', prefix),
+        where('batchNumber', '<=', prefix + '\uf8ff'),
+        orderBy('batchNumber', 'desc'),
+        limit(1)
+    );
+    const snapshot = await getDocs(q);
 
-    let maxNumber = 0;
-    snapshot.docs.forEach(doc => {
-        const batch = doc.data() as Batch;
-        if (batch.batchNumber && batch.batchNumber.startsWith(prefix)) {
-            const parts = batch.batchNumber.split('-');
-            const num = parseInt(parts[parts.length - 1]) || 0;
-            if (num > maxNumber) maxNumber = num;
-        }
-    });
+    let nextNumber = 1;
+    if (!snapshot.empty) {
+        const lastBatch = snapshot.docs[0].data() as Batch;
+        const parts = lastBatch.batchNumber.split('-');
+        const num = parseInt(parts[parts.length - 1]) || 0;
+        nextNumber = num + 1;
+    }
 
-    return `${prefix}-${String(maxNumber + 1).padStart(3, '0')}`;
+    return `${prefix}-${String(nextNumber).padStart(3, '0')}`;
 }
 
 /**
@@ -133,7 +138,8 @@ export interface CreateBatchData {
  * @param createdBy - UID of the user creating the batch
  * @returns The newly created batch's document ID
  */
-export async function createBatch(data: CreateBatchData, createdBy: string): Promise<string> {
+export async function createBatch(data: CreateBatchData, createdBy: string, callerRole?: UserRole): Promise<string> {
+    assertAuthorized(callerRole, 'batch:create');
     const batchNumber = await generateBatchNumber(data.reactorNumber);
     const batchId = batchNumber.replace(/-/g, '_');
     const batchRef = doc(db, BATCHES_COLLECTION, batchId);
@@ -159,10 +165,21 @@ export async function createBatch(data: CreateBatchData, createdBy: string): Pro
     if (data.shiftId) batchDoc.shiftId = data.shiftId;
     if (data.notes) batchDoc.notes = data.notes;
 
-    await setDoc(batchRef, batchDoc);
-
-    // Update reactor status
-    await updateReactorStatus(data.reactorId, 'IN_BATCH', batchId, createdBy);
+    // Atomically create batch and update reactor status
+    const reactorRef = doc(db, 'reactors', data.reactorId);
+    await runTransaction(db, async (transaction) => {
+        const reactorSnap = await transaction.get(reactorRef);
+        if (reactorSnap.exists() && reactorSnap.data()?.status === 'IN_BATCH') {
+            throw new Error('Reactor already has an active batch');
+        }
+        transaction.set(batchRef, batchDoc);
+        transaction.update(reactorRef, {
+            status: 'IN_BATCH',
+            currentBatchId: batchId,
+            updatedAt: Timestamp.now(),
+            updatedBy: createdBy,
+        });
+    });
 
     return batchId;
 }
@@ -216,10 +233,17 @@ export interface PyrolysisReadingData {
 export async function completeStep(
     batchId: string,
     stepData: CompleteStepData,
-    completedBy: string
+    completedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'batch:complete_step');
     const batch = await getBatchById(batchId);
     if (!batch) throw new Error('Batch not found');
+
+    const expectedStep = batch.currentStep + 1;
+    if (stepData.stepNumber !== expectedStep) {
+        throw new Error(`Expected step ${expectedStep}, but received step ${stepData.stepNumber}. Steps must be completed in order.`);
+    }
 
     const stepInfo = BATCH_STEPS.find(s => s.stepNumber === stepData.stepNumber);
     if (!stepInfo) throw new Error('Invalid step number');
@@ -318,8 +342,10 @@ export interface RecordOutputData {
 export async function recordOutput(
     batchId: string,
     outputData: RecordOutputData,
-    recordedBy: string
+    recordedBy: string,
+    callerRole?: UserRole
 ): Promise<void> {
+    assertAuthorized(callerRole, 'batch:complete_step');
     const batch = await getBatchById(batchId);
     if (!batch) throw new Error('Batch not found');
 
@@ -365,14 +391,16 @@ export async function recordOutput(
  * @param reason - The reason for cancellation, stored in the notes field
  * @param cancelledBy - UID of the user cancelling the batch
  */
-export async function cancelBatch(batchId: string, reason: string, cancelledBy: string): Promise<void> {
+export async function cancelBatch(batchId: string, reason: string, cancelledBy: string, callerRole?: UserRole): Promise<void> {
+    assertAuthorized(callerRole, 'batch:cancel');
     const batch = await getBatchById(batchId);
     if (!batch) throw new Error('Batch not found');
 
     const batchRef = doc(db, BATCHES_COLLECTION, batchId);
+    const existingNotes = batch.notes ? `${batch.notes}\n` : '';
     const batchUpdate = {
         status: 'CANCELLED',
-        notes: `Cancelled: ${reason}`,
+        notes: `${existingNotes}Cancelled: ${reason}`,
         endTime: Timestamp.now(),
         updatedAt: Timestamp.now(),
         updatedBy: cancelledBy,
