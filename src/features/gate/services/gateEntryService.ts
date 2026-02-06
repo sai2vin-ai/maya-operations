@@ -15,7 +15,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import type { GateEntry, EntryType, MaterialCategory, GateEntryStatus } from '../types';
 import type { FirestoreDocData } from '../../../types';
-import { validateFile, generateSafeFilename } from '../../../utils/validation';
+import { validateFile, generateSafeFilename, validateVehicleNumber, sanitizeString } from '../../../utils/validation';
 
 const GATE_ENTRIES_COLLECTION = 'gateEntries';
 
@@ -26,7 +26,11 @@ const UPLOAD_CONFIG = {
     allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
 };
 
-// Generate entry number like GE-2026-0001
+/**
+ * Generates a sequential gate entry number in the format GE-{year}-{serial}.
+ * Queries existing entries for the current year to determine the next serial number.
+ * @returns The next available entry number (e.g., "GE-2026-0001")
+ */
 async function generateEntryNumber(): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `GE-${year}`;
@@ -53,7 +57,11 @@ async function generateEntryNumber(): Promise<string> {
     return `${prefix}-${String(nextNumber).padStart(4, '0')}`;
 }
 
-// Get all gate entries
+/**
+ * Fetches gate entries ordered by entry time, with an optional limit.
+ * @param limitCount - Maximum number of entries to return (default: 50)
+ * @returns Array of gate entries sorted newest first
+ */
 export async function getGateEntries(limitCount: number = 50): Promise<GateEntry[]> {
     const entriesRef = collection(db, GATE_ENTRIES_COLLECTION);
     const q = query(entriesRef, orderBy('entryTime', 'desc'), limit(limitCount));
@@ -65,7 +73,7 @@ export async function getGateEntries(limitCount: number = 50): Promise<GateEntry
     })) as GateEntry[];
 }
 
-// Get today's gate entries
+/** Fetches all gate entries created since midnight today. */
 export async function getTodaysEntries(): Promise<GateEntry[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -85,7 +93,11 @@ export async function getTodaysEntries(): Promise<GateEntry[]> {
     })) as GateEntry[];
 }
 
-// Get gate entry by ID
+/**
+ * Fetches a single gate entry by its document ID.
+ * @param entryId - The Firestore document ID
+ * @returns The gate entry object, or null if not found
+ */
 export async function getGateEntryById(entryId: string): Promise<GateEntry | null> {
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
     const snapshot = await getDoc(entryRef);
@@ -97,7 +109,11 @@ export async function getGateEntryById(entryId: string): Promise<GateEntry | nul
     return { id: snapshot.id, ...snapshot.data() } as GateEntry;
 }
 
-// Get entries by status
+/**
+ * Fetches all gate entries matching a specific status.
+ * @param status - The entry status to filter by (e.g., "PENDING", "COMPLETED")
+ * @returns Array of matching gate entries sorted newest first
+ */
 export async function getEntriesByStatus(status: GateEntryStatus): Promise<GateEntry[]> {
     const entriesRef = collection(db, GATE_ENTRIES_COLLECTION);
     const q = query(entriesRef, where('status', '==', status), orderBy('entryTime', 'desc'));
@@ -109,7 +125,12 @@ export async function getEntriesByStatus(status: GateEntryStatus): Promise<GateE
     })) as GateEntry[];
 }
 
-// Upload vehicle photo with validation
+/**
+ * Validates and uploads a vehicle photo to Firebase Storage.
+ * @param file - The image file to upload
+ * @param entryNumber - The gate entry number used for the storage path
+ * @returns The download URL of the uploaded photo
+ */
 export async function uploadVehiclePhoto(file: File, entryNumber: string): Promise<string> {
     // Validate file before upload
     const validation = validateFile(file, UPLOAD_CONFIG);
@@ -127,7 +148,13 @@ export async function uploadVehiclePhoto(file: File, entryNumber: string): Promi
     return await getDownloadURL(storageRef);
 }
 
-// Capture photo from canvas/camera with validation
+/**
+ * Validates and uploads a photo blob (e.g., from camera capture) to Firebase Storage.
+ * @param blob - The image blob to upload
+ * @param entryNumber - The gate entry number used for the storage path
+ * @param type - Photo type label used in the filename ("vehicle" or "weighbridge")
+ * @returns The download URL of the uploaded photo
+ */
 export async function uploadPhotoFromBlob(blob: Blob, entryNumber: string, type: 'vehicle' | 'weighbridge'): Promise<string> {
     // Validate blob size
     const maxSizeBytes = UPLOAD_CONFIG.maxSizeMB * 1024 * 1024;
@@ -153,7 +180,6 @@ export async function uploadPhotoFromBlob(blob: Blob, entryNumber: string, type:
     return await getDownloadURL(storageRef);
 }
 
-// Create gate entry
 export interface CreateGateEntryData {
     entryType: EntryType;
     vehicleNumber: string;
@@ -172,7 +198,20 @@ export interface CreateGateEntryData {
     longitude?: number;
 }
 
+/**
+ * Creates a new gate entry with an auto-generated entry number. Validates the vehicle
+ * number, calculates net weight if weighbridge readings are provided, and sanitizes text fields.
+ * @param data - Gate entry data including vehicle number, material info, and optional weights
+ * @param createdBy - UID of the user creating the entry
+ * @returns The newly created entry's document ID
+ */
 export async function createGateEntry(data: CreateGateEntryData, createdBy: string): Promise<string> {
+    // Validate vehicle number
+    const vehicleValidation = validateVehicleNumber(data.vehicleNumber);
+    if (!vehicleValidation.isValid) {
+        throw new Error(vehicleValidation.error || 'Invalid vehicle number');
+    }
+
     const entryNumber = await generateEntryNumber();
     const entryId = entryNumber.replace(/-/g, '_');
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
@@ -204,11 +243,11 @@ export async function createGateEntry(data: CreateGateEntryData, createdBy: stri
     if (data.weighbridgeReading != null) entryDoc.weighbridgeReading = data.weighbridgeReading;
     if (data.tareWeight != null) entryDoc.tareWeight = data.tareWeight;
     if (netWeight != null) entryDoc.netWeight = netWeight;
-    if (data.supplierName) entryDoc.supplierName = data.supplierName;
-    if (data.driverName) entryDoc.driverName = data.driverName;
+    if (data.supplierName) entryDoc.supplierName = sanitizeString(data.supplierName);
+    if (data.driverName) entryDoc.driverName = sanitizeString(data.driverName);
     if (data.driverPhone) entryDoc.driverPhone = data.driverPhone;
-    if (data.purpose) entryDoc.purpose = data.purpose;
-    if (data.notes) entryDoc.notes = data.notes;
+    if (data.purpose) entryDoc.purpose = sanitizeString(data.purpose);
+    if (data.notes) entryDoc.notes = sanitizeString(data.notes);
     if (data.latitude && data.longitude) {
         entryDoc.location = { latitude: data.latitude, longitude: data.longitude };
     }
@@ -217,7 +256,6 @@ export async function createGateEntry(data: CreateGateEntryData, createdBy: stri
     return entryId;
 }
 
-// Update gate entry
 export interface UpdateGateEntryData {
     vehiclePhoto?: string;
     materialCategory?: MaterialCategory;
@@ -234,6 +272,13 @@ export interface UpdateGateEntryData {
     status?: GateEntryStatus;
 }
 
+/**
+ * Updates an existing gate entry's fields. Recalculates net weight if weighbridge
+ * readings are provided.
+ * @param entryId - The document ID of the entry to update
+ * @param data - Partial entry data to merge
+ * @param updatedBy - UID of the user performing the update
+ */
 export async function updateGateEntry(
     entryId: string,
     data: UpdateGateEntryData,
@@ -271,7 +316,11 @@ export async function updateGateEntry(
     await updateDoc(entryRef, updateData);
 }
 
-// Complete entry (mark exit)
+/**
+ * Marks a gate entry as COMPLETED and records the exit timestamp.
+ * @param entryId - The document ID of the entry to complete
+ * @param updatedBy - UID of the user completing the entry
+ */
 export async function completeGateEntry(entryId: string, updatedBy: string): Promise<void> {
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
 
@@ -283,7 +332,12 @@ export async function completeGateEntry(entryId: string, updatedBy: string): Pro
     });
 }
 
-// Cancel entry
+/**
+ * Cancels a gate entry and records the cancellation reason in the notes field.
+ * @param entryId - The document ID of the entry to cancel
+ * @param reason - The reason for cancellation
+ * @param updatedBy - UID of the user cancelling the entry
+ */
 export async function cancelGateEntry(entryId: string, reason: string, updatedBy: string): Promise<void> {
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
 
@@ -295,7 +349,7 @@ export async function cancelGateEntry(entryId: string, reason: string, updatedBy
     });
 }
 
-// Get today's entry count
+/** Returns the total number of gate entries created today. */
 export async function getTodaysEntryCount(): Promise<number> {
     const entries = await getTodaysEntries();
     return entries.length;

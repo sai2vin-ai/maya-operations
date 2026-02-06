@@ -14,10 +14,12 @@ import {
 } from 'firebase/auth';
 import { db, auth } from '../../../lib/firebase';
 import type { User, UserRole, UserStatus } from '../types';
+import { validateEmail, validateName, validatePhone, validateEmployeeId } from '../../../utils/validation';
+import { assertAuthorized } from '../../../lib/authorization';
 
 const USERS_COLLECTION = 'users';
 
-// Get all users
+/** Fetches all users from Firestore. */
 export async function getUsers(): Promise<User[]> {
     const usersRef = collection(db, USERS_COLLECTION);
     // Note: Not ordering by createdAt since manually created docs may not have this field
@@ -29,7 +31,11 @@ export async function getUsers(): Promise<User[]> {
     })) as User[];
 }
 
-// Get user by ID
+/**
+ * Fetches a single user by their document ID.
+ * @param userId - The Firestore document ID (Auth UID)
+ * @returns The user object, or null if not found
+ */
 export async function getUserById(userId: string): Promise<User | null> {
     const userRef = doc(db, USERS_COLLECTION, userId);
     const snapshot = await getDoc(userRef);
@@ -41,7 +47,11 @@ export async function getUserById(userId: string): Promise<User | null> {
     return { id: snapshot.id, ...snapshot.data() } as User;
 }
 
-// Get users by role
+/**
+ * Fetches all users matching a specific role.
+ * @param role - The user role to filter by
+ * @returns Array of users with the specified role
+ */
 export async function getUsersByRole(role: UserRole): Promise<User[]> {
     const usersRef = collection(db, USERS_COLLECTION);
     const q = query(usersRef, where('role', '==', role));
@@ -53,7 +63,6 @@ export async function getUsersByRole(role: UserRole): Promise<User[]> {
     })) as User[];
 }
 
-// Create new user (Auth + Firestore)
 export interface CreateUserData {
     email: string;
     password: string;
@@ -64,7 +73,31 @@ export interface CreateUserData {
     allowedDeviceIds?: string[];
 }
 
-export async function createUser(data: CreateUserData, createdBy: string): Promise<string> {
+/**
+ * Creates a new user in Firebase Auth and Firestore. Validates all input fields
+ * and checks authorization before creation.
+ * @param data - User registration data including email, password, name, and role
+ * @param createdBy - UID of the user performing the creation
+ * @param callerRole - Role of the caller, used for authorization check
+ * @returns The newly created user's Auth UID
+ */
+export async function createUser(data: CreateUserData, createdBy: string, callerRole?: UserRole): Promise<string> {
+    // Authorization check
+    assertAuthorized(callerRole, 'users:create');
+
+    // Input validation
+    const emailVal = validateEmail(data.email);
+    if (!emailVal.isValid) throw new Error(emailVal.error);
+
+    const nameVal = validateName(data.name);
+    if (!nameVal.isValid) throw new Error(nameVal.error);
+
+    const phoneVal = validatePhone(data.phone);
+    if (!phoneVal.isValid) throw new Error(phoneVal.error);
+
+    const empIdVal = validateEmployeeId(data.employeeId);
+    if (!empIdVal.isValid) throw new Error(empIdVal.error);
+
     // Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
     const uid = userCredential.user.uid;
@@ -90,7 +123,12 @@ export async function createUser(data: CreateUserData, createdBy: string): Promi
     return uid;
 }
 
-// Alternative: Create user document only (when Auth user already exists)
+/**
+ * Creates a Firestore user document for an existing Firebase Auth user.
+ * @param uid - The existing Auth UID to use as the document ID
+ * @param data - User profile data (without password)
+ * @param createdBy - UID of the user performing the creation
+ */
 export async function createUserDocument(
     uid: string,
     data: Omit<CreateUserData, 'password'>,
@@ -115,7 +153,6 @@ export async function createUserDocument(
     await updateDoc(userRef, userDoc as Record<string, unknown>);
 }
 
-// Update user
 export interface UpdateUserData {
     name?: string;
     phone?: string;
@@ -125,6 +162,12 @@ export interface UpdateUserData {
     allowedDeviceIds?: string[];
 }
 
+/**
+ * Updates a user's profile fields in Firestore.
+ * @param userId - The user document ID to update
+ * @param data - Partial user data to merge
+ * @param updatedBy - UID of the user performing the update
+ */
 export async function updateUser(
     userId: string,
     data: UpdateUserData,
@@ -139,27 +182,27 @@ export async function updateUser(
     });
 }
 
-// Deactivate user
+/** Sets a user's status to INACTIVE. */
 export async function deactivateUser(userId: string, updatedBy: string): Promise<void> {
     await updateUser(userId, { status: 'INACTIVE' }, updatedBy);
 }
 
-// Activate user
+/** Sets a user's status to ACTIVE. */
 export async function activateUser(userId: string, updatedBy: string): Promise<void> {
     await updateUser(userId, { status: 'ACTIVE' }, updatedBy);
 }
 
-// Delete user (soft delete - just deactivate)
+/** Soft-deletes a user by deactivating their account. */
 export async function deleteUser(userId: string, updatedBy: string): Promise<void> {
     await deactivateUser(userId, updatedBy);
 }
 
-// Send password reset email
+/** Sends a password reset email via Firebase Auth. */
 export async function sendPasswordReset(email: string): Promise<void> {
     await sendPasswordResetEmail(auth, email);
 }
 
-// Get active users count
+/** Returns the total count of users with ACTIVE status. */
 export async function getActiveUsersCount(): Promise<number> {
     const usersRef = collection(db, USERS_COLLECTION);
     const q = query(usersRef, where('status', '==', 'ACTIVE'));

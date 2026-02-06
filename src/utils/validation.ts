@@ -200,9 +200,83 @@ export function sanitizeFilename(filename: string): string {
         .slice(0, 255);
 }
 
+// URL validation (for webhooks and external integrations)
+export function validateUrl(url: string): ValidationResult {
+    if (!url || url.trim().length === 0) {
+        return { isValid: false, error: 'URL is required' };
+    }
+
+    const trimmed = url.trim();
+
+    try {
+        const parsed = new URL(trimmed);
+
+        // Only allow http and https protocols
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return { isValid: false, error: 'URL must use http or https protocol' };
+        }
+
+        // Block localhost and private IPs in production
+        const hostname = parsed.hostname.toLowerCase();
+        const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
+        if (blockedHosts.includes(hostname)) {
+            return { isValid: false, error: 'URL cannot point to localhost' };
+        }
+
+        // Block private IP ranges
+        const privateIpPatterns = [
+            /^10\.\d+\.\d+\.\d+$/,
+            /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/,
+            /^192\.168\.\d+\.\d+$/,
+        ];
+        if (privateIpPatterns.some(p => p.test(hostname))) {
+            return { isValid: false, error: 'URL cannot point to a private IP address' };
+        }
+
+        if (trimmed.length > 2048) {
+            return { isValid: false, error: 'URL is too long (max 2048 characters)' };
+        }
+
+        return { isValid: true };
+    } catch {
+        return { isValid: false, error: 'Invalid URL format' };
+    }
+}
+
+// Webhook header validation
+const FORBIDDEN_HEADERS = [
+    'host', 'content-length', 'transfer-encoding', 'connection',
+    'keep-alive', 'upgrade', 'proxy-authorization', 'te',
+    'trailer', 'cookie', 'set-cookie',
+];
+
+export function validateWebhookHeaders(headers: Record<string, string>): ValidationResult {
+    for (const key of Object.keys(headers)) {
+        if (FORBIDDEN_HEADERS.includes(key.toLowerCase())) {
+            return { isValid: false, error: `Header '${key}' is not allowed` };
+        }
+
+        // Prevent header injection via newlines
+        if (/[\r\n]/.test(key) || /[\r\n]/.test(headers[key])) {
+            return { isValid: false, error: 'Headers cannot contain newline characters' };
+        }
+
+        if (key.length > 256 || headers[key].length > 8192) {
+            return { isValid: false, error: `Header '${key}' is too long` };
+        }
+    }
+
+    if (Object.keys(headers).length > 20) {
+        return { isValid: false, error: 'Too many headers (max 20)' };
+    }
+
+    return { isValid: true };
+}
+
 // Generate safe filename for uploads
 export function generateSafeFilename(originalName: string, prefix: string = 'file'): string {
-    const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
+    const parts = originalName.split('.');
+    const extension = parts.length > 1 ? parts.pop()!.toLowerCase() : 'jpg';
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     return `${prefix}_${timestamp}_${randomSuffix}.${extension}`;
