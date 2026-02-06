@@ -73,12 +73,16 @@ export default function DashboardPage() {
     const modules = getRoleBasedModules();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+            {/* Ambient background glows */}
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-1/4 right-1/6 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+
             {/* Header */}
-            <header className="glass-card m-4 p-4">
+            <header className="glass-card-elevated m-4 p-4 relative z-10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25">
                             <span className="text-white font-bold text-xl">P</span>
                         </div>
                         <div>
@@ -91,11 +95,11 @@ export default function DashboardPage() {
                         {/* User Info */}
                         <div className="text-right hidden sm:block">
                             <p className="text-white font-medium">{userData?.name || 'User'}</p>
-                            <p className="text-sm text-slate-400">{userData?.role?.replace('_', ' ') || 'Loading...'}</p>
+                            <p className="text-xs text-slate-400 uppercase tracking-wider">{userData?.role?.replace('_', ' ') || 'Loading...'}</p>
                         </div>
 
                         {/* Avatar */}
-                        <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center ring-2 ring-slate-600/50">
                             <span className="text-white font-medium">
                                 {userData?.name?.charAt(0).toUpperCase() || 'U'}
                             </span>
@@ -116,47 +120,85 @@ export default function DashboardPage() {
             </header>
 
             {/* Main Content */}
-            <main className="p-4">
+            <main className="p-4 relative z-10">
                 {/* Welcome Message */}
                 <div className="mb-6">
                     <h2 className="text-2xl font-bold text-white">
-                        Welcome back, {userData?.name?.split(' ')[0] || 'User'}!
+                        Welcome back, <span className="text-gradient">{userData?.name?.split(' ')[0] || 'User'}</span>!
                     </h2>
-                    <p className="text-slate-400">Here's what's happening at the plant today.</p>
+                    <p className="text-slate-400 mt-1">Here's what's happening at the plant today.</p>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="glass-card p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-400 text-sm font-medium">Active Reactors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    {/* Active Reactors */}
+                    <div className="glass-card-elevated p-5 glow-green group hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 bg-green-500/15 rounded-lg flex items-center justify-center ring-1 ring-green-500/25">
+                                <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Active Reactors</h3>
+                            </div>
                             <span className="status-badge status-active">Online</span>
                         </div>
                         <p className="text-3xl font-bold text-white">4</p>
-                        <p className="text-sm text-slate-500 mt-1">of 6 total</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse-soft" />
+                            <p className="text-sm text-slate-500">of 6 total</p>
+                        </div>
                     </div>
 
-                    <div className="glass-card p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-400 text-sm font-medium">Today's Batches</h3>
+                    {/* Today's Batches */}
+                    <div className="glass-card-elevated p-5 glow-orange group hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center ring-1 ring-orange-500/25">
+                                <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Today's Batches</h3>
+                            </div>
                             <span className="status-badge status-pending">In Progress</span>
                         </div>
                         <p className="text-3xl font-bold text-white">12</p>
-                        <p className="text-sm text-slate-500 mt-1">3 in progress</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse-soft" />
+                            <p className="text-sm text-slate-500">3 in progress</p>
+                        </div>
                     </div>
 
-                    <div className="glass-card p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-400 text-sm font-medium">Gate Entries</h3>
+                    {/* Gate Entries */}
+                    <div className="glass-card-elevated p-5 glow-blue group hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 bg-blue-500/15 rounded-lg flex items-center justify-center ring-1 ring-blue-500/25">
+                                <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Gate Entries</h3>
+                            </div>
                             <span className="status-badge status-active">Active</span>
                         </div>
                         <p className="text-3xl font-bold text-white">8</p>
                         <p className="text-sm text-slate-500 mt-1">today</p>
                     </div>
 
-                    <div className="glass-card p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-400 text-sm font-medium">Pending Jobs</h3>
+                    {/* Pending Jobs */}
+                    <div className="glass-card-elevated p-5 glow-red group hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 bg-red-500/15 rounded-lg flex items-center justify-center ring-1 ring-red-500/25">
+                                <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Pending Jobs</h3>
+                            </div>
                             <span className="status-badge status-inactive">Attention</span>
                         </div>
                         <p className="text-3xl font-bold text-white">2</p>
@@ -165,7 +207,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Module Cards */}
-                <h3 className="text-lg font-semibold text-white mb-4">Quick Access</h3>
+                <div className="flex items-center gap-3 mb-4">
+                    <h3 className="text-lg font-semibold text-white">Quick Access</h3>
+                    <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent" />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {modules.map((module, index) => {
                         const isRecent = recentModules.includes(module.id);
@@ -175,24 +220,30 @@ export default function DashboardPage() {
                             <button
                                 key={module.id}
                                 className={`
-                                    glass-card p-6 text-left transition-all group animate-fade-in-up
-                                    ${isRecent ? 'ring-2 ring-blue-500/50 bg-slate-700/30' : 'hover:bg-slate-700/50'}
+                                    glass-card p-5 text-left transition-all duration-300 group animate-fade-in-up
+                                    hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 hover:border-slate-600/80
+                                    ${isRecent ? 'ring-1 ring-blue-500/40 bg-blue-500/5' : ''}
                                 `}
                                 style={{ animationDelay: `${index * 50}ms` }}
                                 onClick={() => handleModuleClick(module.id)}
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className={`w-12 h-12 bg-gradient-to-br ${module.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                                        <span className="text-2xl">{module.icon}</span>
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className={`w-11 h-11 bg-gradient-to-br ${module.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
+                                        <span className="text-xl">{module.icon}</span>
                                     </div>
-                                    {isRecent && (
-                                        <span className="text-xs text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded-full">
-                                            {recentIndex === 0 ? 'Recent' : 'Visited'}
-                                        </span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {isRecent && (
+                                            <span className="text-[10px] text-blue-400 bg-blue-500/15 px-2 py-0.5 rounded-full ring-1 ring-blue-500/25 font-medium uppercase tracking-wider">
+                                                {recentIndex === 0 ? 'Recent' : 'Visited'}
+                                            </span>
+                                        )}
+                                        <svg className="w-4 h-4 text-slate-600 group-hover:text-slate-400 group-hover:translate-x-0.5 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
                                 </div>
-                                <h4 className="text-white font-semibold mb-1">{module.name}</h4>
-                                <p className="text-slate-400 text-sm">
+                                <h4 className="text-white font-semibold mb-0.5 group-hover:text-blue-100 transition-colors">{module.name}</h4>
+                                <p className="text-slate-500 text-sm">
                                     Click to open {module.name.toLowerCase()}
                                 </p>
                             </button>
@@ -201,15 +252,22 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Current Shift Info */}
-                <div className="glass-card p-6 mt-6">
+                <div className="gradient-border-card p-5 mt-8">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-white font-semibold mb-1">Current Shift</h3>
-                            <p className="text-slate-400">Shift A • 06:00 - 14:00</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-500/15 rounded-lg flex items-center justify-center ring-1 ring-indigo-500/25">
+                                <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-white font-semibold">Current Shift</h3>
+                                <p className="text-slate-400 text-sm">Shift A &bull; 06:00 - 14:00</p>
+                            </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-white font-semibold">Supervisor</p>
-                            <p className="text-slate-400">{userData?.name || 'Loading...'}</p>
+                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Supervisor</p>
+                            <p className="text-white font-medium">{userData?.name || 'Loading...'}</p>
                         </div>
                     </div>
                 </div>
