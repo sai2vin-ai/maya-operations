@@ -74,7 +74,7 @@ export default function WebhooksPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="Webhooks"
                 subtitle="Manage webhook integrations for external systems"
@@ -101,14 +101,14 @@ export default function WebhooksPage() {
                         {webhooks.map((webhook) => (
                             <div
                                 key={webhook.id}
-                                className="glass-card p-4 hover:border-slate-600 transition-colors"
+                                className="glass-card p-4 hover:border-border-secondary transition-colors"
                             >
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-2">
                                             <Link
                                                 to={`/webhooks/${webhook.id}`}
-                                                className="text-lg font-semibold text-white hover:text-blue-400 truncate"
+                                                className="text-lg font-semibold text-foreground hover:text-blue-400 truncate"
                                             >
                                                 {webhook.name}
                                             </Link>
@@ -116,16 +116,16 @@ export default function WebhooksPage() {
                                         </div>
 
                                         {webhook.description && (
-                                            <p className="text-slate-400 text-sm mb-2 line-clamp-1">
+                                            <p className="text-foreground-muted text-sm mb-2 line-clamp-1">
                                                 {webhook.description}
                                             </p>
                                         )}
 
                                         <div className="flex flex-wrap gap-2 mb-3">
-                                            <span className="text-slate-500 text-xs font-mono bg-slate-800 px-2 py-1 rounded">
+                                            <span className="text-foreground-faint text-xs font-mono bg-surface-secondary px-2 py-1 rounded">
                                                 {webhook.method}
                                             </span>
-                                            <span className="text-slate-400 text-xs truncate max-w-[300px]">
+                                            <span className="text-foreground-muted text-xs truncate max-w-[300px]">
                                                 {webhook.url}
                                             </span>
                                         </div>
@@ -140,13 +140,13 @@ export default function WebhooksPage() {
                                                 </span>
                                             ))}
                                             {webhook.events.length > 3 && (
-                                                <span className="text-xs text-slate-500">
+                                                <span className="text-xs text-foreground-faint">
                                                     +{webhook.events.length - 3} more
                                                 </span>
                                             )}
                                         </div>
 
-                                        <div className="flex gap-4 text-sm text-slate-500">
+                                        <div className="flex gap-4 text-sm text-foreground-faint">
                                             <span>
                                                 Success: <span className="text-green-400">{webhook.successCount}</span>
                                             </span>
@@ -166,8 +166,8 @@ export default function WebhooksPage() {
                                             onClick={() => handleToggleStatus(webhook)}
                                             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                                                 webhook.status === 'ACTIVE'
-                                                    ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                    ? 'bg-surface-tertiary text-foreground-secondary hover:bg-surface-hover'
+                                                    : 'bg-blue-600 text-foreground hover:bg-blue-700'
                                             }`}
                                             disabled={toggleStatusMutation.isPending}
                                         >

@@ -80,7 +80,7 @@ export default function AuditLogsPage() {
     const hasActiveFilters = collection || action || searchQuery || startDate || endDate;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="Audit Logs"
                 subtitle={`${logs.length} entries${hasActiveFilters ? ' (filtered)' : ''}`}
@@ -104,7 +104,7 @@ export default function AuditLogsPage() {
                         {hasActiveFilters && (
                             <button
                                 onClick={clearFilters}
-                                className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors"
+                                className="px-4 py-2 bg-surface-tertiary text-foreground-secondary rounded-lg hover:bg-surface-hover transition-colors"
                             >
                                 Clear Filters
                             </button>
@@ -114,7 +114,7 @@ export default function AuditLogsPage() {
                     {/* Row 2: Collection and Action filters */}
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1">
-                            <label className="block text-sm text-slate-400 mb-1">Collection</label>
+                            <label className="block text-sm text-foreground-muted mb-1">Collection</label>
                             <select
                                 value={collection}
                                 onChange={(e) => setCollection(e.target.value)}
@@ -128,7 +128,7 @@ export default function AuditLogsPage() {
                             </select>
                         </div>
                         <div className="flex-1">
-                            <label className="block text-sm text-slate-400 mb-1">Action Type</label>
+                            <label className="block text-sm text-foreground-muted mb-1">Action Type</label>
                             <select
                                 value={action}
                                 onChange={(e) => setAction(e.target.value)}
@@ -170,7 +170,7 @@ export default function AuditLogsPage() {
                         {logs.length === 0 ? (
                             <EmptyState
                                 icon={
-                                    <svg className="w-16 h-16 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-16 h-16 text-foreground-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 }
@@ -181,19 +181,19 @@ export default function AuditLogsPage() {
                             <div className="glass-card overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
-                                        <thead className="bg-slate-700/50">
+                                        <thead className="bg-surface-tertiary/50">
                                             <tr>
-                                                <th className="text-left p-3 text-slate-300 font-medium">Timestamp</th>
-                                                <th className="text-left p-3 text-slate-300 font-medium">Action</th>
-                                                <th className="text-left p-3 text-slate-300 font-medium">Collection</th>
-                                                <th className="text-left p-3 text-slate-300 font-medium hidden md:table-cell">Details</th>
-                                                <th className="text-left p-3 text-slate-300 font-medium hidden lg:table-cell">Document ID</th>
+                                                <th className="text-left p-3 text-foreground-secondary font-medium">Timestamp</th>
+                                                <th className="text-left p-3 text-foreground-secondary font-medium">Action</th>
+                                                <th className="text-left p-3 text-foreground-secondary font-medium">Collection</th>
+                                                <th className="text-left p-3 text-foreground-secondary font-medium hidden md:table-cell">Details</th>
+                                                <th className="text-left p-3 text-foreground-secondary font-medium hidden lg:table-cell">Document ID</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-700">
                                             {logs.map((log) => (
-                                                <tr key={log.id} className="hover:bg-slate-700/30 transition-colors">
-                                                    <td className="p-3 text-slate-400 text-sm whitespace-nowrap">
+                                                <tr key={log.id} className="hover:bg-surface-tertiary/30 transition-colors">
+                                                    <td className="p-3 text-foreground-muted text-sm whitespace-nowrap">
                                                         {formatTimestamp(log.timestamp)}
                                                     </td>
                                                     <td className="p-3">
@@ -201,13 +201,13 @@ export default function AuditLogsPage() {
                                                             {getActionLabel(log.action)}
                                                         </span>
                                                     </td>
-                                                    <td className="p-3 text-white">
+                                                    <td className="p-3 text-foreground">
                                                         {getCollectionLabel(log.collection)}
                                                     </td>
-                                                    <td className="p-3 text-slate-400 text-sm hidden md:table-cell max-w-xs truncate">
+                                                    <td className="p-3 text-foreground-muted text-sm hidden md:table-cell max-w-xs truncate">
                                                         {formatData(log.data)}
                                                     </td>
-                                                    <td className="p-3 text-slate-500 font-mono text-xs hidden lg:table-cell">
+                                                    <td className="p-3 text-foreground-faint font-mono text-xs hidden lg:table-cell">
                                                         {log.documentId}
                                                     </td>
                                                 </tr>

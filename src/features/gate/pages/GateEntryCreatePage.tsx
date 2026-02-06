@@ -160,7 +160,7 @@ export default function GateEntryCreatePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center gap-3">
@@ -169,15 +169,15 @@ export default function GateEntryCreatePage() {
                             stopCamera();
                             navigate('/gate');
                         }}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <div>
-                        <h1 className="text-xl font-bold text-white">New Gate Entry</h1>
-                        <p className="text-sm text-slate-400">Record vehicle entry or exit</p>
+                        <h1 className="text-xl font-bold text-foreground">New Gate Entry</h1>
+                        <p className="text-sm text-foreground-muted">Record vehicle entry or exit</p>
                     </div>
                 </div>
             </header>
@@ -192,14 +192,14 @@ export default function GateEntryCreatePage() {
                 <form onSubmit={handleSubmit}>
                     {/* Entry Type Toggle */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Entry Type</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Entry Type</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 type="button"
                                 onClick={() => setFormData(prev => ({ ...prev, entryType: 'IN' }))}
                                 className={`p-4 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.entryType === 'IN'
                                         ? 'border-green-500 bg-green-500/20 text-green-400'
-                                        : 'border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500'
+                                        : 'border-border-secondary bg-surface-tertiary/50 text-foreground-secondary hover:border-slate-500'
                                     }`}
                             >
                                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,7 +212,7 @@ export default function GateEntryCreatePage() {
                                 onClick={() => setFormData(prev => ({ ...prev, entryType: 'OUT' }))}
                                 className={`p-4 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${formData.entryType === 'OUT'
                                         ? 'border-orange-500 bg-orange-500/20 text-orange-400'
-                                        : 'border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500'
+                                        : 'border-border-secondary bg-surface-tertiary/50 text-foreground-secondary hover:border-slate-500'
                                     }`}
                             >
                                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,9 +225,9 @@ export default function GateEntryCreatePage() {
 
                     {/* Vehicle Photo */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Vehicle Photo</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Vehicle Photo</h3>
 
-                        <div className="relative aspect-video bg-slate-800 rounded-xl overflow-hidden">
+                        <div className="relative aspect-video bg-surface-secondary rounded-xl overflow-hidden">
                             {cameraActive && !capturedPhoto && (
                                 <>
                                     <video
@@ -248,7 +248,7 @@ export default function GateEntryCreatePage() {
                                         <button
                                             type="button"
                                             onClick={stopCamera}
-                                            className="px-4 py-2 bg-slate-700 rounded-lg text-white"
+                                            className="px-4 py-2 bg-surface-tertiary rounded-lg text-foreground"
                                         >
                                             Cancel
                                         </button>
@@ -262,7 +262,7 @@ export default function GateEntryCreatePage() {
                                     <button
                                         type="button"
                                         onClick={retakePhoto}
-                                        className="absolute bottom-4 right-4 px-4 py-2 bg-slate-700 rounded-lg text-white hover:bg-slate-600"
+                                        className="absolute bottom-4 right-4 px-4 py-2 bg-surface-tertiary rounded-lg text-foreground hover:bg-surface-hover"
                                     >
                                         Retake
                                     </button>
@@ -282,7 +282,7 @@ export default function GateEntryCreatePage() {
                                         </svg>
                                         Open Camera
                                     </button>
-                                    <p className="text-slate-500 text-sm mt-2">or photo is optional</p>
+                                    <p className="text-foreground-faint text-sm mt-2">or photo is optional</p>
                                 </div>
                             )}
                         </div>
@@ -291,10 +291,10 @@ export default function GateEntryCreatePage() {
 
                     {/* Vehicle Details */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Vehicle Details</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Vehicle Details</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Vehicle Number <span className="text-red-400">*</span>
                                 </label>
                                 <input
@@ -308,7 +308,7 @@ export default function GateEntryCreatePage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Purpose</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Purpose</label>
                                 <input
                                     type="text"
                                     name="purpose"
@@ -323,10 +323,10 @@ export default function GateEntryCreatePage() {
 
                     {/* Material & Weight */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Material & Weight</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Material & Weight</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Material Category</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Material Category</label>
                                 <select
                                     name="materialCategory"
                                     value={formData.materialCategory}
@@ -341,7 +341,7 @@ export default function GateEntryCreatePage() {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Quantity</label>
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Quantity</label>
                                     <input
                                         type="number"
                                         name="quantity"
@@ -353,7 +353,7 @@ export default function GateEntryCreatePage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Unit</label>
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Unit</label>
                                     <select
                                         name="unit"
                                         value={formData.unit}
@@ -367,7 +367,7 @@ export default function GateEntryCreatePage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Weighbridge Reading (kg)</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Weighbridge Reading (kg)</label>
                                 <input
                                     type="number"
                                     name="weighbridgeReading"
@@ -379,7 +379,7 @@ export default function GateEntryCreatePage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Tare Weight (kg)</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Tare Weight (kg)</label>
                                 <input
                                     type="number"
                                     name="tareWeight"
@@ -402,10 +402,10 @@ export default function GateEntryCreatePage() {
 
                     {/* Supplier/Driver Info */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Supplier/Driver Information</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Supplier/Driver Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Supplier Name</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Supplier Name</label>
                                 <input
                                     type="text"
                                     name="supplierName"
@@ -416,7 +416,7 @@ export default function GateEntryCreatePage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Driver Name</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Driver Name</label>
                                 <input
                                     type="text"
                                     name="driverName"
@@ -427,7 +427,7 @@ export default function GateEntryCreatePage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Driver Phone</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Driver Phone</label>
                                 <input
                                     type="tel"
                                     name="driverPhone"
@@ -442,7 +442,7 @@ export default function GateEntryCreatePage() {
 
                     {/* Notes */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Additional Notes</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Additional Notes</h3>
                         <textarea
                             name="notes"
                             value={formData.notes}

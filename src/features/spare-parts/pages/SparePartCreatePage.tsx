@@ -67,10 +67,10 @@ export default function SparePartCreatePage() {
         <div className="p-6 max-w-2xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/spare-parts')} className="text-slate-400 hover:text-white">
+                <button onClick={() => navigate('/spare-parts')} className="text-foreground-muted hover:text-foreground">
                     ← Back
                 </button>
-                <h1 className="text-2xl font-bold text-white">Add Spare Part</h1>
+                <h1 className="text-2xl font-bold text-foreground">Add Spare Part</h1>
             </div>
 
             {/* Error */}
@@ -85,7 +85,7 @@ export default function SparePartCreatePage() {
                 {/* Name and Category */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Name *</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Name *</label>
                         <input
                             type="text"
                             value={name}
@@ -96,7 +96,7 @@ export default function SparePartCreatePage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Category *</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Category *</label>
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value as SparePartCategory)}
@@ -112,7 +112,7 @@ export default function SparePartCreatePage() {
                 {/* File Number and Description */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">File Number</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">File Number</label>
                         <input
                             type="text"
                             value={fileNumber}
@@ -122,7 +122,7 @@ export default function SparePartCreatePage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Description</label>
                         <input
                             type="text"
                             value={description}
@@ -136,7 +136,7 @@ export default function SparePartCreatePage() {
                 {/* Stock and Unit */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Initial Stock *</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Initial Stock *</label>
                         <input
                             type="number"
                             value={currentStock}
@@ -148,7 +148,7 @@ export default function SparePartCreatePage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Minimum Stock *</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Minimum Stock *</label>
                         <input
                             type="number"
                             value={minimumStock}
@@ -160,7 +160,7 @@ export default function SparePartCreatePage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Unit</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Unit</label>
                         <select
                             value={unit}
                             onChange={(e) => setUnit(e.target.value)}
@@ -176,7 +176,7 @@ export default function SparePartCreatePage() {
                 {/* Location and Used For */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Storage Location</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Storage Location</label>
                         <input
                             type="text"
                             value={location}
@@ -186,7 +186,7 @@ export default function SparePartCreatePage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Used For (Machine)</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Used For (Machine)</label>
                         <input
                             type="text"
                             value={usedFor}
@@ -199,7 +199,7 @@ export default function SparePartCreatePage() {
 
                 {/* Unit Price */}
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Unit Price (₹)</label>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Unit Price (₹)</label>
                     <input
                         type="number"
                         value={unitPrice}
@@ -223,7 +223,7 @@ export default function SparePartCreatePage() {
                     </button>
                 </div>
 
-                <p className="text-xs text-slate-500 text-center">
+                <p className="text-xs text-foreground-faint text-center">
                     Part number will be auto-generated based on category
                 </p>
             </form>

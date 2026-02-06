@@ -186,7 +186,7 @@ export default function WeighbridgeEntryPage() {
             <div className="p-6 flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading...</p>
+                    <p className="text-foreground-muted">Loading...</p>
                 </div>
             </div>
         );
@@ -196,15 +196,15 @@ export default function WeighbridgeEntryPage() {
         <div className="p-6 max-w-2xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/weighbridge')} className="text-slate-400 hover:text-white">
+                <button onClick={() => navigate('/weighbridge')} className="text-foreground-muted hover:text-foreground">
                     ← Back
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-white">
+                    <h1 className="text-2xl font-bold text-foreground">
                         {isNew ? (entryType === 'RM_IN' ? '📥 Raw Material IN' : '📤 Finished Goods OUT') : entry?.entryNumber}
                     </h1>
                     {entry && (
-                        <p className="text-slate-400">{entry.vehicleNumber} • {entry.status}</p>
+                        <p className="text-foreground-muted">{entry.vehicleNumber} • {entry.status}</p>
                     )}
                 </div>
             </div>
@@ -227,17 +227,17 @@ export default function WeighbridgeEntryPage() {
                     <div className="space-y-4">
                         {/* Entry Type */}
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Entry Type *</label>
+                            <label className="block text-sm text-foreground-muted mb-1">Entry Type *</label>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setEntryType('RM_IN')}
-                                    className={`flex-1 p-3 rounded-lg border ${entryType === 'RM_IN' ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-slate-700 border-slate-600 text-slate-300'}`}
+                                    className={`flex-1 p-3 rounded-lg border ${entryType === 'RM_IN' ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-surface-tertiary border-border-secondary text-foreground-secondary'}`}
                                 >
                                     📥 Raw Material IN
                                 </button>
                                 <button
                                     onClick={() => setEntryType('FG_OUT')}
-                                    className={`flex-1 p-3 rounded-lg border ${entryType === 'FG_OUT' ? 'bg-orange-500/20 border-orange-500 text-orange-300' : 'bg-slate-700 border-slate-600 text-slate-300'}`}
+                                    className={`flex-1 p-3 rounded-lg border ${entryType === 'FG_OUT' ? 'bg-orange-500/20 border-orange-500 text-orange-300' : 'bg-surface-tertiary border-border-secondary text-foreground-secondary'}`}
                                 >
                                     📤 Finished Goods OUT
                                 </button>
@@ -246,7 +246,7 @@ export default function WeighbridgeEntryPage() {
 
                         {/* Vehicle Number */}
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Vehicle Number *</label>
+                            <label className="block text-sm text-foreground-muted mb-1">Vehicle Number *</label>
                             <input
                                 type="text"
                                 value={vehicleNumber}
@@ -259,7 +259,7 @@ export default function WeighbridgeEntryPage() {
                         {/* Driver Info */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Driver Name</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Driver Name</label>
                                 <input
                                     type="text"
                                     value={driverName}
@@ -268,7 +268,7 @@ export default function WeighbridgeEntryPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Driver Phone</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Driver Phone</label>
                                 <input
                                     type="text"
                                     value={driverPhone}
@@ -280,7 +280,7 @@ export default function WeighbridgeEntryPage() {
 
                         {/* Party Name */}
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">
+                            <label className="block text-sm text-foreground-muted mb-1">
                                 {entryType === 'RM_IN' ? 'Supplier Name' : 'Customer Name'}
                             </label>
                             <input
@@ -293,7 +293,7 @@ export default function WeighbridgeEntryPage() {
 
                         {/* Material Selection */}
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Material</label>
+                            <label className="block text-sm text-foreground-muted mb-1">Material</label>
                             <select
                                 value={inventoryItemId}
                                 onChange={(e) => {
@@ -312,7 +312,7 @@ export default function WeighbridgeEntryPage() {
 
                         {/* Unit */}
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Unit</label>
+                            <label className="block text-sm text-foreground-muted mb-1">Unit</label>
                             <select
                                 value={unit}
                                 onChange={(e) => setUnit(e.target.value as 'KG' | 'TONS' | 'KL')}
@@ -326,7 +326,7 @@ export default function WeighbridgeEntryPage() {
 
                         {/* Notes */}
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Notes</label>
+                            <label className="block text-sm text-foreground-muted mb-1">Notes</label>
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
@@ -351,54 +351,54 @@ export default function WeighbridgeEntryPage() {
                 <>
                     {/* Entry Details */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Entry Details</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Entry Details</h3>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div><span className="text-slate-500">Entry Number:</span> <span className="text-white">{entry.entryNumber}</span></div>
-                            <div><span className="text-slate-500">Type:</span> <span className="text-white">{entry.entryType === 'RM_IN' ? 'Raw Material IN' : 'Finished Goods OUT'}</span></div>
-                            <div><span className="text-slate-500">Vehicle:</span> <span className="text-white">{entry.vehicleNumber}</span></div>
-                            <div><span className="text-slate-500">Driver:</span> <span className="text-white">{entry.driverName || '-'}</span></div>
-                            <div><span className="text-slate-500">{entry.entryType === 'RM_IN' ? 'Supplier' : 'Customer'}:</span> <span className="text-white">{entry.partyName || '-'}</span></div>
-                            <div><span className="text-slate-500">Material:</span> <span className="text-white">{entry.materialName || '-'}</span></div>
+                            <div><span className="text-foreground-faint">Entry Number:</span> <span className="text-foreground">{entry.entryNumber}</span></div>
+                            <div><span className="text-foreground-faint">Type:</span> <span className="text-foreground">{entry.entryType === 'RM_IN' ? 'Raw Material IN' : 'Finished Goods OUT'}</span></div>
+                            <div><span className="text-foreground-faint">Vehicle:</span> <span className="text-foreground">{entry.vehicleNumber}</span></div>
+                            <div><span className="text-foreground-faint">Driver:</span> <span className="text-foreground">{entry.driverName || '-'}</span></div>
+                            <div><span className="text-foreground-faint">{entry.entryType === 'RM_IN' ? 'Supplier' : 'Customer'}:</span> <span className="text-foreground">{entry.partyName || '-'}</span></div>
+                            <div><span className="text-foreground-faint">Material:</span> <span className="text-foreground">{entry.materialName || '-'}</span></div>
                         </div>
                     </div>
 
                     {/* Weight Info */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Weight Information</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Weight Information</h3>
                         <div className="grid grid-cols-3 gap-4 text-center mb-4">
-                            <div className="bg-slate-700/50 p-4 rounded-lg">
-                                <p className="text-slate-400 text-sm">Gross Weight</p>
-                                <p className="text-2xl font-bold text-white">{entry.grossWeight ? `${entry.grossWeight} KG` : '-'}</p>
+                            <div className="bg-surface-tertiary/50 p-4 rounded-lg">
+                                <p className="text-foreground-muted text-sm">Gross Weight</p>
+                                <p className="text-2xl font-bold text-foreground">{entry.grossWeight ? `${entry.grossWeight} KG` : '-'}</p>
                                 {entry.firstWeightTime && entry.grossWeight && (
-                                    <p className="text-xs text-slate-500">{formatDate(entry.firstWeightTime)}</p>
+                                    <p className="text-xs text-foreground-faint">{formatDate(entry.firstWeightTime)}</p>
                                 )}
                             </div>
-                            <div className="bg-slate-700/50 p-4 rounded-lg">
-                                <p className="text-slate-400 text-sm">Tare Weight</p>
-                                <p className="text-2xl font-bold text-white">{entry.tareWeight ? `${entry.tareWeight} KG` : '-'}</p>
+                            <div className="bg-surface-tertiary/50 p-4 rounded-lg">
+                                <p className="text-foreground-muted text-sm">Tare Weight</p>
+                                <p className="text-2xl font-bold text-foreground">{entry.tareWeight ? `${entry.tareWeight} KG` : '-'}</p>
                             </div>
-                            <div className="bg-slate-700/50 p-4 rounded-lg">
-                                <p className="text-slate-400 text-sm">Net Weight</p>
+                            <div className="bg-surface-tertiary/50 p-4 rounded-lg">
+                                <p className="text-foreground-muted text-sm">Net Weight</p>
                                 <p className="text-2xl font-bold text-green-400">{entry.netWeight ? `${entry.netWeight} KG` : '-'}</p>
                             </div>
                         </div>
 
                         {/* Record Weight Form */}
                         {(entry.status === 'PENDING' || entry.status === 'FIRST_WEIGHT') && (
-                            <div className="bg-slate-700/30 p-4 rounded-lg mt-4">
-                                <h4 className="text-white font-medium mb-3">
+                            <div className="bg-surface-tertiary/30 p-4 rounded-lg mt-4">
+                                <h4 className="text-foreground font-medium mb-3">
                                     {entry.status === 'PENDING' ? 'Record First Weight' : 'Record Second Weight'}
                                 </h4>
                                 <div className="flex gap-4 mb-4">
                                     <button
                                         onClick={() => setIsGross(true)}
-                                        className={`flex-1 p-2 rounded-lg ${isGross ? 'bg-blue-500 text-white' : 'bg-slate-600 text-slate-300'}`}
+                                        className={`flex-1 p-2 rounded-lg ${isGross ? 'bg-blue-500 text-foreground' : 'bg-slate-600 text-foreground-secondary'}`}
                                     >
                                         Gross (Loaded)
                                     </button>
                                     <button
                                         onClick={() => setIsGross(false)}
-                                        className={`flex-1 p-2 rounded-lg ${!isGross ? 'bg-blue-500 text-white' : 'bg-slate-600 text-slate-300'}`}
+                                        className={`flex-1 p-2 rounded-lg ${!isGross ? 'bg-blue-500 text-foreground' : 'bg-slate-600 text-foreground-secondary'}`}
                                     >
                                         Tare (Empty)
                                     </button>
@@ -426,7 +426,7 @@ export default function WeighbridgeEntryPage() {
                         {entry.status === 'COMPLETED' && (
                             <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 mt-4 text-center">
                                 <p className="text-green-400 font-medium">✅ Entry Completed</p>
-                                <p className="text-sm text-slate-400">Inventory has been updated</p>
+                                <p className="text-sm text-foreground-muted">Inventory has been updated</p>
                             </div>
                         )}
                     </div>

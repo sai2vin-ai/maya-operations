@@ -87,15 +87,15 @@ export default function InventoryPage() {
     const getFilterButtonClass = (filterValue: string, isActive: boolean) => {
         if (isActive) {
             const colorMap: Record<string, string> = {
-                blue: 'bg-blue-600 text-white',
-                purple: 'bg-purple-600 text-white',
-                green: 'bg-green-600 text-white',
-                yellow: 'bg-yellow-600 text-white',
+                blue: 'bg-blue-600 text-foreground',
+                purple: 'bg-purple-600 text-foreground',
+                green: 'bg-green-600 text-foreground',
+                yellow: 'bg-yellow-600 text-foreground',
             };
             const filterDef = InventoryFilters.find(f => f.value === filterValue);
-            return colorMap[filterDef?.activeColor || 'blue'] || 'bg-blue-600 text-white';
+            return colorMap[filterDef?.activeColor || 'blue'] || 'bg-blue-600 text-foreground';
         }
-        return 'bg-slate-700 text-slate-300 hover:bg-slate-600';
+        return 'bg-surface-tertiary text-foreground-secondary hover:bg-surface-hover';
     };
 
     // Summary stats from all items
@@ -122,7 +122,7 @@ export default function InventoryPage() {
     const finishedProducts = finishedProductItems.length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="Inventory"
                 subtitle={`${totalItems} items tracked`}
@@ -151,29 +151,29 @@ export default function InventoryPage() {
                                     <span className="text-3xl">📥</span>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">Raw Materials</h3>
+                                    <h3 className="text-xl font-bold text-foreground">Raw Materials</h3>
                                     <p className="text-cyan-400 text-sm">From Weighbridge</p>
                                 </div>
                             </div>
                             <span className="bg-cyan-500/20 text-cyan-400 text-xs px-2 py-1 rounded">🚚 Weighbridge</span>
                         </div>
-                        <div className="text-4xl font-bold text-white mb-2">
+                        <div className="text-4xl font-bold text-foreground mb-2">
                             {totalRawMaterialStock >= 1000
                                 ? `${(totalRawMaterialStock / 1000).toFixed(2)} TONS`
                                 : `${totalRawMaterialStock.toFixed(0)} KG`}
                         </div>
-                        <p className="text-slate-400 text-sm mb-4">Available stock from {rawMaterials} items</p>
+                        <p className="text-foreground-muted text-sm mb-4">Available stock from {rawMaterials} items</p>
                         <div className="grid grid-cols-2 gap-3">
                             {rawMaterialItems.slice(0, 4).map(item => (
-                                <div key={item.id} className="bg-slate-700/30 p-3 rounded-lg cursor-pointer hover:bg-slate-700/50"
+                                <div key={item.id} className="bg-surface-tertiary/30 p-3 rounded-lg cursor-pointer hover:bg-surface-tertiary/50"
                                     onClick={() => navigate(`/inventory/${item.id}`)}>
-                                    <p className="text-white font-medium truncate">{item.name}</p>
+                                    <p className="text-foreground font-medium truncate">{item.name}</p>
                                     <p className="text-cyan-400 text-lg font-bold">{item.currentStock} {item.unit}</p>
                                 </div>
                             ))}
                         </div>
                         {rawMaterialItems.length === 0 && (
-                            <p className="text-slate-500 text-center py-4">No raw materials added yet</p>
+                            <p className="text-foreground-faint text-center py-4">No raw materials added yet</p>
                         )}
                     </div>
 
@@ -185,29 +185,29 @@ export default function InventoryPage() {
                                     <span className="text-3xl">📤</span>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">Finished Goods</h3>
+                                    <h3 className="text-xl font-bold text-foreground">Finished Goods</h3>
                                     <p className="text-orange-400 text-sm">From Reactor</p>
                                 </div>
                             </div>
                             <span className="bg-orange-500/20 text-orange-400 text-xs px-2 py-1 rounded">⚙️ Reactor</span>
                         </div>
-                        <div className="text-4xl font-bold text-white mb-2">
+                        <div className="text-4xl font-bold text-foreground mb-2">
                             {totalFinishedGoodsStock >= 1000
                                 ? `${(totalFinishedGoodsStock / 1000).toFixed(2)} TONS`
                                 : `${totalFinishedGoodsStock.toFixed(0)} KG`}
                         </div>
-                        <p className="text-slate-400 text-sm mb-4">Available stock from {finishedProducts} items</p>
+                        <p className="text-foreground-muted text-sm mb-4">Available stock from {finishedProducts} items</p>
                         <div className="grid grid-cols-2 gap-3">
                             {finishedProductItems.slice(0, 4).map(item => (
-                                <div key={item.id} className="bg-slate-700/30 p-3 rounded-lg cursor-pointer hover:bg-slate-700/50"
+                                <div key={item.id} className="bg-surface-tertiary/30 p-3 rounded-lg cursor-pointer hover:bg-surface-tertiary/50"
                                     onClick={() => navigate(`/inventory/${item.id}`)}>
-                                    <p className="text-white font-medium truncate">{item.name}</p>
+                                    <p className="text-foreground font-medium truncate">{item.name}</p>
                                     <p className="text-orange-400 text-lg font-bold">{item.currentStock} {item.unit}</p>
                                 </div>
                             ))}
                         </div>
                         {finishedProductItems.length === 0 && (
-                            <p className="text-slate-500 text-center py-4">No finished goods added yet</p>
+                            <p className="text-foreground-faint text-center py-4">No finished goods added yet</p>
                         )}
                     </div>
                 </div>
@@ -222,32 +222,32 @@ export default function InventoryPage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">{totalItems}</p>
-                                <p className="text-xs text-slate-400">Total Items</p>
+                                <p className="text-2xl font-bold text-foreground">{totalItems}</p>
+                                <p className="text-xs text-foreground-muted">Total Items</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="glass-card p-4 cursor-pointer hover:bg-slate-700/50" onClick={() => setFilter('RAW_MATERIAL')}>
+                    <div className="glass-card p-4 cursor-pointer hover:bg-surface-tertiary/50" onClick={() => setFilter('RAW_MATERIAL')}>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
                                 <span className="text-lg">📥</span>
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">{rawMaterials}</p>
-                                <p className="text-xs text-slate-400">Raw Materials</p>
+                                <p className="text-2xl font-bold text-foreground">{rawMaterials}</p>
+                                <p className="text-xs text-foreground-muted">Raw Materials</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="glass-card p-4 cursor-pointer hover:bg-slate-700/50" onClick={() => setFilter('FINISHED_PRODUCT')}>
+                    <div className="glass-card p-4 cursor-pointer hover:bg-surface-tertiary/50" onClick={() => setFilter('FINISHED_PRODUCT')}>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
                                 <span className="text-lg">📤</span>
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">{finishedProducts}</p>
-                                <p className="text-xs text-slate-400">Finished Goods</p>
+                                <p className="text-2xl font-bold text-foreground">{finishedProducts}</p>
+                                <p className="text-xs text-foreground-muted">Finished Goods</p>
                             </div>
                         </div>
                     </div>
@@ -263,8 +263,8 @@ export default function InventoryPage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">{lowStockCount}</p>
-                                <p className="text-xs text-slate-400">Low Stock</p>
+                                <p className="text-2xl font-bold text-foreground">{lowStockCount}</p>
+                                <p className="text-xs text-foreground-muted">Low Stock</p>
                             </div>
                         </div>
                     </div>
@@ -314,7 +314,7 @@ export default function InventoryPage() {
                         {items.length === 0 ? (
                             <EmptyState
                                 icon={
-                                    <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-8 h-8 text-foreground-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                     </svg>
                                 }
@@ -328,7 +328,7 @@ export default function InventoryPage() {
                                 return (
                                     <div
                                         key={item.id}
-                                        className="glass-card p-4 hover:bg-slate-700/50 transition-all cursor-pointer"
+                                        className="glass-card p-4 hover:bg-surface-tertiary/50 transition-all cursor-pointer"
                                         onClick={() => navigate(`/inventory/${item.id}`)}
                                     >
                                         <div className="flex items-start justify-between gap-4">
@@ -341,13 +341,13 @@ export default function InventoryPage() {
                                                 {/* Item Info */}
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="text-white font-bold">{item.name}</h3>
+                                                        <h3 className="text-foreground font-bold">{item.name}</h3>
                                                         <span className={`px-2 py-0.5 text-xs font-medium rounded ${getCategoryColor(item.category)}`}>
                                                             {getCategoryLabel(item.category)}
                                                         </span>
                                                     </div>
-                                                    <p className="text-slate-400 text-sm">{item.code}</p>
-                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-slate-500">
+                                                    <p className="text-foreground-muted text-sm">{item.code}</p>
+                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-foreground-faint">
                                                         {item.location && <span>📍 {item.location}</span>}
                                                         <span>Min: {item.minimumStock} {item.unit}</span>
                                                         {item.maximumStock && <span>Max: {item.maximumStock} {item.unit}</span>}
@@ -357,8 +357,8 @@ export default function InventoryPage() {
 
                                             {/* Stock Level */}
                                             <div className="text-right">
-                                                <p className="text-2xl font-bold text-white">{item.currentStock}</p>
-                                                <p className="text-xs text-slate-400">{item.unit}</p>
+                                                <p className="text-2xl font-bold text-foreground">{item.currentStock}</p>
+                                                <p className="text-xs text-foreground-muted">{item.unit}</p>
                                                 <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded ${stockStatus.bg}`}>
                                                     {stockStatus.label}
                                                 </span>

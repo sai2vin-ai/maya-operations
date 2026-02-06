@@ -109,7 +109,7 @@ export default function ReactorOutputPage() {
             <div className="p-6 flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading outputs...</p>
+                    <p className="text-foreground-muted">Loading outputs...</p>
                 </div>
             </div>
         );
@@ -120,8 +120,8 @@ export default function ReactorOutputPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Reactor Output</h1>
-                    <p className="text-slate-400">{batchesWithOutputs.length} batches with output</p>
+                    <h1 className="text-2xl font-bold text-foreground">Reactor Output</h1>
+                    <p className="text-foreground-muted">{batchesWithOutputs.length} batches with output</p>
                 </div>
                 <button onClick={() => navigate('/reactor')} className="btn-secondary">
                     ← Back to Reactor
@@ -137,57 +137,57 @@ export default function ReactorOutputPage() {
 
             {/* Total Output Summary */}
             <div className="glass-card p-6 mb-6">
-                <h2 className="text-lg font-semibold text-white mb-4">📊 Total Output (All Batches)</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">📊 Total Output (All Batches)</h2>
                 {totalOutputs.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {totalOutputs.map(output => (
-                            <div key={output.category} className="bg-slate-700/50 p-4 rounded-lg">
+                            <div key={output.category} className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="text-2xl">{getCategoryIcon(output.category)}</span>
-                                    <span className="text-slate-300">{getCategoryLabel(output.category)}</span>
+                                    <span className="text-foreground-secondary">{getCategoryLabel(output.category)}</span>
                                 </div>
-                                <div className="text-3xl font-bold text-white">
+                                <div className="text-3xl font-bold text-foreground">
                                     {output.totalQuantity.toLocaleString()}
-                                    <span className="text-lg text-slate-400 ml-1">{output.unit}</span>
+                                    <span className="text-lg text-foreground-muted ml-1">{output.unit}</span>
                                 </div>
-                                <p className="text-sm text-slate-500 mt-1">from {output.count} records</p>
+                                <p className="text-sm text-foreground-faint mt-1">from {output.count} records</p>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <p className="text-slate-500 text-center py-4">No outputs recorded yet</p>
+                    <p className="text-foreground-faint text-center py-4">No outputs recorded yet</p>
                 )}
             </div>
 
             {/* Last Batch Output */}
             <div className="glass-card p-6 mb-6">
-                <h2 className="text-lg font-semibold text-white mb-4">🕐 Last Batch Output</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">🕐 Last Batch Output</h2>
                 {lastBatch ? (
                     <div>
-                        <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-700">
+                        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
                             <div>
-                                <span className="text-xl font-bold text-white">{lastBatch.batchNumber}</span>
-                                <span className="text-slate-500 ml-3">Reactor {lastBatch.reactorId}</span>
+                                <span className="text-xl font-bold text-foreground">{lastBatch.batchNumber}</span>
+                                <span className="text-foreground-faint ml-3">Reactor {lastBatch.reactorId}</span>
                             </div>
                             <div className="text-right">
-                                <span className="text-slate-400">{formatDate(lastBatch.endTime || lastBatch.startTime)}</span>
+                                <span className="text-foreground-muted">{formatDate(lastBatch.endTime || lastBatch.startTime)}</span>
                                 <span className={`ml-3 px-2 py-1 rounded-full text-xs ${lastBatch.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
                                     }`}>{lastBatch.status}</span>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {lastBatch.outputs.map((output, idx) => (
-                                <div key={idx} className="bg-slate-700/30 p-4 rounded-lg">
+                                <div key={idx} className="bg-surface-tertiary/30 p-4 rounded-lg">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-xl">{getCategoryIcon(output.materialCategory)}</span>
-                                        <span className="text-slate-300">{getCategoryLabel(output.materialCategory)}</span>
+                                        <span className="text-foreground-secondary">{getCategoryLabel(output.materialCategory)}</span>
                                     </div>
-                                    <div className="text-2xl font-bold text-white">
+                                    <div className="text-2xl font-bold text-foreground">
                                         {output.quantity}
-                                        <span className="text-sm text-slate-400 ml-1">{output.unit}</span>
+                                        <span className="text-sm text-foreground-muted ml-1">{output.unit}</span>
                                     </div>
                                     {output.qualityGrade && (
-                                        <p className="text-sm text-slate-500 mt-1">Grade: {output.qualityGrade}</p>
+                                        <p className="text-sm text-foreground-faint mt-1">Grade: {output.qualityGrade}</p>
                                     )}
                                 </div>
                             ))}
@@ -200,24 +200,24 @@ export default function ReactorOutputPage() {
                         </button>
                     </div>
                 ) : (
-                    <p className="text-slate-500 text-center py-4">No batch with output found</p>
+                    <p className="text-foreground-faint text-center py-4">No batch with output found</p>
                 )}
             </div>
 
             {/* All Outputs History */}
             <div className="glass-card p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">📋 All Outputs History</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">📋 All Outputs History</h2>
                 {batchesWithOutputs.length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-slate-700/50">
+                            <thead className="bg-surface-tertiary/50">
                                 <tr>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Batch</th>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Reactor</th>
-                                    <th className="text-left p-3 text-slate-300 font-medium">Date</th>
-                                    <th className="text-right p-3 text-slate-300 font-medium">Oil (KG)</th>
-                                    <th className="text-right p-3 text-slate-300 font-medium">Carbon (KG)</th>
-                                    <th className="text-right p-3 text-slate-300 font-medium">Steel (KG)</th>
+                                    <th className="text-left p-3 text-foreground-secondary font-medium">Batch</th>
+                                    <th className="text-left p-3 text-foreground-secondary font-medium">Reactor</th>
+                                    <th className="text-left p-3 text-foreground-secondary font-medium">Date</th>
+                                    <th className="text-right p-3 text-foreground-secondary font-medium">Oil (KG)</th>
+                                    <th className="text-right p-3 text-foreground-secondary font-medium">Carbon (KG)</th>
+                                    <th className="text-right p-3 text-foreground-secondary font-medium">Steel (KG)</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-700">
@@ -231,14 +231,14 @@ export default function ReactorOutputPage() {
                                     return (
                                         <tr
                                             key={batch.id}
-                                            className="hover:bg-slate-700/30 cursor-pointer transition-colors"
+                                            className="hover:bg-surface-tertiary/30 cursor-pointer transition-colors"
                                             onClick={() => navigate(`/batch/${batch.id}`)}
                                         >
-                                            <td className="p-3 text-white font-mono">{batch.batchNumber}</td>
-                                            <td className="p-3 text-slate-300">R{batch.reactorId}</td>
-                                            <td className="p-3 text-slate-400">{formatDate(batch.endTime || batch.startTime)}</td>
+                                            <td className="p-3 text-foreground font-mono">{batch.batchNumber}</td>
+                                            <td className="p-3 text-foreground-secondary">R{batch.reactorId}</td>
+                                            <td className="p-3 text-foreground-muted">{formatDate(batch.endTime || batch.startTime)}</td>
                                             <td className="p-3 text-right text-yellow-400">{getOutput('PYROLYSIS_OIL')}</td>
-                                            <td className="p-3 text-right text-slate-300">{getOutput('CARBON_BLACK')}</td>
+                                            <td className="p-3 text-right text-foreground-secondary">{getOutput('CARBON_BLACK')}</td>
                                             <td className="p-3 text-right text-blue-400">{getOutput('SCRAP_STEEL')}</td>
                                         </tr>
                                     );
@@ -247,7 +247,7 @@ export default function ReactorOutputPage() {
                         </table>
                     </div>
                 ) : (
-                    <p className="text-slate-500 text-center py-4">No outputs recorded yet</p>
+                    <p className="text-foreground-faint text-center py-4">No outputs recorded yet</p>
                 )}
             </div>
         </div>

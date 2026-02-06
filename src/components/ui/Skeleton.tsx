@@ -13,7 +13,7 @@ export function Skeleton({
     height,
     animation = 'pulse',
 }: SkeletonProps) {
-    const baseStyles = 'bg-slate-700';
+    const baseStyles = 'bg-surface-tertiary';
 
     const variantStyles = {
         text: 'rounded',
@@ -23,7 +23,7 @@ export function Skeleton({
 
     const animationStyles = {
         pulse: 'animate-pulse',
-        wave: 'animate-shimmer bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%]',
+        wave: 'animate-shimmer bg-gradient-to-r from-surface-tertiary via-surface-hover to-surface-tertiary bg-[length:200%_100%]',
         none: '',
     };
 
@@ -84,14 +84,14 @@ export function SkeletonTable({ rows = 5, cols = 4, className = '' }: { rows?: n
     return (
         <div className={`glass-card overflow-hidden ${className}`}>
             {/* Header */}
-            <div className="flex gap-4 p-4 border-b border-slate-700">
+            <div className="flex gap-4 p-4 border-b border-border">
                 {Array.from({ length: cols }).map((_, i) => (
                     <Skeleton key={i} variant="text" height={16} className="flex-1" />
                 ))}
             </div>
             {/* Rows */}
             {Array.from({ length: rows }).map((_, rowIndex) => (
-                <div key={rowIndex} className="flex gap-4 p-4 border-b border-slate-700/50 last:border-b-0">
+                <div key={rowIndex} className="flex gap-4 p-4 border-b border-border last:border-b-0">
                     {Array.from({ length: cols }).map((_, colIndex) => (
                         <Skeleton key={colIndex} variant="text" height={14} className="flex-1" />
                     ))}

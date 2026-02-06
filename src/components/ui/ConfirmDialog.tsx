@@ -100,8 +100,8 @@ export function ConfirmDialog({
                         )}
                     </div>
                     <div className="flex-1">
-                        <h3 id="confirm-dialog-title" className="text-lg font-semibold text-white mb-2">{title}</h3>
-                        <p id="confirm-dialog-message" className="text-slate-400">{message}</p>
+                        <h3 id="confirm-dialog-title" className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+                        <p id="confirm-dialog-message" className="text-foreground-muted">{message}</p>
                     </div>
                 </div>
 

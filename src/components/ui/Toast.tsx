@@ -123,10 +123,10 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
             <svg className={`w-5 h-5 flex-shrink-0 ${style.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={style.iconPath} />
             </svg>
-            <p className="text-white text-sm flex-1">{toast.message}</p>
+            <p className="text-foreground text-sm flex-1">{toast.message}</p>
             <button
                 onClick={handleClose}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-foreground-muted hover:text-foreground transition-colors"
                 aria-label="Dismiss"
             >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

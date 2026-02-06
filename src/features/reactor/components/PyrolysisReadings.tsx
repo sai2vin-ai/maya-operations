@@ -33,8 +33,8 @@ export function PyrolysisReadings({ readings, onChange }: PyrolysisReadingsProps
 
     return (
         <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Temperature & Pressure Readings</label>
-            <div className="bg-slate-700/50 p-4 rounded-lg space-y-3">
+            <label className="block text-sm font-medium text-foreground-secondary mb-2">Temperature & Pressure Readings</label>
+            <div className="bg-surface-tertiary/50 p-4 rounded-lg space-y-3">
                 {readings.map((reading, idx) => (
                     <div key={idx} className="grid grid-cols-6 gap-2 text-sm">
                         <input type="number" value={reading.reactorTemp}
@@ -61,7 +61,7 @@ export function PyrolysisReadings({ readings, onChange }: PyrolysisReadingsProps
                     + Add Reading
                 </button>
             </div>
-            <p className="text-xs text-slate-500 mt-1">Reactor | 1st Tank | Panel (Temp + Pressure)</p>
+            <p className="text-xs text-foreground-faint mt-1">Reactor | 1st Tank | Panel (Temp + Pressure)</p>
         </div>
     );
 }

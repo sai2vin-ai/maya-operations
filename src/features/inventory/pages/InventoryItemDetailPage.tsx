@@ -162,7 +162,7 @@ export default function InventoryItemDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen page-bg flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -170,15 +170,15 @@ export default function InventoryItemDetailPage() {
 
     if (error || !item) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen page-bg flex items-center justify-center">
                 <div className="glass-card p-8 text-center max-w-md">
                     <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-2">Error</h2>
-                    <p className="text-slate-400 mb-4">{error || 'Item not found'}</p>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Error</h2>
+                    <p className="text-foreground-muted mb-4">{error || 'Item not found'}</p>
                     <button onClick={() => navigate('/inventory')} className="btn-primary">
                         Back to Inventory
                     </button>
@@ -190,30 +190,30 @@ export default function InventoryItemDetailPage() {
     const stockStatus = getStockStatus(item);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate('/inventory')}
-                            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-white">{item.name}</h1>
-                            <p className="text-sm text-slate-400">{item.code}</p>
+                            <h1 className="text-xl font-bold text-foreground">{item.name}</h1>
+                            <p className="text-sm text-foreground-muted">{item.code}</p>
                         </div>
                     </div>
 
                     <button
                         onClick={() => setShowEditModal(true)}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                     </button>
@@ -225,8 +225,8 @@ export default function InventoryItemDetailPage() {
                 <div className="glass-card p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-slate-400 mb-1">Current Stock</p>
-                            <p className="text-4xl font-bold text-white">{item.currentStock} <span className="text-lg text-slate-400">{item.unit}</span></p>
+                            <p className="text-sm text-foreground-muted mb-1">Current Stock</p>
+                            <p className="text-4xl font-bold text-foreground">{item.currentStock} <span className="text-lg text-foreground-muted">{item.unit}</span></p>
                             <span className={`inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full ${stockStatus.bg}`}>
                                 {stockStatus.label}
                             </span>
@@ -243,23 +243,23 @@ export default function InventoryItemDetailPage() {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-700">
+                    <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
                         <div>
-                            <p className="text-xs text-slate-500 mb-1">Category</p>
-                            <p className="text-white font-medium">{getCategoryLabel(item.category)}</p>
+                            <p className="text-xs text-foreground-faint mb-1">Category</p>
+                            <p className="text-foreground font-medium">{getCategoryLabel(item.category)}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-slate-500 mb-1">Min Stock</p>
-                            <p className="text-white font-medium">{item.minimumStock} {item.unit}</p>
+                            <p className="text-xs text-foreground-faint mb-1">Min Stock</p>
+                            <p className="text-foreground font-medium">{item.minimumStock} {item.unit}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-slate-500 mb-1">Max Stock</p>
-                            <p className="text-white font-medium">{item.maximumStock ? `${item.maximumStock} ${item.unit}` : '-'}</p>
+                            <p className="text-xs text-foreground-faint mb-1">Max Stock</p>
+                            <p className="text-foreground font-medium">{item.maximumStock ? `${item.maximumStock} ${item.unit}` : '-'}</p>
                         </div>
                         {item.location && (
                             <div className="col-span-3">
-                                <p className="text-xs text-slate-500 mb-1">Location</p>
-                                <p className="text-white font-medium">📍 {item.location}</p>
+                                <p className="text-xs text-foreground-faint mb-1">Location</p>
+                                <p className="text-foreground font-medium">📍 {item.location}</p>
                             </div>
                         )}
                     </div>
@@ -267,14 +267,14 @@ export default function InventoryItemDetailPage() {
 
                 {/* Recent Transactions */}
                 <div className="glass-card p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">Recent Transactions</h2>
+                    <h2 className="text-lg font-semibold text-foreground mb-4">Recent Transactions</h2>
 
                     {transactions.length === 0 ? (
                         <div className="text-center py-8">
-                            <svg className="w-12 h-12 text-slate-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-12 h-12 text-foreground-faint mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
-                            <p className="text-slate-400">No transactions yet</p>
+                            <p className="text-foreground-muted">No transactions yet</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -282,7 +282,7 @@ export default function InventoryItemDetailPage() {
                                 const txnInfo = getTransactionInfo(txn.transactionType);
                                 const isPositive = txn.transactionType === 'RECEIPT' || (txn.transactionType === 'ADJUSTMENT' && txn.quantity > 0);
                                 return (
-                                    <div key={txn.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                                    <div key={txn.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${txnInfo.color === 'green' ? 'bg-green-500/20 text-green-400' :
                                                 txnInfo.color === 'red' ? 'bg-red-500/20 text-red-400' :
@@ -300,16 +300,16 @@ export default function InventoryItemDetailPage() {
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="text-white font-medium">{txnInfo.label}</p>
-                                                <p className="text-xs text-slate-400">{formatTime(txn.createdAt)}</p>
-                                                {txn.reason && <p className="text-xs text-slate-500 mt-1">{txn.reason}</p>}
+                                                <p className="text-foreground font-medium">{txnInfo.label}</p>
+                                                <p className="text-xs text-foreground-muted">{formatTime(txn.createdAt)}</p>
+                                                {txn.reason && <p className="text-xs text-foreground-faint mt-1">{txn.reason}</p>}
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className={`font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
                                                 {isPositive ? '+' : '-'}{Math.abs(txn.quantity)} {item.unit}
                                             </p>
-                                            <p className="text-xs text-slate-500">Bal: {txn.balanceAfter}</p>
+                                            <p className="text-xs text-foreground-faint">Bal: {txn.balanceAfter}</p>
                                         </div>
                                     </div>
                                 );
@@ -323,11 +323,11 @@ export default function InventoryItemDetailPage() {
             {showTransactionModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="glass-card p-6 max-w-md w-full">
-                        <h2 className="text-lg font-bold text-white mb-4">Record Transaction</h2>
+                        <h2 className="text-lg font-bold text-foreground mb-4">Record Transaction</h2>
 
                         <form onSubmit={handleRecordTransaction} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Type</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">Type</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {['RECEIPT', 'ISSUE', 'ADJUSTMENT'].map((type) => (
                                         <button
@@ -335,10 +335,10 @@ export default function InventoryItemDetailPage() {
                                             type="button"
                                             onClick={() => setTransactionType(type as TransactionType)}
                                             className={`py-2 px-3 rounded-lg font-medium transition-all ${transactionType === type
-                                                ? type === 'RECEIPT' ? 'bg-green-600 text-white' :
-                                                    type === 'ISSUE' ? 'bg-red-600 text-white' :
-                                                        'bg-yellow-600 text-white'
-                                                : 'bg-slate-700 text-slate-300'
+                                                ? type === 'RECEIPT' ? 'bg-green-600 text-foreground' :
+                                                    type === 'ISSUE' ? 'bg-red-600 text-foreground' :
+                                                        'bg-yellow-600 text-foreground'
+                                                : 'bg-surface-tertiary text-foreground-secondary'
                                                 }`}
                                         >
                                             {type.charAt(0) + type.slice(1).toLowerCase()}
@@ -348,7 +348,7 @@ export default function InventoryItemDetailPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Quantity ({item.unit})</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">Quantity ({item.unit})</label>
                                 <input
                                     type="number"
                                     value={transactionQty}
@@ -361,7 +361,7 @@ export default function InventoryItemDetailPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Reason (optional)</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">Reason (optional)</label>
                                 <input
                                     type="text"
                                     value={transactionReason}
@@ -375,7 +375,7 @@ export default function InventoryItemDetailPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowTransactionModal(false)}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-slate-700 text-white hover:bg-slate-600"
+                                    className="flex-1 py-2 px-4 rounded-lg bg-surface-tertiary text-foreground hover:bg-surface-hover"
                                 >
                                     Cancel
                                 </button>
@@ -396,11 +396,11 @@ export default function InventoryItemDetailPage() {
             {showEditModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="glass-card p-6 max-w-md w-full">
-                        <h2 className="text-lg font-bold text-white mb-4">Edit Item</h2>
+                        <h2 className="text-lg font-bold text-foreground mb-4">Edit Item</h2>
 
                         <form onSubmit={handleUpdateItem} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Name</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">Name</label>
                                 <input
                                     type="text"
                                     value={editName}
@@ -412,7 +412,7 @@ export default function InventoryItemDetailPage() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Min Stock</label>
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-2">Min Stock</label>
                                     <input
                                         type="number"
                                         value={editMinStock}
@@ -423,7 +423,7 @@ export default function InventoryItemDetailPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Max Stock</label>
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-2">Max Stock</label>
                                     <input
                                         type="number"
                                         value={editMaxStock}
@@ -436,7 +436,7 @@ export default function InventoryItemDetailPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Location</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">Location</label>
                                 <input
                                     type="text"
                                     value={editLocation}
@@ -450,7 +450,7 @@ export default function InventoryItemDetailPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowEditModal(false)}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-slate-700 text-white hover:bg-slate-600"
+                                    className="flex-1 py-2 px-4 rounded-lg bg-surface-tertiary text-foreground hover:bg-surface-hover"
                                 >
                                     Cancel
                                 </button>

@@ -119,7 +119,7 @@ export default function UserDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -127,10 +127,10 @@ export default function UserDetailPage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <div className="glass-card p-8 text-center max-w-md">
-                    <h2 className="text-xl font-bold text-white mb-2">User Not Found</h2>
-                    <p className="text-slate-400 mb-4">The user you're looking for doesn't exist.</p>
+                    <h2 className="text-xl font-bold text-foreground mb-2">User Not Found</h2>
+                    <p className="text-foreground-muted mb-4">The user you're looking for doesn't exist.</p>
                     <button onClick={() => navigate('/users')} className="btn-primary">
                         Back to Users
                     </button>
@@ -140,22 +140,22 @@ export default function UserDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate('/users')}
-                            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-white">User Details</h1>
-                            <p className="text-sm text-slate-400">{user.email}</p>
+                            <h1 className="text-xl font-bold text-foreground">User Details</h1>
+                            <p className="text-sm text-foreground-muted">{user.email}</p>
                         </div>
                     </div>
 
@@ -209,14 +209,14 @@ export default function UserDetailPage() {
                             </span>
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-white">{user.name}</h2>
-                            <p className="text-slate-400">{user.email}</p>
+                            <h2 className="text-2xl font-bold text-foreground">{user.name}</h2>
+                            <p className="text-foreground-muted">{user.email}</p>
                             <div className="flex items-center gap-2 mt-2">
                                 <span className={`status-badge ${user.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}`}>
                                     {user.status}
                                 </span>
-                                <span className="text-slate-500">•</span>
-                                <span className="text-slate-400">{USER_ROLES.find(r => r.value === user.role)?.label || user.role}</span>
+                                <span className="text-foreground-faint">•</span>
+                                <span className="text-foreground-muted">{USER_ROLES.find(r => r.value === user.role)?.label || user.role}</span>
                             </div>
                         </div>
                     </div>
@@ -224,12 +224,12 @@ export default function UserDetailPage() {
 
                 {/* Form Fields */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">User Information</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">User Information</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Name */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Full Name</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -239,19 +239,19 @@ export default function UserDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{user.name}</p>
+                                <p className="text-foreground py-2">{user.name}</p>
                             )}
                         </div>
 
                         {/* Email (read-only) */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                            <p className="text-white py-2">{user.email}</p>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Email</label>
+                            <p className="text-foreground py-2">{user.email}</p>
                         </div>
 
                         {/* Phone */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Phone</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Phone</label>
                             {isEditing ? (
                                 <input
                                     type="tel"
@@ -261,13 +261,13 @@ export default function UserDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{user.phone || '-'}</p>
+                                <p className="text-foreground py-2">{user.phone || '-'}</p>
                             )}
                         </div>
 
                         {/* Employee ID */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Employee ID</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Employee ID</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -277,13 +277,13 @@ export default function UserDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{user.employeeId || '-'}</p>
+                                <p className="text-foreground py-2">{user.employeeId || '-'}</p>
                             )}
                         </div>
 
                         {/* Role */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Role</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Role</label>
                             {isEditing ? (
                                 <select
                                     name="role"
@@ -296,13 +296,13 @@ export default function UserDetailPage() {
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-white py-2">{USER_ROLES.find(r => r.value === user.role)?.label || user.role}</p>
+                                <p className="text-foreground py-2">{USER_ROLES.find(r => r.value === user.role)?.label || user.role}</p>
                             )}
                         </div>
 
                         {/* Status */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Status</label>
                             {isEditing ? (
                                 <select
                                     name="status"
@@ -315,7 +315,7 @@ export default function UserDetailPage() {
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-white py-2">{USER_STATUSES.find(s => s.value === user.status)?.label || user.status}</p>
+                                <p className="text-foreground py-2">{USER_STATUSES.find(s => s.value === user.status)?.label || user.status}</p>
                             )}
                         </div>
                     </div>
@@ -323,7 +323,7 @@ export default function UserDetailPage() {
 
                 {/* Actions */}
                 <div className="glass-card p-6 mt-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Actions</h3>
                     <div className="flex flex-wrap gap-3">
                         <button
                             onClick={handleResetPassword}
@@ -340,17 +340,17 @@ export default function UserDetailPage() {
 
                 {/* Audit Info */}
                 <div className="glass-card p-6 mt-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Audit Information</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Audit Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span className="text-slate-400">Created:</span>
-                            <span className="text-white ml-2">
+                            <span className="text-foreground-muted">Created:</span>
+                            <span className="text-foreground ml-2">
                                 {user.createdAt?.toDate?.()?.toLocaleString() || '-'}
                             </span>
                         </div>
                         <div>
-                            <span className="text-slate-400">Last Updated:</span>
-                            <span className="text-white ml-2">
+                            <span className="text-foreground-muted">Last Updated:</span>
+                            <span className="text-foreground ml-2">
                                 {user.updatedAt?.toDate?.()?.toLocaleString() || '-'}
                             </span>
                         </div>

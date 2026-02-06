@@ -191,7 +191,7 @@ export default function SparePartDetailPage() {
             <div className="p-6 flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading spare part...</p>
+                    <p className="text-foreground-muted">Loading spare part...</p>
                 </div>
             </div>
         );
@@ -214,12 +214,12 @@ export default function SparePartDetailPage() {
         <div className="p-6 max-w-4xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/spare-parts')} className="text-slate-400 hover:text-white">
+                <button onClick={() => navigate('/spare-parts')} className="text-foreground-muted hover:text-foreground">
                     ← Back
                 </button>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-white">{part.partNumber}</h1>
-                    <p className="text-slate-400">{part.name}</p>
+                    <h1 className="text-2xl font-bold text-foreground">{part.partNumber}</h1>
+                    <p className="text-foreground-muted">{part.name}</p>
                 </div>
                 {stockStatus && (
                     <span className={`px-3 py-1 rounded-full border ${stockStatus.color}`}>
@@ -244,8 +244,8 @@ export default function SparePartDetailPage() {
             <div className="glass-card p-6 mb-4">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <span className="text-4xl font-bold text-white">{part.currentStock}</span>
-                        <span className="text-xl text-slate-400 ml-2">{part.unit}</span>
+                        <span className="text-4xl font-bold text-foreground">{part.currentStock}</span>
+                        <span className="text-xl text-foreground-muted ml-2">{part.unit}</span>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -266,8 +266,8 @@ export default function SparePartDetailPage() {
 
                 {/* Receipt Form */}
                 {showReceiptForm && (
-                    <div className="bg-slate-700/50 p-4 rounded-lg mt-4">
-                        <h4 className="text-white font-medium mb-3">Receive Stock</h4>
+                    <div className="bg-surface-tertiary/50 p-4 rounded-lg mt-4">
+                        <h4 className="text-foreground font-medium mb-3">Receive Stock</h4>
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <input
                                 type="number"
@@ -298,8 +298,8 @@ export default function SparePartDetailPage() {
 
                 {/* Issue Form */}
                 {showIssueForm && (
-                    <div className="bg-slate-700/50 p-4 rounded-lg mt-4">
-                        <h4 className="text-white font-medium mb-3">Issue Stock</h4>
+                    <div className="bg-surface-tertiary/50 p-4 rounded-lg mt-4">
+                        <h4 className="text-foreground font-medium mb-3">Issue Stock</h4>
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <input
                                 type="number"
@@ -347,7 +347,7 @@ export default function SparePartDetailPage() {
             {/* Part Details */}
             <div className="glass-card p-6 mb-4">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Part Details</h3>
+                    <h3 className="text-lg font-semibold text-foreground">Part Details</h3>
                     <button onClick={() => setEditing(!editing)} className="text-blue-400 hover:text-blue-300">
                         {editing ? 'Cancel' : 'Edit'}
                     </button>
@@ -355,28 +355,28 @@ export default function SparePartDetailPage() {
 
                 {!editing ? (
                     <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div><span className="text-slate-500">Part Number:</span> <span className="text-white">{part.partNumber}</span></div>
-                        <div><span className="text-slate-500">File Number:</span> <span className="text-white">{part.fileNumber || '-'}</span></div>
-                        <div><span className="text-slate-500">Category:</span> <span className="text-white">{part.category}</span></div>
-                        <div><span className="text-slate-500">Unit:</span> <span className="text-white">{part.unit}</span></div>
-                        <div><span className="text-slate-500">Min Stock:</span> <span className="text-white">{part.minimumStock}</span></div>
-                        <div><span className="text-slate-500">Unit Price:</span> <span className="text-white">{part.unitPrice ? `₹${part.unitPrice}` : '-'}</span></div>
-                        <div><span className="text-slate-500">Location:</span> <span className="text-white">{part.location || '-'}</span></div>
-                        <div><span className="text-slate-500">Used For:</span> <span className="text-white">{part.usedFor || '-'}</span></div>
+                        <div><span className="text-foreground-faint">Part Number:</span> <span className="text-foreground">{part.partNumber}</span></div>
+                        <div><span className="text-foreground-faint">File Number:</span> <span className="text-foreground">{part.fileNumber || '-'}</span></div>
+                        <div><span className="text-foreground-faint">Category:</span> <span className="text-foreground">{part.category}</span></div>
+                        <div><span className="text-foreground-faint">Unit:</span> <span className="text-foreground">{part.unit}</span></div>
+                        <div><span className="text-foreground-faint">Min Stock:</span> <span className="text-foreground">{part.minimumStock}</span></div>
+                        <div><span className="text-foreground-faint">Unit Price:</span> <span className="text-foreground">{part.unitPrice ? `₹${part.unitPrice}` : '-'}</span></div>
+                        <div><span className="text-foreground-faint">Location:</span> <span className="text-foreground">{part.location || '-'}</span></div>
+                        <div><span className="text-foreground-faint">Used For:</span> <span className="text-foreground">{part.usedFor || '-'}</span></div>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Name</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Name</label>
                                 <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="input-field w-full" />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">File Number</label>
+                                <label className="block text-sm text-foreground-muted mb-1">File Number</label>
                                 <input type="text" value={editFileNumber} onChange={(e) => setEditFileNumber(e.target.value)} className="input-field w-full" />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Category</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Category</label>
                                 <select value={editCategory} onChange={(e) => setEditCategory(e.target.value as SparePartCategory)} className="input-field w-full">
                                     {SPARE_PART_CATEGORIES.map(cat => (
                                         <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -384,7 +384,7 @@ export default function SparePartDetailPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Unit</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Unit</label>
                                 <select value={editUnit} onChange={(e) => setEditUnit(e.target.value)} className="input-field w-full">
                                     {SPARE_PART_UNITS.map(u => (
                                         <option key={u} value={u}>{u}</option>
@@ -392,19 +392,19 @@ export default function SparePartDetailPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Min Stock</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Min Stock</label>
                                 <input type="number" value={editMinStock} onChange={(e) => setEditMinStock(e.target.value)} className="input-field w-full" />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Unit Price (₹)</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Unit Price (₹)</label>
                                 <input type="number" value={editUnitPrice} onChange={(e) => setEditUnitPrice(e.target.value)} className="input-field w-full" />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Location</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Location</label>
                                 <input type="text" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="input-field w-full" placeholder="e.g., Rack A-1" />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Used For</label>
+                                <label className="block text-sm text-foreground-muted mb-1">Used For</label>
                                 <input type="text" value={editUsedFor} onChange={(e) => setEditUsedFor(e.target.value)} className="input-field w-full" placeholder="e.g., Reactor 1" />
                             </div>
                         </div>
@@ -417,31 +417,31 @@ export default function SparePartDetailPage() {
 
             {/* Transaction History */}
             <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Transaction History</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Transaction History</h3>
                 {transactions.length > 0 ? (
                     <div className="space-y-2">
                         {transactions.map((txn) => (
-                            <div key={txn.id} className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                            <div key={txn.id} className="flex items-center justify-between p-3 bg-surface-tertiary/30 rounded-lg">
                                 <div className="flex items-center gap-3">
                                     <span className={`text-lg font-bold ${txn.type === 'RECEIPT' ? 'text-green-400' : 'text-red-400'}`}>
                                         {txn.type === 'RECEIPT' ? '+' : '-'}{txn.quantity}
                                     </span>
                                     <div>
-                                        <span className="text-white">{txn.type === 'RECEIPT' ? 'Received' : 'Issued'}</span>
-                                        {txn.machineName && <span className="text-slate-400 text-sm ml-2">→ {txn.machineName}</span>}
-                                        {txn.issuedTo && <span className="text-slate-500 text-xs block">To: {txn.issuedTo}</span>}
-                                        {txn.reason && <span className="text-slate-500 text-xs block">{txn.reason}</span>}
+                                        <span className="text-foreground">{txn.type === 'RECEIPT' ? 'Received' : 'Issued'}</span>
+                                        {txn.machineName && <span className="text-foreground-muted text-sm ml-2">→ {txn.machineName}</span>}
+                                        {txn.issuedTo && <span className="text-foreground-faint text-xs block">To: {txn.issuedTo}</span>}
+                                        {txn.reason && <span className="text-foreground-faint text-xs block">{txn.reason}</span>}
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-slate-400 text-sm">{formatDate(txn.createdAt)}</span>
-                                    <span className="text-slate-500 text-xs block">Balance: {txn.balanceAfter}</span>
+                                    <span className="text-foreground-muted text-sm">{formatDate(txn.createdAt)}</span>
+                                    <span className="text-foreground-faint text-xs block">Balance: {txn.balanceAfter}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <p className="text-slate-500 text-center py-4">No transactions yet</p>
+                    <p className="text-foreground-faint text-center py-4">No transactions yet</p>
                 )}
             </div>
         </div>

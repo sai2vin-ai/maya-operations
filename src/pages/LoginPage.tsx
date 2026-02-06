@@ -26,15 +26,15 @@ export default function LoginPage() {
     const isLoading = loading || localLoading;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <div className="min-h-screen page-bg flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo/Header */}
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
                         <span className="text-white font-bold text-3xl">P</span>
                     </div>
-                    <h1 className="text-2xl font-bold text-white">Pyrolysis Ops</h1>
-                    <p className="text-slate-400 mt-1">Plant Management System</p>
+                    <h1 className="text-2xl font-bold text-foreground">Pyrolysis Ops</h1>
+                    <p className="text-foreground-muted mt-1">Plant Management System</p>
                 </div>
 
                 {/* Login Card */}
@@ -52,7 +52,7 @@ export default function LoginPage() {
                     {/* Email Login Form */}
                     <form onSubmit={handleEmailLogin} className="space-y-4">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
+                            <label htmlFor="email" className="block text-sm font-medium text-foreground-secondary mb-1">
                                 Email Address
                             </label>
                             <input
@@ -68,7 +68,7 @@ export default function LoginPage() {
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-foreground-secondary mb-1">
                                 Password
                             </label>
                             <input
@@ -101,7 +101,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-slate-500 text-sm mt-6">
+                <p className="text-center text-foreground-faint text-sm mt-6">
                     Maya Recycling © 2025
                 </p>
             </div>

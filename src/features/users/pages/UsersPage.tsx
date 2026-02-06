@@ -46,7 +46,7 @@ export default function UsersPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="User Management"
                 subtitle={`${users.length} users total`}
@@ -99,7 +99,7 @@ export default function UsersPage() {
                             users.map((user) => (
                                 <div
                                     key={user.id}
-                                    className="glass-card p-4 hover:bg-slate-700/50 transition-all cursor-pointer"
+                                    className="glass-card p-4 hover:bg-surface-hover transition-all cursor-pointer"
                                     onClick={() => navigate(`/users/${user.id}`)}
                                 >
                                     <div className="flex items-center justify-between">
@@ -113,12 +113,12 @@ export default function UsersPage() {
 
                                             {/* Info */}
                                             <div>
-                                                <h3 className="text-white font-semibold">{user.name}</h3>
-                                                <p className="text-slate-400 text-sm">{user.email}</p>
+                                                <h3 className="text-foreground font-semibold">{user.name}</h3>
+                                                <p className="text-foreground-muted text-sm">{user.email}</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-slate-500">{user.employeeId}</span>
-                                                    <span className="text-xs text-slate-500">•</span>
-                                                    <span className="text-xs text-slate-500">{getRoleLabel(user.role)}</span>
+                                                    <span className="text-xs text-foreground-faint">{user.employeeId}</span>
+                                                    <span className="text-xs text-foreground-faint">•</span>
+                                                    <span className="text-xs text-foreground-faint">{getRoleLabel(user.role)}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -148,7 +148,7 @@ export default function UsersPage() {
                                                 </svg>
                                             </button>
 
-                                            <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg className="w-5 h-5 text-foreground-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                             </svg>
                                         </div>

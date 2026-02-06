@@ -37,7 +37,7 @@ export function FilterBar({
             };
             return colorMap[filter.activeColor || 'blue'] || 'bg-blue-600 text-white';
         }
-        return 'bg-slate-700 text-slate-300 hover:bg-slate-600';
+        return 'bg-surface-tertiary text-foreground-secondary hover:bg-surface-hover';
     };
 
     return (

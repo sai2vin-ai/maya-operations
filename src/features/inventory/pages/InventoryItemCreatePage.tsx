@@ -55,21 +55,21 @@ export default function InventoryItemCreatePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/inventory')}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <div>
-                        <h1 className="text-xl font-bold text-white">Add Inventory Item</h1>
-                        <p className="text-sm text-slate-400">Create a new item to track</p>
+                        <h1 className="text-xl font-bold text-foreground">Add Inventory Item</h1>
+                        <p className="text-sm text-foreground-muted">Create a new item to track</p>
                     </div>
                 </div>
             </header>
@@ -85,10 +85,10 @@ export default function InventoryItemCreatePage() {
 
                     {/* Basic Info */}
                     <div className="glass-card p-6 space-y-4">
-                        <h2 className="text-lg font-semibold text-white mb-4">Basic Information</h2>
+                        <h2 className="text-lg font-semibold text-foreground mb-4">Basic Information</h2>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                            <label className="block text-sm font-medium text-foreground-secondary mb-2">
                                 Item Name *
                             </label>
                             <input
@@ -103,7 +103,7 @@ export default function InventoryItemCreatePage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">
                                     Category *
                                 </label>
                                 <select
@@ -120,7 +120,7 @@ export default function InventoryItemCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">
                                     Unit *
                                 </label>
                                 <select
@@ -138,7 +138,7 @@ export default function InventoryItemCreatePage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                            <label className="block text-sm font-medium text-foreground-secondary mb-2">
                                 Storage Location
                             </label>
                             <input
@@ -153,11 +153,11 @@ export default function InventoryItemCreatePage() {
 
                     {/* Stock Levels */}
                     <div className="glass-card p-6 space-y-4">
-                        <h2 className="text-lg font-semibold text-white mb-4">Stock Levels</h2>
+                        <h2 className="text-lg font-semibold text-foreground mb-4">Stock Levels</h2>
 
                         <div className="grid grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">
                                     Minimum Stock *
                                 </label>
                                 <input
@@ -169,11 +169,11 @@ export default function InventoryItemCreatePage() {
                                     className="input-field w-full"
                                     required
                                 />
-                                <p className="text-xs text-slate-500 mt-1">Alert when below this</p>
+                                <p className="text-xs text-foreground-faint mt-1">Alert when below this</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">
                                     Maximum Stock
                                 </label>
                                 <input
@@ -184,11 +184,11 @@ export default function InventoryItemCreatePage() {
                                     step="0.01"
                                     className="input-field w-full"
                                 />
-                                <p className="text-xs text-slate-500 mt-1">Optional capacity</p>
+                                <p className="text-xs text-foreground-faint mt-1">Optional capacity</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-2">
                                     Initial Stock
                                 </label>
                                 <input
@@ -199,7 +199,7 @@ export default function InventoryItemCreatePage() {
                                     step="0.01"
                                     className="input-field w-full"
                                 />
-                                <p className="text-xs text-slate-500 mt-1">Current on-hand</p>
+                                <p className="text-xs text-foreground-faint mt-1">Current on-hand</p>
                             </div>
                         </div>
                     </div>
@@ -209,7 +209,7 @@ export default function InventoryItemCreatePage() {
                         <button
                             type="button"
                             onClick={() => navigate('/inventory')}
-                            className="flex-1 py-3 px-6 rounded-xl font-semibold bg-slate-700 text-white hover:bg-slate-600 transition-all"
+                            className="flex-1 py-3 px-6 rounded-xl font-semibold bg-surface-tertiary text-foreground hover:bg-surface-hover transition-all"
                         >
                             Cancel
                         </button>

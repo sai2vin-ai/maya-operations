@@ -14,13 +14,13 @@ export function LoadingSpinner({ size = 'md', message, fullScreen = false }: Loa
     const spinner = (
         <div className="flex flex-col items-center gap-4">
             <div className={`${sizeClasses[size]} border-blue-500 border-t-transparent rounded-full animate-spin`}></div>
-            {message && <p className="text-slate-400">{message}</p>}
+            {message && <p className="text-foreground-muted">{message}</p>}
         </div>
     );
 
     if (fullScreen) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen page-bg flex items-center justify-center">
                 {spinner}
             </div>
         );

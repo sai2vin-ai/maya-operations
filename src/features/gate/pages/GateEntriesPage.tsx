@@ -92,11 +92,11 @@ export default function GateEntriesPage() {
             const filterDef = GateEntryFilters.find(f => f.value === filterValue);
             return colorMap[filterDef?.activeColor || 'blue'] || 'bg-blue-600 text-white';
         }
-        return 'bg-slate-700 text-slate-300 hover:bg-slate-600';
+        return 'bg-surface-tertiary text-foreground-secondary hover:bg-surface-hover';
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="Gate Operations"
                 subtitle={`${entries.length} entries total`}
@@ -159,7 +159,7 @@ export default function GateEntriesPage() {
                         {entries.length === 0 ? (
                             <EmptyState
                                 icon={
-                                    <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-8 h-8 text-foreground-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                     </svg>
                                 }
@@ -173,7 +173,7 @@ export default function GateEntriesPage() {
                                 return (
                                     <div
                                         key={entry.id}
-                                        className="glass-card p-4 hover:bg-slate-700/50 transition-all cursor-pointer"
+                                        className="glass-card p-4 hover:bg-surface-hover transition-all cursor-pointer"
                                         onClick={() => navigate(`/gate/${entry.id}`)}
                                     >
                                         <div className="flex items-start justify-between gap-4">
@@ -195,20 +195,20 @@ export default function GateEntriesPage() {
                                                 {/* Entry Info */}
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="text-white font-bold text-lg">{entry.vehicleNumber}</h3>
+                                                        <h3 className="text-foreground font-bold text-lg">{entry.vehicleNumber}</h3>
                                                         <span className={`px-2 py-0.5 text-xs font-medium rounded ${entry.entryType === 'IN' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
                                                             }`}>
                                                             {entry.entryType}
                                                         </span>
                                                     </div>
-                                                    <p className="text-slate-400 text-sm">{entry.entryNumber}</p>
-                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-slate-500">
+                                                    <p className="text-foreground-muted text-sm">{entry.entryNumber}</p>
+                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-foreground-faint">
                                                         <span>{getMaterialLabel(entry.materialCategory)}</span>
                                                         {entry.netWeight && <span>{entry.netWeight} {entry.unit}</span>}
                                                         <span>{formatTime(entry.entryTime)}</span>
                                                     </div>
                                                     {entry.supplierName && (
-                                                        <p className="text-slate-500 text-xs mt-1">
+                                                        <p className="text-foreground-faint text-xs mt-1">
                                                             {entry.supplierName} {entry.driverName && `| ${entry.driverName}`}
                                                         </p>
                                                     )}

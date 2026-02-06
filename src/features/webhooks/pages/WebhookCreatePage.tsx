@@ -134,7 +134,7 @@ export default function WebhookCreatePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="Create Webhook"
                 subtitle="Set up a new webhook integration"
@@ -145,7 +145,7 @@ export default function WebhookCreatePage() {
                 <form onSubmit={handleSubmit} className="glass-card p-6 space-y-6">
                     {/* Basic Information */}
                     <div>
-                        <h3 className="text-lg font-semibold text-white mb-4">Basic Information</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Basic Information</h3>
                         <FormGroup>
                             <TextInput
                                 label="Name"
@@ -170,7 +170,7 @@ export default function WebhookCreatePage() {
 
                     {/* Endpoint Configuration */}
                     <div>
-                        <h3 className="text-lg font-semibold text-white mb-4">Endpoint Configuration</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Endpoint Configuration</h3>
                         <FormRow cols={3}>
                             <SelectField
                                 label="Method"
@@ -203,8 +203,8 @@ export default function WebhookCreatePage() {
 
                     {/* Events */}
                     <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Events</h3>
-                        <p className="text-slate-400 text-sm mb-4">
+                        <h3 className="text-lg font-semibold text-foreground mb-2">Events</h3>
+                        <p className="text-foreground-muted text-sm mb-4">
                             Select the events that should trigger this webhook
                         </p>
                         {errors.events && (
@@ -223,7 +223,7 @@ export default function WebhookCreatePage() {
                                             ? 'Deselect all'
                                             : 'Select all'}
                                     </button>
-                                    <span className="text-slate-500 text-sm">{category}</span>
+                                    <span className="text-foreground-faint text-sm">{category}</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {events.map((event) => (
@@ -241,8 +241,8 @@ export default function WebhookCreatePage() {
 
                     {/* Custom Headers */}
                     <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Custom Headers</h3>
-                        <p className="text-slate-400 text-sm mb-4">
+                        <h3 className="text-lg font-semibold text-foreground mb-2">Custom Headers</h3>
+                        <p className="text-foreground-muted text-sm mb-4">
                             Optional headers to include with each request
                         </p>
                         <FormRow cols={3}>
@@ -272,10 +272,10 @@ export default function WebhookCreatePage() {
                                 {Object.entries(formData.headers || {}).map(([key, value]) => (
                                     <div
                                         key={key}
-                                        className="flex items-center gap-2 bg-slate-800 px-3 py-2 rounded text-sm"
+                                        className="flex items-center gap-2 bg-surface-secondary px-3 py-2 rounded text-sm"
                                     >
-                                        <span className="text-slate-300">{key}:</span>
-                                        <span className="text-slate-400 flex-1">{value}</span>
+                                        <span className="text-foreground-secondary">{key}:</span>
+                                        <span className="text-foreground-muted flex-1">{value}</span>
                                         <button
                                             type="button"
                                             onClick={() => removeHeader(key)}
@@ -291,8 +291,8 @@ export default function WebhookCreatePage() {
 
                     {/* Signing Secret */}
                     <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Signing Secret</h3>
-                        <p className="text-slate-400 text-sm mb-4">
+                        <h3 className="text-lg font-semibold text-foreground mb-2">Signing Secret</h3>
+                        <p className="text-foreground-muted text-sm mb-4">
                             Optional secret for HMAC signature verification (X-Webhook-Signature header)
                         </p>
                         <TextInput
@@ -304,7 +304,7 @@ export default function WebhookCreatePage() {
                         />
                     </div>
 
-                    <div className="flex gap-3 pt-4 border-t border-slate-700">
+                    <div className="flex gap-3 pt-4 border-t border-border">
                         <button type="submit" className="btn-primary">
                             Create Webhook
                         </button>

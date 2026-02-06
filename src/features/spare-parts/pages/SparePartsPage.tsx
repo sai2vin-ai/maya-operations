@@ -37,7 +37,7 @@ export default function SparePartsPage() {
     const lowStockCount = allParts.filter(p => p.currentStock <= p.minimumStock).length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="Spare Parts"
                 subtitle={`${allParts.length} parts | ${lowStockCount} low stock`}
@@ -92,15 +92,15 @@ export default function SparePartsPage() {
                     <div className="glass-card overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-slate-700/50">
+                                <thead className="bg-surface-tertiary/50">
                                     <tr>
-                                        <th className="text-left p-4 text-slate-300 font-medium">Part Number</th>
-                                        <th className="text-left p-4 text-slate-300 font-medium">Name</th>
-                                        <th className="text-left p-4 text-slate-300 font-medium">Category</th>
-                                        <th className="text-left p-4 text-slate-300 font-medium">Location</th>
-                                        <th className="text-right p-4 text-slate-300 font-medium">Stock</th>
-                                        <th className="text-center p-4 text-slate-300 font-medium">Status</th>
-                                        <th className="text-center p-4 text-slate-300 font-medium">Actions</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">Part Number</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">Name</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">Category</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">Location</th>
+                                        <th className="text-right p-4 text-foreground-secondary font-medium">Stock</th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium">Status</th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-700">
@@ -109,30 +109,30 @@ export default function SparePartsPage() {
                                         return (
                                             <tr
                                                 key={part.id}
-                                                className="hover:bg-slate-700/30 cursor-pointer transition-colors"
+                                                className="hover:bg-surface-tertiary/30 cursor-pointer transition-colors"
                                                 onClick={() => navigate(`/spare-parts/${part.id}`)}
                                             >
                                                 <td className="p-4">
-                                                    <span className="text-white font-mono">{part.partNumber}</span>
+                                                    <span className="text-foreground font-mono">{part.partNumber}</span>
                                                     {part.fileNumber && (
-                                                        <span className="text-slate-500 text-xs block">File: {part.fileNumber}</span>
+                                                        <span className="text-foreground-faint text-xs block">File: {part.fileNumber}</span>
                                                     )}
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="text-white">{part.name}</span>
+                                                    <span className="text-foreground">{part.name}</span>
                                                     {part.usedFor && (
-                                                        <span className="text-slate-500 text-xs block">{part.usedFor}</span>
+                                                        <span className="text-foreground-faint text-xs block">{part.usedFor}</span>
                                                     )}
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="text-slate-300">{part.category}</span>
+                                                    <span className="text-foreground-secondary">{part.category}</span>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="text-slate-400">{part.location || '-'}</span>
+                                                    <span className="text-foreground-muted">{part.location || '-'}</span>
                                                 </td>
                                                 <td className="p-4 text-right">
-                                                    <span className="text-white font-bold">{part.currentStock}</span>
-                                                    <span className="text-slate-500 ml-1">{part.unit}</span>
+                                                    <span className="text-foreground font-bold">{part.currentStock}</span>
+                                                    <span className="text-foreground-faint ml-1">{part.unit}</span>
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     <span className={`px-2 py-1 rounded-full text-xs ${status.color}`}>

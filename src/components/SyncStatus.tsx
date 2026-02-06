@@ -57,7 +57,7 @@ export function SyncStatusIndicator() {
                                         failedCount > 0 ? 'Sync Failed' :
                                             'Synced'}
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-foreground-muted">
                             {!isOnline && pendingCount > 0 && `${pendingCount} pending`}
                             {isOnline && isSyncing && `${pendingCount} remaining`}
                             {isOnline && !isSyncing && failedCount > 0 && `${failedCount} failed`}
@@ -69,10 +69,10 @@ export function SyncStatusIndicator() {
                     {isOnline && !isSyncing && (pendingCount > 0 || failedCount > 0) && (
                         <button
                             onClick={manualSync}
-                            className="ml-2 p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors"
+                            className="ml-2 p-2 rounded-lg bg-surface-tertiary hover:bg-surface-hover transition-colors"
                             title="Retry sync"
                         >
-                            <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-4 h-4 text-foreground-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </button>

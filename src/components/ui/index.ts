@@ -22,3 +22,4 @@ export { useVirtualList, useInfiniteScroll } from '../../hooks/useVirtualList';
 export { LazyImage, LazyBackground } from './LazyImage';
 export { ErrorBoundary } from './ErrorBoundary';
 export { Pagination } from './Pagination';
+export { ThemeToggle } from './ThemeToggle';

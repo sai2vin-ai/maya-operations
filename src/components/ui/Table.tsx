@@ -27,7 +27,7 @@ interface TableHeadProps {
 
 export function TableHead({ children, className = '' }: TableHeadProps) {
     return (
-        <thead className={`bg-slate-700/50 ${className}`}>
+        <thead className={`bg-surface-tertiary ${className}`}>
             {children}
         </thead>
     );
@@ -53,8 +53,8 @@ export function TableRow({ children, className = '', onClick, hoverable = true }
     return (
         <tr
             className={`
-                border-b border-slate-700/50 last:border-b-0
-                ${hoverable ? 'hover:bg-slate-700/30 transition-colors' : ''}
+                border-b border-border last:border-b-0
+                ${hoverable ? 'hover:bg-surface-hover transition-colors' : ''}
                 ${onClick ? 'cursor-pointer' : ''}
                 ${className}
             `}
@@ -79,7 +79,7 @@ export function TableHeader({ children, className = '', align = 'left' }: TableH
     };
 
     return (
-        <th className={`px-4 py-3 text-sm font-semibold text-slate-300 ${alignClass[align]} ${className}`}>
+        <th className={`px-4 py-3 text-sm font-semibold text-foreground-secondary ${alignClass[align]} ${className}`}>
             {children}
         </th>
     );
@@ -99,7 +99,7 @@ export function TableCell({ children, className = '', align = 'left' }: TableCel
     };
 
     return (
-        <td className={`px-4 py-3 text-sm text-slate-200 ${alignClass[align]} ${className}`}>
+        <td className={`px-4 py-3 text-sm text-foreground ${alignClass[align]} ${className}`}>
             {children}
         </td>
     );
@@ -115,7 +115,7 @@ interface MobileCardProps {
 export function MobileCard({ children, className = '', onClick }: MobileCardProps) {
     return (
         <div
-            className={`glass-card p-4 ${onClick ? 'cursor-pointer hover:bg-slate-700/50' : ''} transition-colors ${className}`}
+            className={`glass-card p-4 ${onClick ? 'cursor-pointer hover:bg-surface-hover' : ''} transition-colors ${className}`}
             onClick={onClick}
         >
             {children}
@@ -132,8 +132,8 @@ interface MobileCardRowProps {
 export function MobileCardRow({ label, value, className = '' }: MobileCardRowProps) {
     return (
         <div className={`flex justify-between items-center py-1 ${className}`}>
-            <span className="text-slate-400 text-sm">{label}</span>
-            <span className="text-white text-sm font-medium">{value}</span>
+            <span className="text-foreground-muted text-sm">{label}</span>
+            <span className="text-foreground text-sm font-medium">{value}</span>
         </div>
     );
 }
@@ -162,7 +162,7 @@ export function ResponsiveTable({
 }: ResponsiveTableProps) {
     if (data.length === 0) {
         return (
-            <div className="glass-card p-8 text-center text-slate-400">
+            <div className="glass-card p-8 text-center text-foreground-muted">
                 {emptyMessage}
             </div>
         );

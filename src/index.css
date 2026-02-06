@@ -1,15 +1,66 @@
 @import "tailwindcss";
 
-/* Custom CSS Variables for Pyrolysis Ops */
+/* ============================================
+   THEME SYSTEM - CSS Custom Properties
+   ============================================ */
+
+/* Light theme (default) */
 :root {
-  /* Primary colors - Industrial Blue */
+  /* Surfaces */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-tertiary: #f1f5f9;
+  --surface-hover: #e2e8f0;
+
+  /* Foreground / Text */
+  --foreground: #0f172a;
+  --foreground-secondary: #475569;
+  --foreground-muted: #64748b;
+  --foreground-faint: #94a3b8;
+
+  /* Borders */
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+
+  /* Glass effect */
+  --glass-bg: rgba(255, 255, 255, 0.80);
+  --glass-border: rgba(226, 232, 240, 0.60);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.90);
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 4px 16px -4px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 8px 24px -8px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  /* Page background gradient */
+  --page-bg-from: #f8fafc;
+  --page-bg-via: #f1f5f9;
+  --page-bg-to: #e2e8f0;
+
+  /* Input */
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-placeholder: #94a3b8;
+
+  /* Skeleton */
+  --skeleton-base: #e2e8f0;
+  --skeleton-shimmer: #f1f5f9;
+
+  /* Focus ring offset */
+  --focus-ring-offset: #ffffff;
+
+  /* Scrollbar */
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+
+  /* Primary colors */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
   --color-primary-500: #3b82f6;
   --color-primary-600: #2563eb;
   --color-primary-700: #1d4ed8;
 
-  /* Accent colors - Industrial Orange */
+  /* Accent colors */
   --color-accent-500: #f97316;
   --color-accent-600: #ea580c;
 
@@ -17,39 +68,148 @@
   --color-success: #22c55e;
   --color-warning: #eab308;
   --color-danger: #ef4444;
-
-  /* Dark mode base */
-  --color-bg-primary: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-bg-tertiary: #334155;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-border: #475569;
 }
 
-/* Base styles */
+/* Dark theme */
+.dark {
+  /* Surfaces */
+  --surface-primary: #0f172a;
+  --surface-secondary: #1e293b;
+  --surface-tertiary: #334155;
+  --surface-hover: #475569;
+
+  /* Foreground / Text — improved contrast */
+  --foreground: #f1f5f9;
+  --foreground-secondary: #cbd5e1;
+  --foreground-muted: #94a3b8;
+  --foreground-faint: #64748b;
+
+  /* Borders */
+  --border-primary: #334155;
+  --border-secondary: #475569;
+
+  /* Glass effect */
+  --glass-bg: rgba(30, 41, 59, 0.50);
+  --glass-border: rgba(51, 65, 85, 0.50);
+  --glass-bg-elevated: rgba(30, 41, 59, 0.60);
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.05) inset;
+  --shadow-elevated: 0 4px 24px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(148, 163, 184, 0.05) inset, 0 1px 0 0 rgba(248, 250, 252, 0.05) inset;
+  --shadow-hover: 0 8px 32px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(148, 163, 184, 0.1);
+
+  /* Page background gradient */
+  --page-bg-from: #0f172a;
+  --page-bg-via: #1e293b;
+  --page-bg-to: #0f172a;
+
+  /* Input */
+  --input-bg: #1e293b;
+  --input-border: #475569;
+  --input-placeholder: #64748b;
+
+  /* Skeleton */
+  --skeleton-base: #334155;
+  --skeleton-shimmer: #475569;
+
+  /* Focus ring offset */
+  --focus-ring-offset: #0f172a;
+
+  /* Scrollbar */
+  --scrollbar-track: #1e293b;
+  --scrollbar-thumb: #475569;
+}
+
+/* ============================================
+   TAILWIND v4 @theme — Register design tokens
+   ============================================ */
+@theme {
+  --color-surface: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-faint: var(--foreground-faint);
+
+  --color-border: var(--border-primary);
+  --color-border-secondary: var(--border-secondary);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
 body {
-  @apply bg-slate-900 text-slate-100 antialiased;
+  background: var(--surface-primary);
+  color: var(--foreground);
   font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Utility classes for the app */
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-hover);
+}
+
+/* ============================================
+   PAGE BACKGROUND
+   ============================================ */
+.page-bg {
+  background: linear-gradient(to bottom right, var(--page-bg-from), var(--page-bg-via), var(--page-bg-to));
+}
+
+/* ============================================
+   GLASS CARDS — themed
+   ============================================ */
 .glass-card {
-  @apply bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl shadow-lg shadow-black/20;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-card);
 }
 
-/* Elevated glass card with stronger depth */
+.dark .glass-card {
+  backdrop-filter: blur(16px);
+}
+
 .glass-card-elevated {
-  @apply bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl;
-  box-shadow:
-    0 4px 24px -4px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(148, 163, 184, 0.05) inset,
-    0 1px 0 0 rgba(248, 250, 252, 0.05) inset;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-elevated);
 }
 
-/* Gradient border card using pseudo-element */
+.dark .glass-card-elevated {
+  backdrop-filter: blur(24px);
+}
+
+/* Gradient border card */
 .gradient-border-card {
-  @apply relative bg-slate-800/60 backdrop-blur-xl rounded-xl overflow-hidden;
+  position: relative;
+  background: var(--glass-bg-elevated);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.dark .gradient-border-card {
+  backdrop-filter: blur(24px);
 }
 
 .gradient-border-card::before {
@@ -62,39 +222,76 @@ body {
   pointer-events: none;
 }
 
+/* ============================================
+   BUTTONS — themed
+   ============================================ */
 .btn-primary {
   @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-blue-500/25;
 }
 
 .btn-secondary {
-  @apply bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
+  background: var(--surface-tertiary);
+  color: var(--foreground);
+  border: 1px solid var(--border-primary);
+  @apply font-medium px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
 }
 
 .btn-danger {
   @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
 }
 
+/* ============================================
+   FORM INPUT — themed
+   ============================================ */
 .input-field {
-  @apply bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--foreground);
+  @apply rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
 }
 
+.input-field::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* ============================================
+   STATUS BADGES (work in both themes via alpha)
+   ============================================ */
 .status-badge {
   @apply px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide;
 }
 
 .status-active {
-  @apply bg-green-500/15 text-green-400 ring-1 ring-green-500/25;
+  @apply bg-green-500/15 text-green-600 ring-1 ring-green-500/25;
+}
+
+.dark .status-active {
+  @apply text-green-400;
 }
 
 .status-pending {
-  @apply bg-yellow-500/15 text-yellow-400 ring-1 ring-yellow-500/25;
+  @apply bg-yellow-500/15 text-yellow-600 ring-1 ring-yellow-500/25;
+}
+
+.dark .status-pending {
+  @apply text-yellow-400;
 }
 
 .status-inactive {
-  @apply bg-red-500/15 text-red-400 ring-1 ring-red-500/25;
+  @apply bg-red-500/15 text-red-600 ring-1 ring-red-500/25;
 }
 
-/* Ambient glow utilities */
+.dark .status-inactive {
+  @apply text-red-400;
+}
+
+/* ============================================
+   AMBIENT GLOW UTILITIES
+   ============================================ */
 .glow-blue {
   box-shadow: 0 0 40px -8px rgba(59, 130, 246, 0.15);
 }
@@ -111,50 +308,31 @@ body {
   box-shadow: 0 0 40px -8px rgba(239, 68, 68, 0.15);
 }
 
-/* Skeleton shimmer animation */
+/* ============================================
+   ANIMATIONS
+   ============================================ */
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .animate-shimmer {
   animation: shimmer 2s infinite linear;
 }
 
-/* Page transition animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .animate-fade-in {
@@ -169,19 +347,6 @@ body {
   animation: fadeInScale 0.2s ease-out;
 }
 
-/* Card hover effects */
-.card-hover {
-  @apply transition-all duration-300;
-}
-
-.card-hover:hover {
-  @apply -translate-y-1;
-  box-shadow:
-    0 8px 32px -8px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(148, 163, 184, 0.1);
-}
-
-/* Subtle pulse for live indicators */
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
@@ -191,13 +356,30 @@ body {
   animation: pulse-soft 2s ease-in-out infinite;
 }
 
-/* Gradient text utility */
+/* ============================================
+   CARD HOVER EFFECTS — themed
+   ============================================ */
+.card-hover {
+  @apply transition-all duration-300;
+}
+
+.card-hover:hover {
+  @apply -translate-y-1;
+  box-shadow: var(--shadow-hover);
+}
+
+/* ============================================
+   TEXT GRADIENT
+   ============================================ */
 .text-gradient {
   @apply bg-clip-text text-transparent;
   background-image: linear-gradient(135deg, #60a5fa, #3b82f6, #818cf8);
 }
 
-/* Focus ring utilities */
+/* ============================================
+   FOCUS RING — themed offset
+   ============================================ */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  --tw-ring-offset-color: var(--focus-ring-offset);
 }

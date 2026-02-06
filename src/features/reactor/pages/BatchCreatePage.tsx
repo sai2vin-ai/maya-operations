@@ -86,21 +86,21 @@ export default function BatchCreatePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/reactor')}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <div>
-                        <h1 className="text-xl font-bold text-white">Start New Batch</h1>
-                        <p className="text-sm text-slate-400">{reactor?.name} ({reactor?.reactorNumber})</p>
+                        <h1 className="text-xl font-bold text-foreground">Start New Batch</h1>
+                        <p className="text-sm text-foreground-muted">{reactor?.name} ({reactor?.reactorNumber})</p>
                     </div>
                 </div>
             </header>
@@ -121,8 +121,8 @@ export default function BatchCreatePage() {
                                     <span className="text-3xl">🔥</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white">{reactor.reactorNumber}</h2>
-                                    <p className="text-slate-400">{reactor.name}</p>
+                                    <h2 className="text-2xl font-bold text-foreground">{reactor.reactorNumber}</h2>
+                                    <p className="text-foreground-muted">{reactor.name}</p>
                                     <p className="text-green-400 text-sm mt-1">Ready to start batch</p>
                                 </div>
                             </div>
@@ -130,39 +130,39 @@ export default function BatchCreatePage() {
 
                         {/* Batch Info - Auto-filled */}
                         <div className="glass-card p-6 mb-4">
-                            <h3 className="text-lg font-semibold text-white mb-4">Batch Information</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Batch Information</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                         Date
                                     </label>
-                                    <div className="input-field w-full bg-slate-700/50 text-white cursor-not-allowed">
+                                    <div className="input-field w-full bg-surface-tertiary/50 text-foreground cursor-not-allowed">
                                         {new Date().toLocaleDateString('en-IN', {
                                             day: '2-digit',
                                             month: '2-digit',
                                             year: 'numeric'
                                         })}
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-1">Auto-filled from device</p>
+                                    <p className="text-xs text-foreground-faint mt-1">Auto-filled from device</p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                         Batch Number
                                     </label>
-                                    <div className="input-field w-full bg-slate-700/50 text-white cursor-not-allowed">
+                                    <div className="input-field w-full bg-surface-tertiary/50 text-foreground cursor-not-allowed">
                                         {reactor.reactorNumber}-{new Date().toISOString().split('T')[0].replace(/-/g, '')}-XXX
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-1">Serial # auto-generated (e.g., M1-20260128-001)</p>
+                                    <p className="text-xs text-foreground-faint mt-1">Serial # auto-generated (e.g., M1-20260128-001)</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Input Details */}
                         <div className="glass-card p-6 mb-4">
-                            <h3 className="text-lg font-semibold text-white mb-4">Batch Input</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Batch Input</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                         Input Weight (kg)
                                     </label>
                                     <input
@@ -176,7 +176,7 @@ export default function BatchCreatePage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                         Shift
                                     </label>
                                     <select
@@ -196,7 +196,7 @@ export default function BatchCreatePage() {
 
                         {/* Notes */}
                         <div className="glass-card p-6 mb-4">
-                            <h3 className="text-lg font-semibold text-white mb-4">Notes</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Notes</h3>
                             <textarea
                                 name="notes"
                                 value={formData.notes}
@@ -208,8 +208,8 @@ export default function BatchCreatePage() {
 
                         {/* Workflow Preview */}
                         <div className="glass-card p-6 mb-4">
-                            <h3 className="text-lg font-semibold text-white mb-4">14-Step Workflow</h3>
-                            <p className="text-slate-400 mb-4">This batch will follow the standard 14-step pyrolysis workflow:</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-4">14-Step Workflow</h3>
+                            <p className="text-foreground-muted mb-4">This batch will follow the standard 14-step pyrolysis workflow:</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                                 {[
                                     '1. Tyre Loading',
@@ -227,7 +227,7 @@ export default function BatchCreatePage() {
                                     '13. Extract Outputs',
                                     '14. Clean & Inspect',
                                 ].map((step, idx) => (
-                                    <div key={idx} className="bg-slate-700/50 px-3 py-2 rounded-lg text-slate-300">
+                                    <div key={idx} className="bg-surface-tertiary/50 px-3 py-2 rounded-lg text-foreground-secondary">
                                         {step}
                                     </div>
                                 ))}
@@ -255,7 +255,7 @@ export default function BatchCreatePage() {
                     </form>
                 ) : (
                     <div className="glass-card p-8 text-center">
-                        <p className="text-slate-400">Cannot start batch - reactor is not idle</p>
+                        <p className="text-foreground-muted">Cannot start batch - reactor is not idle</p>
                         <button
                             onClick={() => navigate('/reactor')}
                             className="btn-primary mt-4"

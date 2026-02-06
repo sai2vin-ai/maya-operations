@@ -53,10 +53,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                         </div>
                         <div className="flex-1">
                             <h4 className="text-red-400 font-medium mb-1">Something went wrong</h4>
-                            <p className="text-sm text-slate-400 mb-3">{this.state.error.message}</p>
+                            <p className="text-sm text-foreground-muted mb-3">{this.state.error.message}</p>
                             <button
                                 onClick={this.handleReset}
-                                className="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                                className="px-3 py-1.5 text-sm bg-surface-tertiary hover:bg-surface-hover text-foreground rounded-lg transition-colors"
                             >
                                 Try Again
                             </button>

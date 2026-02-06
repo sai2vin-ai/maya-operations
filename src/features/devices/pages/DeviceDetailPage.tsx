@@ -133,7 +133,7 @@ export default function DeviceDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -141,10 +141,10 @@ export default function DeviceDetailPage() {
 
     if (!device) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <div className="glass-card p-8 text-center max-w-md">
-                    <h2 className="text-xl font-bold text-white mb-2">Device Not Found</h2>
-                    <p className="text-slate-400 mb-4">The device you're looking for doesn't exist.</p>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Device Not Found</h2>
+                    <p className="text-foreground-muted mb-4">The device you're looking for doesn't exist.</p>
                     <button onClick={() => navigate('/devices')} className="btn-primary">
                         Back to Devices
                     </button>
@@ -154,22 +154,22 @@ export default function DeviceDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate('/devices')}
-                            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-white">Device Details</h1>
-                            <p className="text-sm text-slate-400">{device.deviceId}</p>
+                            <h1 className="text-xl font-bold text-foreground">Device Details</h1>
+                            <p className="text-sm text-foreground-muted">{device.deviceId}</p>
                         </div>
                     </div>
 
@@ -218,14 +218,14 @@ export default function DeviceDetailPage() {
                             <span className="text-4xl">{getDeviceIcon(device.deviceType)}</span>
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-white">{device.name}</h2>
-                            <p className="text-slate-400">{device.deviceId}</p>
+                            <h2 className="text-2xl font-bold text-foreground">{device.name}</h2>
+                            <p className="text-foreground-muted">{device.deviceId}</p>
                             <div className="flex items-center gap-2 mt-2">
                                 <span className={`status-badge ${device.status === 'ACTIVE' ? 'status-active' : device.status === 'REVOKED' ? 'status-pending' : 'status-inactive'}`}>
                                     {device.status}
                                 </span>
-                                <span className="text-slate-500">•</span>
-                                <span className="text-slate-400">{DEVICE_TYPES.find(t => t.value === device.deviceType)?.label}</span>
+                                <span className="text-foreground-faint">•</span>
+                                <span className="text-foreground-muted">{DEVICE_TYPES.find(t => t.value === device.deviceType)?.label}</span>
                             </div>
                         </div>
                     </div>
@@ -233,11 +233,11 @@ export default function DeviceDetailPage() {
 
                 {/* Form Fields */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Device Information</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Device Information</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Device Name</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Device Name</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -247,17 +247,17 @@ export default function DeviceDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{device.name}</p>
+                                <p className="text-foreground py-2">{device.name}</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Device ID</label>
-                            <p className="text-white py-2">{device.deviceId}</p>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Device ID</label>
+                            <p className="text-foreground py-2">{device.deviceId}</p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Device Type</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Device Type</label>
                             {isEditing ? (
                                 <select
                                     name="deviceType"
@@ -270,12 +270,12 @@ export default function DeviceDetailPage() {
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-white py-2">{DEVICE_TYPES.find(t => t.value === device.deviceType)?.label}</p>
+                                <p className="text-foreground py-2">{DEVICE_TYPES.find(t => t.value === device.deviceType)?.label}</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Operating System</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Operating System</label>
                             {isEditing ? (
                                 <select
                                     name="os"
@@ -288,12 +288,12 @@ export default function DeviceDetailPage() {
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-white py-2">{OPERATING_SYSTEMS.find(o => o.value === device.os)?.label}</p>
+                                <p className="text-foreground py-2">{OPERATING_SYSTEMS.find(o => o.value === device.os)?.label}</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">OS Version</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">OS Version</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -303,12 +303,12 @@ export default function DeviceDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{device.osVersion || '-'}</p>
+                                <p className="text-foreground py-2">{device.osVersion || '-'}</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">App Version</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">App Version</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -318,12 +318,12 @@ export default function DeviceDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{device.appVersion || '-'}</p>
+                                <p className="text-foreground py-2">{device.appVersion || '-'}</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Location</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Location</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -334,12 +334,12 @@ export default function DeviceDetailPage() {
                                     placeholder="e.g., Gate 1, Control Room"
                                 />
                             ) : (
-                                <p className="text-white py-2">{device.location || '-'}</p>
+                                <p className="text-foreground py-2">{device.location || '-'}</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Status</label>
                             {isEditing ? (
                                 <select
                                     name="status"
@@ -352,7 +352,7 @@ export default function DeviceDetailPage() {
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-white py-2">{DEVICE_STATUSES.find(s => s.value === device.status)?.label}</p>
+                                <p className="text-foreground py-2">{DEVICE_STATUSES.find(s => s.value === device.status)?.label}</p>
                             )}
                         </div>
                     </div>
@@ -360,7 +360,7 @@ export default function DeviceDetailPage() {
 
                 {/* Actions */}
                 <div className="glass-card p-6 mt-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Actions</h3>
                     <div className="flex flex-wrap gap-3">
                         {device.status !== 'REVOKED' && (
                             <button
@@ -379,17 +379,17 @@ export default function DeviceDetailPage() {
 
                 {/* Audit Info */}
                 <div className="glass-card p-6 mt-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Registration Info</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Registration Info</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span className="text-slate-400">Registered:</span>
-                            <span className="text-white ml-2">
+                            <span className="text-foreground-muted">Registered:</span>
+                            <span className="text-foreground ml-2">
                                 {device.registeredAt?.toDate?.()?.toLocaleString() || '-'}
                             </span>
                         </div>
                         <div>
-                            <span className="text-slate-400">Registered By:</span>
-                            <span className="text-white ml-2">{device.registeredBy || '-'}</span>
+                            <span className="text-foreground-muted">Registered By:</span>
+                            <span className="text-foreground ml-2">{device.registeredBy || '-'}</span>
                         </div>
                     </div>
                 </div>

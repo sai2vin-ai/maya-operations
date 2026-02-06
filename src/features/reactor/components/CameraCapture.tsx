@@ -62,7 +62,7 @@ export function CameraCapture({ onPhotoCaptured, capturedPhotos, onClear }: Came
 
     return (
         <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground-secondary mb-2">
                 Photo Required {capturedPhotos.length > 0 && `(${capturedPhotos.length} captured)`}
             </label>
 
@@ -70,7 +70,7 @@ export function CameraCapture({ onPhotoCaptured, capturedPhotos, onClear }: Came
                 <div className="text-sm text-red-400 mb-2">{error}</div>
             )}
 
-            <div className="aspect-video bg-slate-800 rounded-xl overflow-hidden max-w-md relative">
+            <div className="aspect-video bg-surface-secondary rounded-xl overflow-hidden max-w-md relative">
                 {cameraActive && (
                     <>
                         <video ref={videoRef} className="w-full h-full object-cover" autoPlay playsInline muted />

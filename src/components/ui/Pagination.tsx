@@ -30,24 +30,24 @@ export function Pagination({
 
     return (
         <div className="flex items-center justify-between py-3">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-foreground-muted">
                 Showing {startItem}-{endItem} of {totalItems}
             </p>
             <div className="flex items-center gap-2">
                 <button
                     onClick={onPrevPage}
                     disabled={!hasPrevPage}
-                    className="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-sm bg-surface-tertiary hover:bg-surface-hover text-foreground rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     Previous
                 </button>
-                <span className="text-sm text-slate-400 px-2">
+                <span className="text-sm text-foreground-muted px-2">
                     {currentPage} / {totalPages}
                 </span>
                 <button
                     onClick={onNextPage}
                     disabled={!hasNextPage}
-                    className="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-sm bg-surface-tertiary hover:bg-surface-hover text-foreground rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     Next
                 </button>

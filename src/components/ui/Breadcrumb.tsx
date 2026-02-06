@@ -47,7 +47,7 @@ export function Breadcrumb({
         : breadcrumbItems;
 
     const defaultSeparator = (
-        <svg className="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-4 h-4 text-foreground-faint flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
     );
@@ -67,7 +67,7 @@ export function Breadcrumb({
                             )}
                             {isLast || !item.href ? (
                                 <span
-                                    className="text-slate-300 font-medium"
+                                    className="text-foreground-secondary font-medium"
                                     aria-current={isLast ? 'page' : undefined}
                                 >
                                     {item.label}
@@ -75,7 +75,7 @@ export function Breadcrumb({
                             ) : (
                                 <Link
                                     to={item.href}
-                                    className="text-slate-400 hover:text-white transition-colors"
+                                    className="text-foreground-muted hover:text-foreground transition-colors"
                                 >
                                     {item.label}
                                 </Link>
@@ -143,15 +143,15 @@ export function CompactBreadcrumb({
         <nav aria-label="Breadcrumb" className={`flex items-center gap-2 ${className}`}>
             <Link
                 to={backHref}
-                className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors text-sm"
+                className="flex items-center gap-1 text-foreground-muted hover:text-foreground transition-colors text-sm"
             >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 <span className="hidden sm:inline">{backLabel}</span>
             </Link>
-            <span className="text-slate-500" aria-hidden="true">/</span>
-            <span className="text-slate-300 font-medium text-sm truncate" aria-current="page">
+            <span className="text-foreground-faint" aria-hidden="true">/</span>
+            <span className="text-foreground-secondary font-medium text-sm truncate" aria-current="page">
                 {currentLabel}
             </span>
         </nav>

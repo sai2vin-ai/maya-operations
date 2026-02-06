@@ -41,7 +41,7 @@ export function OutputForm({ onSubmit, finishedProductItems, saving }: OutputFor
     }, [outputCategory, outputQuantity, outputUnit, outputGrade, outputInventoryItemId, onSubmit]);
 
     return (
-        <div className="bg-slate-700/50 p-4 rounded-lg mb-4">
+        <div className="bg-surface-tertiary/50 p-4 rounded-lg mb-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <select
                     value={outputCategory}
@@ -78,7 +78,7 @@ export function OutputForm({ onSubmit, finishedProductItems, saving }: OutputFor
             </div>
             {/* Inventory Item Selector */}
             <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-300 mb-1">
+                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                     Link to Inventory (optional)
                 </label>
                 <select
@@ -93,7 +93,7 @@ export function OutputForm({ onSubmit, finishedProductItems, saving }: OutputFor
                         </option>
                     ))}
                 </select>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-foreground-faint mt-1">
                     Select an inventory item to automatically update stock when recording output
                 </p>
             </div>

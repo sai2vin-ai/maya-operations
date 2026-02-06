@@ -91,21 +91,21 @@ export default function UserCreatePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/users')}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <div>
-                        <h1 className="text-xl font-bold text-white">Create New User</h1>
-                        <p className="text-sm text-slate-400">Add a new user to the system</p>
+                        <h1 className="text-xl font-bold text-foreground">Create New User</h1>
+                        <p className="text-sm text-foreground-muted">Add a new user to the system</p>
                     </div>
                 </div>
             </header>
@@ -121,11 +121,11 @@ export default function UserCreatePage() {
                 <form onSubmit={handleSubmit}>
                     {/* Account Details */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Account Details</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Account Details</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Email Address <span className="text-red-400">*</span>
                                 </label>
                                 <input
@@ -140,7 +140,7 @@ export default function UserCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Employee ID <span className="text-red-400">*</span>
                                 </label>
                                 <input
@@ -155,7 +155,7 @@ export default function UserCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Password <span className="text-red-400">*</span>
                                 </label>
                                 <input
@@ -171,7 +171,7 @@ export default function UserCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Confirm Password <span className="text-red-400">*</span>
                                 </label>
                                 <input
@@ -189,11 +189,11 @@ export default function UserCreatePage() {
 
                     {/* Personal Information */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Personal Information</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Personal Information</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Full Name <span className="text-red-400">*</span>
                                 </label>
                                 <input
@@ -208,7 +208,7 @@ export default function UserCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Phone Number</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Phone Number</label>
                                 <input
                                     type="tel"
                                     name="phone"
@@ -223,10 +223,10 @@ export default function UserCreatePage() {
 
                     {/* Role Assignment */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Role Assignment</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Role Assignment</h3>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                 User Role <span className="text-red-400">*</span>
                             </label>
                             <select
@@ -240,7 +240,7 @@ export default function UserCreatePage() {
                                     <option key={role.value} value={role.value}>{role.label}</option>
                                 ))}
                             </select>
-                            <p className="text-slate-500 text-sm mt-2">
+                            <p className="text-foreground-faint text-sm mt-2">
                                 This determines what features and pages the user can access.
                             </p>
                         </div>

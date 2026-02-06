@@ -183,7 +183,7 @@ export default function GateEntryDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -191,10 +191,10 @@ export default function GateEntryDetailPage() {
 
     if (!entry) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <div className="glass-card p-8 text-center max-w-md">
-                    <h2 className="text-xl font-bold text-white mb-2">Entry Not Found</h2>
-                    <p className="text-slate-400 mb-4">The gate entry you're looking for doesn't exist.</p>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Entry Not Found</h2>
+                    <p className="text-foreground-muted mb-4">The gate entry you're looking for doesn't exist.</p>
                     <button onClick={() => navigate('/gate')} className="btn-primary">
                         Back to Gate Operations
                     </button>
@@ -206,22 +206,22 @@ export default function GateEntryDetailPage() {
     const statusInfo = getStatusInfo(entry.status);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate('/gate')}
-                            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-white">{entry.entryNumber}</h1>
-                            <p className="text-sm text-slate-400">{entry.vehicleNumber}</p>
+                            <h1 className="text-xl font-bold text-foreground">{entry.entryNumber}</h1>
+                            <p className="text-sm text-foreground-muted">{entry.vehicleNumber}</p>
                         </div>
                     </div>
 
@@ -283,13 +283,13 @@ export default function GateEntryDetailPage() {
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                                <h2 className="text-2xl font-bold text-white">{entry.vehicleNumber}</h2>
+                                <h2 className="text-2xl font-bold text-foreground">{entry.vehicleNumber}</h2>
                                 <span className={`px-2 py-0.5 text-sm font-medium rounded ${entry.entryType === 'IN' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
                                     }`}>
                                     {entry.entryType}
                                 </span>
                             </div>
-                            <p className="text-slate-400">{entry.entryNumber}</p>
+                            <p className="text-foreground-muted">{entry.entryNumber}</p>
                             <div className="flex items-center gap-2 mt-2">
                                 <span className={`status-badge ${statusInfo.color === 'green' ? 'status-active' :
                                         statusInfo.color === 'yellow' ? 'status-pending' :
@@ -305,7 +305,7 @@ export default function GateEntryDetailPage() {
                 {/* Vehicle Photo */}
                 {entry.vehiclePhoto && (
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Vehicle Photo</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Vehicle Photo</h3>
                         <img
                             src={entry.vehiclePhoto}
                             alt="Vehicle"
@@ -316,10 +316,10 @@ export default function GateEntryDetailPage() {
 
                 {/* Material & Weight */}
                 <div className="glass-card p-6 mb-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Material & Weight</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Material & Weight</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Material Category</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Material Category</label>
                             {isEditing ? (
                                 <select
                                     name="materialCategory"
@@ -333,12 +333,12 @@ export default function GateEntryDetailPage() {
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-white py-2">{getMaterialLabel(entry.materialCategory)}</p>
+                                <p className="text-foreground py-2">{getMaterialLabel(entry.materialCategory)}</p>
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Quantity</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Quantity</label>
                                 {isEditing ? (
                                     <input
                                         type="number"
@@ -349,11 +349,11 @@ export default function GateEntryDetailPage() {
                                         step="0.01"
                                     />
                                 ) : (
-                                    <p className="text-white py-2">{entry.quantity || '-'}</p>
+                                    <p className="text-foreground py-2">{entry.quantity || '-'}</p>
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Unit</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Unit</label>
                                 {isEditing ? (
                                     <select
                                         name="unit"
@@ -366,12 +366,12 @@ export default function GateEntryDetailPage() {
                                         <option value="PIECES">Pieces</option>
                                     </select>
                                 ) : (
-                                    <p className="text-white py-2">{entry.unit || '-'}</p>
+                                    <p className="text-foreground py-2">{entry.unit || '-'}</p>
                                 )}
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Weighbridge Reading (kg)</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Weighbridge Reading (kg)</label>
                             {isEditing ? (
                                 <input
                                     type="number"
@@ -382,11 +382,11 @@ export default function GateEntryDetailPage() {
                                     step="0.01"
                                 />
                             ) : (
-                                <p className="text-white py-2">{entry.weighbridgeReading || '-'}</p>
+                                <p className="text-foreground py-2">{entry.weighbridgeReading || '-'}</p>
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Tare Weight (kg)</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Tare Weight (kg)</label>
                             {isEditing ? (
                                 <input
                                     type="number"
@@ -397,7 +397,7 @@ export default function GateEntryDetailPage() {
                                     step="0.01"
                                 />
                             ) : (
-                                <p className="text-white py-2">{entry.tareWeight || '-'}</p>
+                                <p className="text-foreground py-2">{entry.tareWeight || '-'}</p>
                             )}
                         </div>
                     </div>
@@ -410,10 +410,10 @@ export default function GateEntryDetailPage() {
 
                 {/* Supplier/Driver Info */}
                 <div className="glass-card p-6 mb-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Supplier/Driver Information</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Supplier/Driver Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Supplier Name</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Supplier Name</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -423,11 +423,11 @@ export default function GateEntryDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{entry.supplierName || '-'}</p>
+                                <p className="text-foreground py-2">{entry.supplierName || '-'}</p>
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Driver Name</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Driver Name</label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -437,11 +437,11 @@ export default function GateEntryDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{entry.driverName || '-'}</p>
+                                <p className="text-foreground py-2">{entry.driverName || '-'}</p>
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Driver Phone</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Driver Phone</label>
                             {isEditing ? (
                                 <input
                                     type="tel"
@@ -451,7 +451,7 @@ export default function GateEntryDetailPage() {
                                     className="input-field w-full"
                                 />
                             ) : (
-                                <p className="text-white py-2">{entry.driverPhone || '-'}</p>
+                                <p className="text-foreground py-2">{entry.driverPhone || '-'}</p>
                             )}
                         </div>
                     </div>
@@ -459,7 +459,7 @@ export default function GateEntryDetailPage() {
 
                 {/* Notes */}
                 <div className="glass-card p-6 mb-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Notes</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Notes</h3>
                     {isEditing ? (
                         <textarea
                             name="notes"
@@ -468,13 +468,13 @@ export default function GateEntryDetailPage() {
                             className="input-field w-full h-24 resize-none"
                         />
                     ) : (
-                        <p className="text-white">{entry.notes || 'No notes'}</p>
+                        <p className="text-foreground">{entry.notes || 'No notes'}</p>
                     )}
                 </div>
 
                 {/* Timeline */}
                 <div className="glass-card p-6 mb-4">
-                    <h3 className="text-lg font-semibold text-white mb-4">Timeline</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Timeline</h3>
                     <div className="space-y-3 text-sm">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
@@ -483,8 +483,8 @@ export default function GateEntryDetailPage() {
                                 </svg>
                             </div>
                             <div>
-                                <span className="text-slate-400">Entry Time:</span>
-                                <span className="text-white ml-2">{formatTime(entry.entryTime)}</span>
+                                <span className="text-foreground-muted">Entry Time:</span>
+                                <span className="text-foreground ml-2">{formatTime(entry.entryTime)}</span>
                             </div>
                         </div>
                         {entry.exitTime && (
@@ -495,8 +495,8 @@ export default function GateEntryDetailPage() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400">Exit Time:</span>
-                                    <span className="text-white ml-2">{formatTime(entry.exitTime)}</span>
+                                    <span className="text-foreground-muted">Exit Time:</span>
+                                    <span className="text-foreground ml-2">{formatTime(entry.exitTime)}</span>
                                 </div>
                             </div>
                         )}
@@ -506,7 +506,7 @@ export default function GateEntryDetailPage() {
                 {/* Actions */}
                 {entry.status === 'PENDING' && !isEditing && (
                     <div className="glass-card p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Actions</h3>
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={handleComplete}

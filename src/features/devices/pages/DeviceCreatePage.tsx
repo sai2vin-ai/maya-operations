@@ -65,21 +65,21 @@ export default function DeviceCreatePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/devices')}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <div>
-                        <h1 className="text-xl font-bold text-white">Register New Device</h1>
-                        <p className="text-sm text-slate-400">Add a new device to the system</p>
+                        <h1 className="text-xl font-bold text-foreground">Register New Device</h1>
+                        <p className="text-sm text-foreground-muted">Add a new device to the system</p>
                     </div>
                 </div>
             </header>
@@ -94,11 +94,11 @@ export default function DeviceCreatePage() {
                 <form onSubmit={handleSubmit}>
                     {/* Device Identification */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Device Identification</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Device Identification</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Device ID <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex gap-2">
@@ -119,11 +119,11 @@ export default function DeviceCreatePage() {
                                         Generate
                                     </button>
                                 </div>
-                                <p className="text-slate-500 text-sm mt-1">Unique identifier for this device</p>
+                                <p className="text-foreground-faint text-sm mt-1">Unique identifier for this device</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Device Name <span className="text-red-400">*</span>
                                 </label>
                                 <input
@@ -141,11 +141,11 @@ export default function DeviceCreatePage() {
 
                     {/* Device Specifications */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Device Specifications</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Device Specifications</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Device Type <span className="text-red-400">*</span>
                                 </label>
                                 <select
@@ -162,7 +162,7 @@ export default function DeviceCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                                     Operating System <span className="text-red-400">*</span>
                                 </label>
                                 <select
@@ -179,7 +179,7 @@ export default function DeviceCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">OS Version</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">OS Version</label>
                                 <input
                                     type="text"
                                     name="osVersion"
@@ -191,7 +191,7 @@ export default function DeviceCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">App Version</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">App Version</label>
                                 <input
                                     type="text"
                                     name="appVersion"
@@ -206,10 +206,10 @@ export default function DeviceCreatePage() {
 
                     {/* Location */}
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Location</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Location</h3>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Assigned Location</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Assigned Location</label>
                             <input
                                 type="text"
                                 name="location"
@@ -218,7 +218,7 @@ export default function DeviceCreatePage() {
                                 className="input-field w-full md:w-1/2"
                                 placeholder="Gate 1, Control Room, etc."
                             />
-                            <p className="text-slate-500 text-sm mt-2">
+                            <p className="text-foreground-faint text-sm mt-2">
                                 Where this device is primarily used
                             </p>
                         </div>

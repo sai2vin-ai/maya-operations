@@ -88,22 +88,22 @@ export default function ReactorDashboardPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             {/* Header */}
             <header className="glass-card m-4 p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate('/dashboard')}
-                            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-white">Reactor Dashboard</h1>
-                            <p className="text-sm text-slate-400">{reactors.length} reactors configured</p>
+                            <h1 className="text-xl font-bold text-foreground">Reactor Dashboard</h1>
+                            <p className="text-sm text-foreground-muted">{reactors.length} reactors configured</p>
                         </div>
                     </div>
 
@@ -130,7 +130,7 @@ export default function ReactorDashboardPage() {
                 {/* Add Reactor Form */}
                 {showAddReactor && (
                     <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-white mb-4">Add New Reactor</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Add New Reactor</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <input
                                 type="text"
@@ -169,11 +169,11 @@ export default function ReactorDashboardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {reactors.length === 0 ? (
                             <div className="col-span-full glass-card p-8 text-center">
-                                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <div className="w-16 h-16 bg-surface-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-3xl">🔥</span>
                                 </div>
-                                <h3 className="text-white font-semibold mb-2">No Reactors Configured</h3>
-                                <p className="text-slate-400">Add your first reactor to get started</p>
+                                <h3 className="text-foreground font-semibold mb-2">No Reactors Configured</h3>
+                                <p className="text-foreground-muted">Add your first reactor to get started</p>
                             </div>
                         ) : (
                             reactors.map((reactor) => {
@@ -194,12 +194,12 @@ export default function ReactorDashboardPage() {
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-3xl">{getStatusIcon(reactor.status)}</span>
                                                     <div>
-                                                        <h3 className="text-white font-bold text-xl">{reactor.reactorNumber}</h3>
-                                                        <p className="text-white/80 text-sm">{reactor.name}</p>
+                                                        <h3 className="text-foreground font-bold text-xl">{reactor.reactorNumber}</h3>
+                                                        <p className="text-foreground/80 text-sm">{reactor.name}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="bg-white/20 px-2 py-1 rounded text-white text-sm">
+                                                    <span className="bg-white/20 px-2 py-1 rounded text-foreground text-sm">
                                                         {statusInfo.label}
                                                     </span>
                                                 </div>
@@ -212,7 +212,7 @@ export default function ReactorDashboardPage() {
                                             {reactor.activeBatch ? (
                                                 <div className="mb-4">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-slate-400 text-sm">Active Batch</span>
+                                                        <span className="text-foreground-muted text-sm">Active Batch</span>
                                                         <span className={`status-badge ${reactor.activeBatch.status === 'IN_PROGRESS' ? 'status-active' :
                                                             reactor.activeBatch.status === 'COOLING' ? 'status-pending' :
                                                                 'status-inactive'
@@ -220,15 +220,15 @@ export default function ReactorDashboardPage() {
                                                             {getBatchStatusInfo(reactor.activeBatch.status).label}
                                                         </span>
                                                     </div>
-                                                    <p className="text-white font-semibold">{reactor.activeBatch.batchNumber}</p>
+                                                    <p className="text-foreground font-semibold">{reactor.activeBatch.batchNumber}</p>
 
                                                     {/* Progress Bar */}
                                                     <div className="mt-3">
-                                                        <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                                        <div className="flex justify-between text-xs text-foreground-muted mb-1">
                                                             <span>Step {reactor.activeBatch.currentStep} of {reactor.activeBatch.totalSteps}</span>
                                                             <span>{Math.round((reactor.activeBatch.currentStep / reactor.activeBatch.totalSteps) * 100)}%</span>
                                                         </div>
-                                                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                        <div className="h-2 bg-surface-tertiary rounded-full overflow-hidden">
                                                             <div
                                                                 className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
                                                                 style={{ width: `${(reactor.activeBatch.currentStep / reactor.activeBatch.totalSteps) * 100}%` }}
@@ -238,7 +238,7 @@ export default function ReactorDashboardPage() {
                                                 </div>
                                             ) : (
                                                 <div className="mb-4">
-                                                    <p className="text-slate-500 text-sm">No active batch</p>
+                                                    <p className="text-foreground-faint text-sm">No active batch</p>
                                                     {reactor.status === 'IDLE' && (
                                                         <button
                                                             onClick={(e) => {
@@ -254,14 +254,14 @@ export default function ReactorDashboardPage() {
                                             )}
 
                                             {/* Stats */}
-                                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+                                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                                                 <div>
-                                                    <span className="text-slate-400 text-xs">Total Batches</span>
-                                                    <p className="text-white font-semibold">{reactor.totalBatches || 0}</p>
+                                                    <span className="text-foreground-muted text-xs">Total Batches</span>
+                                                    <p className="text-foreground font-semibold">{reactor.totalBatches || 0}</p>
                                                 </div>
                                                 <div>
-                                                    <span className="text-slate-400 text-xs">Last Maintenance</span>
-                                                    <p className="text-white font-semibold text-sm">
+                                                    <span className="text-foreground-muted text-xs">Last Maintenance</span>
+                                                    <p className="text-foreground font-semibold text-sm">
                                                         {reactor.lastMaintenanceDate?.toDate?.()?.toLocaleDateString() || 'N/A'}
                                                     </p>
                                                 </div>

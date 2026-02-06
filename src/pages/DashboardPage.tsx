@@ -73,7 +73,7 @@ export default function DashboardPage() {
     const modules = getRoleBasedModules();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+        <div className="min-h-screen page-bg relative overflow-hidden">
             {/* Ambient background glows */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/6 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -86,16 +86,16 @@ export default function DashboardPage() {
                             <span className="text-white font-bold text-xl">P</span>
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">Pyrolysis Ops</h1>
-                            <p className="text-sm text-slate-400">Plant Management System</p>
+                            <h1 className="text-xl font-bold text-foreground">Pyrolysis Ops</h1>
+                            <p className="text-sm text-foreground-muted">Plant Management System</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                         {/* User Info */}
                         <div className="text-right hidden sm:block">
-                            <p className="text-white font-medium">{userData?.name || 'User'}</p>
-                            <p className="text-xs text-slate-400 uppercase tracking-wider">{userData?.role?.replace('_', ' ') || 'Loading...'}</p>
+                            <p className="text-foreground font-medium">{userData?.name || 'User'}</p>
+                            <p className="text-xs text-foreground-muted uppercase tracking-wider">{userData?.role?.replace('_', ' ') || 'Loading...'}</p>
                         </div>
 
                         {/* Avatar */}
@@ -123,10 +123,10 @@ export default function DashboardPage() {
             <main className="p-4 relative z-10">
                 {/* Welcome Message */}
                 <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2 className="text-2xl font-bold text-foreground">
                         Welcome back, <span className="text-gradient">{userData?.name?.split(' ')[0] || 'User'}</span>!
                     </h2>
-                    <p className="text-slate-400 mt-1">Here's what's happening at the plant today.</p>
+                    <p className="text-foreground-muted mt-1">Here's what's happening at the plant today.</p>
                 </div>
 
                 {/* Quick Stats */}
@@ -140,14 +140,14 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Active Reactors</h3>
+                                <h3 className="text-foreground-muted text-xs font-medium uppercase tracking-wider">Active Reactors</h3>
                             </div>
                             <span className="status-badge status-active">Online</span>
                         </div>
-                        <p className="text-3xl font-bold text-white">4</p>
+                        <p className="text-3xl font-bold text-foreground">4</p>
                         <div className="flex items-center gap-1.5 mt-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse-soft" />
-                            <p className="text-sm text-slate-500">of 6 total</p>
+                            <p className="text-sm text-foreground-faint">of 6 total</p>
                         </div>
                     </div>
 
@@ -160,14 +160,14 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Today's Batches</h3>
+                                <h3 className="text-foreground-muted text-xs font-medium uppercase tracking-wider">Today's Batches</h3>
                             </div>
                             <span className="status-badge status-pending">In Progress</span>
                         </div>
-                        <p className="text-3xl font-bold text-white">12</p>
+                        <p className="text-3xl font-bold text-foreground">12</p>
                         <div className="flex items-center gap-1.5 mt-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse-soft" />
-                            <p className="text-sm text-slate-500">3 in progress</p>
+                            <p className="text-sm text-foreground-faint">3 in progress</p>
                         </div>
                     </div>
 
@@ -180,12 +180,12 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Gate Entries</h3>
+                                <h3 className="text-foreground-muted text-xs font-medium uppercase tracking-wider">Gate Entries</h3>
                             </div>
                             <span className="status-badge status-active">Active</span>
                         </div>
-                        <p className="text-3xl font-bold text-white">8</p>
-                        <p className="text-sm text-slate-500 mt-1">today</p>
+                        <p className="text-3xl font-bold text-foreground">8</p>
+                        <p className="text-sm text-foreground-faint mt-1">today</p>
                     </div>
 
                     {/* Pending Jobs */}
@@ -197,18 +197,18 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Pending Jobs</h3>
+                                <h3 className="text-foreground-muted text-xs font-medium uppercase tracking-wider">Pending Jobs</h3>
                             </div>
                             <span className="status-badge status-inactive">Attention</span>
                         </div>
-                        <p className="text-3xl font-bold text-white">2</p>
-                        <p className="text-sm text-slate-500 mt-1">maintenance</p>
+                        <p className="text-3xl font-bold text-foreground">2</p>
+                        <p className="text-sm text-foreground-faint mt-1">maintenance</p>
                     </div>
                 </div>
 
                 {/* Module Cards */}
                 <div className="flex items-center gap-3 mb-4">
-                    <h3 className="text-lg font-semibold text-white">Quick Access</h3>
+                    <h3 className="text-lg font-semibold text-foreground">Quick Access</h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -221,7 +221,7 @@ export default function DashboardPage() {
                                 key={module.id}
                                 className={`
                                     glass-card p-5 text-left transition-all duration-300 group animate-fade-in-up
-                                    hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 hover:border-slate-600/80
+                                    hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 hover:border-border-secondary
                                     ${isRecent ? 'ring-1 ring-blue-500/40 bg-blue-500/5' : ''}
                                 `}
                                 style={{ animationDelay: `${index * 50}ms` }}
@@ -237,13 +237,13 @@ export default function DashboardPage() {
                                                 {recentIndex === 0 ? 'Recent' : 'Visited'}
                                             </span>
                                         )}
-                                        <svg className="w-4 h-4 text-slate-600 group-hover:text-slate-400 group-hover:translate-x-0.5 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="w-4 h-4 text-foreground-faint group-hover:text-foreground-muted group-hover:translate-x-0.5 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
                                     </div>
                                 </div>
-                                <h4 className="text-white font-semibold mb-0.5 group-hover:text-blue-100 transition-colors">{module.name}</h4>
-                                <p className="text-slate-500 text-sm">
+                                <h4 className="text-foreground font-semibold mb-0.5 group-hover:text-blue-100 transition-colors">{module.name}</h4>
+                                <p className="text-foreground-faint text-sm">
                                     Click to open {module.name.toLowerCase()}
                                 </p>
                             </button>
@@ -261,13 +261,13 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h3 className="text-white font-semibold">Current Shift</h3>
-                                <p className="text-slate-400 text-sm">Shift A &bull; 06:00 - 14:00</p>
+                                <h3 className="text-foreground font-semibold">Current Shift</h3>
+                                <p className="text-foreground-muted text-sm">Shift A &bull; 06:00 - 14:00</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Supervisor</p>
-                            <p className="text-white font-medium">{userData?.name || 'Loading...'}</p>
+                            <p className="text-xs text-foreground-faint uppercase tracking-wider mb-0.5">Supervisor</p>
+                            <p className="text-foreground font-medium">{userData?.name || 'Loading...'}</p>
                         </div>
                     </div>
                 </div>

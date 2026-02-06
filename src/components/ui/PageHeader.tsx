@@ -18,16 +18,16 @@ export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps
                     {backTo && (
                         <button
                             onClick={() => navigate(backTo)}
-                            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                     )}
                     <div>
-                        <h1 className="text-xl font-bold text-white">{title}</h1>
-                        {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
+                        <h1 className="text-xl font-bold text-foreground">{title}</h1>
+                        {subtitle && <p className="text-sm text-foreground-muted">{subtitle}</p>}
                     </div>
                 </div>
 

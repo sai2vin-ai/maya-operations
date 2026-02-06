@@ -48,7 +48,7 @@ export default function DevicesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <PageHeader
                 title="Device Management"
                 subtitle={`${devices.length} devices registered`}
@@ -98,7 +98,7 @@ export default function DevicesPage() {
                             devices.map((device) => (
                                 <div
                                     key={device.id}
-                                    className="glass-card p-4 hover:bg-slate-700/50 transition-all cursor-pointer"
+                                    className="glass-card p-4 hover:bg-surface-hover transition-all cursor-pointer"
                                     onClick={() => navigate(`/devices/${device.id}`)}
                                 >
                                     <div className="flex items-center justify-between">
@@ -108,16 +108,16 @@ export default function DevicesPage() {
                                             </div>
 
                                             <div>
-                                                <h3 className="text-white font-semibold">{device.name}</h3>
-                                                <p className="text-slate-400 text-sm">{device.deviceId}</p>
+                                                <h3 className="text-foreground font-semibold">{device.name}</h3>
+                                                <p className="text-foreground-muted text-sm">{device.deviceId}</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-slate-500">{getDeviceTypeLabel(device.deviceType)}</span>
-                                                    <span className="text-xs text-slate-500">•</span>
-                                                    <span className="text-xs text-slate-500">{device.os}</span>
+                                                    <span className="text-xs text-foreground-faint">{getDeviceTypeLabel(device.deviceType)}</span>
+                                                    <span className="text-xs text-foreground-faint">•</span>
+                                                    <span className="text-xs text-foreground-faint">{device.os}</span>
                                                     {device.location && (
                                                         <>
-                                                            <span className="text-xs text-slate-500">•</span>
-                                                            <span className="text-xs text-slate-500">{device.location}</span>
+                                                            <span className="text-xs text-foreground-faint">•</span>
+                                                            <span className="text-xs text-foreground-faint">{device.location}</span>
                                                         </>
                                                     )}
                                                 </div>
@@ -148,7 +148,7 @@ export default function DevicesPage() {
                                                 </svg>
                                             </button>
 
-                                            <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg className="w-5 h-5 text-foreground-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                             </svg>
                                         </div>

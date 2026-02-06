@@ -24,7 +24,7 @@ export function PageLayout({
     padding = true,
 }: PageLayoutProps) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen page-bg">
             <div className={`${maxWidthStyles[maxWidth]} mx-auto ${padding ? 'p-4' : ''} ${className}`}>
                 {children}
             </div>
@@ -61,7 +61,7 @@ export function Card({
             className={`
                 glass-card
                 ${cardPaddingStyles[padding]}
-                ${hover ? 'hover:bg-slate-700/50 transition-all cursor-pointer' : ''}
+                ${hover ? 'hover:bg-surface-hover transition-all cursor-pointer' : ''}
                 ${onClick ? 'text-left w-full' : ''}
                 ${className}
             `}
@@ -92,8 +92,8 @@ export function Section({
             {(title || action) && (
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        {title && <h2 className="text-lg font-semibold text-white">{title}</h2>}
-                        {description && <p className="text-sm text-slate-400">{description}</p>}
+                        {title && <h2 className="text-lg font-semibold text-foreground">{title}</h2>}
+                        {description && <p className="text-sm text-foreground-muted">{description}</p>}
                     </div>
                     {action}
                 </div>
@@ -141,5 +141,5 @@ interface DividerProps {
 }
 
 export function Divider({ className = '' }: DividerProps) {
-    return <hr className={`border-slate-700 my-4 ${className}`} />;
+    return <hr className={`border-border my-4 ${className}`} />;
 }

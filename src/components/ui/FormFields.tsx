@@ -23,14 +23,14 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         return (
             <div className="w-full">
                 {label && (
-                    <label htmlFor={inputId} className="block text-sm font-medium text-slate-300 mb-1">
+                    <label htmlFor={inputId} className="block text-sm font-medium text-foreground-secondary mb-1">
                         {label}
                         {required && <span className="text-red-400 ml-1">*</span>}
                     </label>
                 )}
                 <div className="relative">
                     {leftIcon && (
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted">
                             {leftIcon}
                         </div>
                     )}
@@ -49,7 +49,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                         {...props}
                     />
                     {rightIcon && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted">
                             {rightIcon}
                         </div>
                     )}
@@ -60,7 +60,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                     </p>
                 )}
                 {hint && !error && (
-                    <p id={`${inputId}-hint`} className="mt-1 text-sm text-slate-500">
+                    <p id={`${inputId}-hint`} className="mt-1 text-sm text-foreground-faint">
                         {hint}
                     </p>
                 )}
@@ -91,7 +91,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
         return (
             <div className="w-full">
                 {label && (
-                    <label htmlFor={selectId} className="block text-sm font-medium text-slate-300 mb-1">
+                    <label htmlFor={selectId} className="block text-sm font-medium text-foreground-secondary mb-1">
                         {label}
                         {required && <span className="text-red-400 ml-1">*</span>}
                     </label>
@@ -125,7 +125,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
                     </p>
                 )}
                 {hint && !error && (
-                    <p id={`${selectId}-hint`} className="mt-1 text-sm text-slate-500">
+                    <p id={`${selectId}-hint`} className="mt-1 text-sm text-foreground-faint">
                         {hint}
                     </p>
                 )}
@@ -156,7 +156,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
         return (
             <div className="w-full">
                 {label && (
-                    <label htmlFor={textareaId} className="block text-sm font-medium text-slate-300 mb-1">
+                    <label htmlFor={textareaId} className="block text-sm font-medium text-foreground-secondary mb-1">
                         {label}
                         {required && <span className="text-red-400 ml-1">*</span>}
                     </label>
@@ -181,7 +181,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
                     </p>
                 )}
                 {hint && !error && (
-                    <p id={`${textareaId}-hint`} className="mt-1 text-sm text-slate-500">
+                    <p id={`${textareaId}-hint`} className="mt-1 text-sm text-foreground-faint">
                         {hint}
                     </p>
                 )}
@@ -212,20 +212,20 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
                         aria-invalid={!!error}
                         aria-describedby={error ? `${checkboxId}-error` : description ? `${checkboxId}-desc` : undefined}
                         className={`
-                            mt-1 h-4 w-4 rounded border-slate-600 bg-slate-800
-                            text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900
+                            mt-1 h-4 w-4 rounded border-border-secondary bg-surface-secondary
+                            text-blue-600 focus:ring-blue-500 focus:ring-offset-surface
                             ${className}
                         `}
                         {...props}
                     />
                     <div>
                         {label && (
-                            <label htmlFor={checkboxId} className="text-sm font-medium text-slate-200 cursor-pointer">
+                            <label htmlFor={checkboxId} className="text-sm font-medium text-foreground cursor-pointer">
                                 {label}
                             </label>
                         )}
                         {description && (
-                            <p id={`${checkboxId}-desc`} className="text-sm text-slate-400">
+                            <p id={`${checkboxId}-desc`} className="text-sm text-foreground-muted">
                                 {description}
                             </p>
                         )}
@@ -281,7 +281,7 @@ interface FieldLabelProps {
 
 export function FieldLabel({ htmlFor, required, children, className = '' }: FieldLabelProps) {
     return (
-        <label htmlFor={htmlFor} className={`block text-sm font-medium text-slate-300 mb-1 ${className}`}>
+        <label htmlFor={htmlFor} className={`block text-sm font-medium text-foreground-secondary mb-1 ${className}`}>
             {children}
             {required && <span className="text-red-400 ml-1">*</span>}
         </label>
@@ -314,7 +314,7 @@ interface FieldHintProps {
 export function FieldHint({ id, children, className = '' }: FieldHintProps) {
     if (!children) return null;
     return (
-        <p id={id} className={`mt-1 text-sm text-slate-500 ${className}`}>
+        <p id={id} className={`mt-1 text-sm text-foreground-faint ${className}`}>
             {children}
         </p>
     );

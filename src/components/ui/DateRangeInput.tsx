@@ -79,7 +79,7 @@ export function DateRangeInput({
                         <button
                             key={option.value}
                             onClick={() => handlePresetClick(option.value)}
-                            className="px-3 py-1.5 text-sm rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"
+                            className="px-3 py-1.5 text-sm rounded-lg bg-surface-tertiary text-foreground-secondary hover:bg-surface-hover transition-colors"
                         >
                             {option.label}
                         </button>
@@ -90,7 +90,7 @@ export function DateRangeInput({
             {/* Date Inputs */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
-                    <label className="block text-sm text-slate-400 mb-1">From</label>
+                    <label className="block text-sm text-foreground-muted mb-1">From</label>
                     <input
                         type="date"
                         value={startDate}
@@ -99,7 +99,7 @@ export function DateRangeInput({
                     />
                 </div>
                 <div className="flex-1">
-                    <label className="block text-sm text-slate-400 mb-1">To</label>
+                    <label className="block text-sm text-foreground-muted mb-1">To</label>
                     <input
                         type="date"
                         value={endDate}

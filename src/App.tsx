@@ -346,15 +346,15 @@ function App() {
 // Coming Soon placeholder component
 function ComingSoon({ title }: { title: string }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+    <div className="min-h-screen page-bg flex items-center justify-center">
       <div className="glass-card p-8 text-center max-w-md">
         <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-        <p className="text-slate-400 mb-4">This module is coming soon in the next sprint.</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{title}</h2>
+        <p className="text-foreground-muted mb-4">This module is coming soon in the next sprint.</p>
         <a href="/dashboard" className="btn-primary inline-block">
           Back to Dashboard
         </a>
@@ -366,11 +366,11 @@ function ComingSoon({ title }: { title: string }) {
 // 404 Not Found component
 function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+    <div className="min-h-screen page-bg flex items-center justify-center">
       <div className="glass-card p-8 text-center max-w-md">
-        <div className="text-6xl font-bold text-slate-600 mb-4">404</div>
-        <h2 className="text-xl font-bold text-white mb-2">Page Not Found</h2>
-        <p className="text-slate-400 mb-4">The page you're looking for doesn't exist.</p>
+        <div className="text-6xl font-bold text-foreground-faint mb-4">404</div>
+        <h2 className="text-xl font-bold text-foreground mb-2">Page Not Found</h2>
+        <p className="text-foreground-muted mb-4">The page you're looking for doesn't exist.</p>
         <a href="/dashboard" className="btn-primary inline-block">
           Go to Dashboard
         </a>

@@ -104,8 +104,8 @@ export function InputDialog({
                             </svg>
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white mb-1">{title}</h3>
-                            {message && <p className="text-slate-400 text-sm">{message}</p>}
+                            <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
+                            {message && <p className="text-foreground-muted text-sm">{message}</p>}
                         </div>
                     </div>
 
