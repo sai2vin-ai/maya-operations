@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getBatchById, completeStep, uploadStepPhoto, recordOutput, cancelBatch, BATCH_STEPS, getBatchStatusInfo, type CompleteStepData } from '../services/batchService';
 import { MATERIAL_CATEGORIES, getGateEntries } from '../../gate/services/gateEntryService';
 import { getInventoryItemsByCategory } from '../../inventory/services/inventoryService';
-import { InputDialog } from '../../../components/ui';
+import { InputDialog, ErrorBoundary } from '../../../components/ui';
+import { CameraCapture } from '../components/CameraCapture';
+import { OutputForm } from '../components/OutputForm';
+import { PyrolysisReadings, type ReadingRow } from '../components/PyrolysisReadings';
 import type { Batch, MaterialCategory } from '../types';
 import type { InventoryItem } from '../../inventory/types';
 import type { GateEntry } from '../../gate/types';
@@ -27,42 +30,23 @@ export default function BatchWorkflowPage() {
     const [stepPressure, setStepPressure] = useState('');
     const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
     const [photoBlobs, setPhotoBlobs] = useState<Blob[]>([]);
-    const [cameraActive, setCameraActive] = useState(false);
 
-    // New fields for specific steps
+    // Step-specific fields
     const [inputWeight, setInputWeight] = useState('');
     const [nitrogenPurged, setNitrogenPurged] = useState(false);
-    const [pyrolysisReadings, setPyrolysisReadings] = useState<{
-        reactorTemp: string;
-        reactorPressure: string;
-        firstTankTemp: string;
-        firstTankPressure: string;
-        panelTemp: string;
-        panelPressure: string;
-    }[]>([]);
+    const [pyrolysisReadings, setPyrolysisReadings] = useState<ReadingRow[]>([]);
     const [selectedGateEntryIds, setSelectedGateEntryIds] = useState<string[]>([]);
     const [availableGateEntries, setAvailableGateEntries] = useState<GateEntry[]>([]);
 
     // Output recording
     const [showOutputForm, setShowOutputForm] = useState(false);
-    const [outputCategory, setOutputCategory] = useState<MaterialCategory | ''>('');
-    const [outputQuantity, setOutputQuantity] = useState('');
-    const [outputUnit, setOutputUnit] = useState<'KG' | 'TONS'>('KG');
-    const [outputGrade, setOutputGrade] = useState('');
-    const [outputInventoryItemId, setOutputInventoryItemId] = useState('');
     const [finishedProductItems, setFinishedProductItems] = useState<InventoryItem[]>([]);
-
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const streamRef = useRef<MediaStream | null>(null);
 
     useEffect(() => {
         if (batchId) {
             loadBatch(batchId);
         }
-        // Load finished product inventory items for output recording
         loadFinishedProducts();
-        // Load completed gate entries for LOADING step
         loadGateEntries();
     }, [batchId]);
 
@@ -78,7 +62,6 @@ export default function BatchWorkflowPage() {
     const loadGateEntries = async () => {
         try {
             const entries = await getGateEntries(50);
-            // Filter to only show COMPLETED entries (raw materials ready for use)
             const completed = entries.filter(e => e.status === 'COMPLETED');
             setAvailableGateEntries(completed);
         } catch (err) {
@@ -103,60 +86,17 @@ export default function BatchWorkflowPage() {
         }
     };
 
-    // Camera functions
-    const startCamera = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: 1280, height: 720 }
-            });
-            streamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                await videoRef.current.play();
-            }
-            setCameraActive(true);
-        } catch (err) {
-            setError('Could not access camera: ' + (err instanceof Error ? err.message : 'Unknown error'));
-        }
-    };
+    const handlePhotoCaptured = useCallback((blob: Blob, dataUrl: string) => {
+        setPhotoBlobs(prev => [...prev, blob]);
+        setCapturedPhotos(prev => [...prev, dataUrl]);
+    }, []);
 
-    const stopCamera = () => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-            streamRef.current = null;
-        }
-        setCameraActive(false);
-    };
-
-    const capturePhoto = () => {
-        if (!videoRef.current || !canvasRef.current) return;
-
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-
-        if (!ctx) return;
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-
-        canvas.toBlob((blob) => {
-            if (blob) {
-                setPhotoBlobs(prev => [...prev, blob]);
-                setCapturedPhotos(prev => [...prev, canvas.toDataURL('image/jpeg')]);
-            }
-        }, 'image/jpeg', 0.8);
-
-        stopCamera();
-    };
-
-    const clearPhotos = () => {
+    const clearPhotos = useCallback(() => {
         setCapturedPhotos([]);
         setPhotoBlobs([]);
-    };
+    }, []);
 
-    const handleCompleteStep = async () => {
+    const handleCompleteStep = useCallback(async () => {
         if (!batch || !userData?.id) return;
 
         const nextStep = batch.currentStep + 1;
@@ -176,7 +116,6 @@ export default function BatchWorkflowPage() {
                 }
             }
 
-            // Build step data based on step type
             const stepData: CompleteStepData = {
                 stepNumber: nextStep,
                 notes: stepNotes || undefined,
@@ -185,11 +124,10 @@ export default function BatchWorkflowPage() {
                 pressure: stepPressure ? parseFloat(stepPressure) : undefined,
             };
 
-            // Add step-specific fields
+            // Step-specific fields
             if (nextStep === 3 && inputWeight) {
                 stepData.inputWeight = parseFloat(inputWeight);
             }
-            // Add linked gate entries for LOADING step
             if (nextStep === 3 && selectedGateEntryIds.length > 0) {
                 stepData.gateEntryIds = selectedGateEntryIds;
             }
@@ -226,30 +164,26 @@ export default function BatchWorkflowPage() {
         } finally {
             setSaving(false);
         }
-    };
+    }, [batch, userData, photoBlobs, stepNotes, stepTemp, stepPressure, inputWeight, selectedGateEntryIds, nitrogenPurged, pyrolysisReadings]);
 
-    const handleRecordOutput = async () => {
-        if (!batch || !userData?.id || !outputCategory || !outputQuantity) return;
+    const handleRecordOutput = useCallback(async (data: {
+        materialCategory: MaterialCategory;
+        quantity: number;
+        unit: 'KG' | 'TONS';
+        qualityGrade?: string;
+        inventoryItemId?: string;
+    }) => {
+        if (!batch || !userData?.id) return;
 
         try {
             setSaving(true);
             setError(null);
 
-            await recordOutput(batch.id, {
-                materialCategory: outputCategory as MaterialCategory,
-                quantity: parseFloat(outputQuantity),
-                unit: outputUnit,
-                qualityGrade: outputGrade || undefined,
-                inventoryItemId: outputInventoryItemId || undefined,
-            }, userData.id);
+            await recordOutput(batch.id, data, userData.id);
 
-            const inventoryNote = outputInventoryItemId ? ' & inventory updated!' : '!';
+            const inventoryNote = data.inventoryItemId ? ' & inventory updated!' : '!';
             setSuccess(`Output recorded${inventoryNote}`);
             setShowOutputForm(false);
-            setOutputCategory('');
-            setOutputQuantity('');
-            setOutputGrade('');
-            setOutputInventoryItemId('');
 
             await loadBatch(batch.id);
         } catch (err) {
@@ -257,13 +191,9 @@ export default function BatchWorkflowPage() {
         } finally {
             setSaving(false);
         }
-    };
+    }, [batch, userData]);
 
-    const handleCancelBatchClick = () => {
-        setCancelDialogOpen(true);
-    };
-
-    const handleCancelBatchConfirm = async (reason: string) => {
+    const handleCancelBatchConfirm = useCallback(async (reason: string) => {
         if (!batch || !userData?.id) return;
 
         try {
@@ -276,7 +206,7 @@ export default function BatchWorkflowPage() {
         } finally {
             setSaving(false);
         }
-    };
+    }, [batch, userData, navigate]);
 
     const currentStepInfo = batch ? BATCH_STEPS.find(s => s.stepNumber === batch.currentStep + 1) : null;
     const isCompleted = batch?.status === 'COMPLETED';
@@ -356,7 +286,6 @@ export default function BatchWorkflowPage() {
                         </span>
                     </div>
 
-                    {/* Progress Bar */}
                     <div className="h-4 bg-slate-700 rounded-full overflow-hidden mb-4">
                         <div
                             className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all"
@@ -364,7 +293,6 @@ export default function BatchWorkflowPage() {
                         />
                     </div>
 
-                    {/* Steps Grid */}
                     <div className="grid grid-cols-7 gap-2">
                         {BATCH_STEPS.map((step) => {
                             const isComplete = batch.currentStep >= step.stepNumber;
@@ -392,41 +320,24 @@ export default function BatchWorkflowPage() {
                             Step {currentStepInfo.stepNumber}: {currentStepInfo.stepName}
                         </h3>
 
-                        {/* Photo Capture */}
+                        {/* Camera - wrapped in ErrorBoundary */}
                         {currentStepInfo.requiresPhoto && (
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Photo Required {capturedPhotos.length > 0 && `(${capturedPhotos.length} captured)`}
-                                </label>
-                                <div className="aspect-video bg-slate-800 rounded-xl overflow-hidden max-w-md relative">
-                                    {cameraActive && (
-                                        <>
-                                            <video ref={videoRef} className="w-full h-full object-cover" autoPlay playsInline muted />
-                                            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                                                <button onClick={capturePhoto} className="w-12 h-12 bg-white rounded-full shadow-lg">
-                                                    <div className="w-8 h-8 bg-red-500 rounded-full mx-auto"></div>
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-                                    {capturedPhotos.length > 0 && !cameraActive && (
-                                        <img src={capturedPhotos[capturedPhotos.length - 1]} alt="Captured" className="w-full h-full object-cover" />
-                                    )}
-                                    {!cameraActive && capturedPhotos.length === 0 && (
-                                        <div className="flex items-center justify-center h-full">
-                                            <button onClick={startCamera} className="btn-secondary">📷 Open Camera</button>
-                                        </div>
-                                    )}
-                                </div>
-                                {capturedPhotos.length > 0 && (
-                                    <div className="flex gap-2 mt-2">
-                                        <button onClick={startCamera} className="btn-secondary text-sm">📷 Add Another</button>
-                                        <button onClick={clearPhotos} className="text-sm text-red-400 hover:text-red-300">Clear All</button>
+                            <ErrorBoundary
+                                fallback={(err, reset) => (
+                                    <div className="glass-card p-4 mb-4 border border-yellow-500/30 bg-yellow-500/5">
+                                        <p className="text-yellow-400 text-sm mb-2">Camera unavailable: {err.message}</p>
+                                        <button onClick={reset} className="btn-secondary text-sm">Retry</button>
                                     </div>
                                 )}
-                                <canvas ref={canvasRef} className="hidden" />
-                            </div>
+                            >
+                                <CameraCapture
+                                    onPhotoCaptured={handlePhotoCaptured}
+                                    capturedPhotos={capturedPhotos}
+                                    onClear={clearPhotos}
+                                />
+                            </ErrorBoundary>
                         )}
+
                         {/* Step Description */}
                         {'description' in currentStepInfo && (
                             <p className="text-slate-400 mb-4 text-sm">
@@ -446,7 +357,6 @@ export default function BatchWorkflowPage() {
                                     placeholder="Raw material weight in KG"
                                     required
                                 />
-                                {/* Gate Entry Selector */}
                                 {availableGateEntries.length > 0 && (
                                     <div className="mt-4">
                                         <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -481,61 +391,15 @@ export default function BatchWorkflowPage() {
                             </div>
                         )}
 
-                        {/* Step 8: Pyrolysis Multi-Point Readings */}
+                        {/* Step 8: Pyrolysis Readings */}
                         {currentStepInfo.stepNumber === 8 && (
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Temperature & Pressure Readings</label>
-                                <div className="bg-slate-700/50 p-4 rounded-lg space-y-3">
-                                    {pyrolysisReadings.map((reading, idx) => (
-                                        <div key={idx} className="grid grid-cols-6 gap-2 text-sm">
-                                            <input type="number" value={reading.reactorTemp} onChange={(e) => {
-                                                const updated = [...pyrolysisReadings];
-                                                updated[idx].reactorTemp = e.target.value;
-                                                setPyrolysisReadings(updated);
-                                            }} className="input-field" placeholder="Reactor °C" />
-                                            <input type="number" value={reading.reactorPressure} onChange={(e) => {
-                                                const updated = [...pyrolysisReadings];
-                                                updated[idx].reactorPressure = e.target.value;
-                                                setPyrolysisReadings(updated);
-                                            }} className="input-field" placeholder="Reactor bar" />
-                                            <input type="number" value={reading.firstTankTemp} onChange={(e) => {
-                                                const updated = [...pyrolysisReadings];
-                                                updated[idx].firstTankTemp = e.target.value;
-                                                setPyrolysisReadings(updated);
-                                            }} className="input-field" placeholder="Tank °C" />
-                                            <input type="number" value={reading.firstTankPressure} onChange={(e) => {
-                                                const updated = [...pyrolysisReadings];
-                                                updated[idx].firstTankPressure = e.target.value;
-                                                setPyrolysisReadings(updated);
-                                            }} className="input-field" placeholder="Tank bar" />
-                                            <input type="number" value={reading.panelTemp} onChange={(e) => {
-                                                const updated = [...pyrolysisReadings];
-                                                updated[idx].panelTemp = e.target.value;
-                                                setPyrolysisReadings(updated);
-                                            }} className="input-field" placeholder="Panel °C" />
-                                            <input type="number" value={reading.panelPressure} onChange={(e) => {
-                                                const updated = [...pyrolysisReadings];
-                                                updated[idx].panelPressure = e.target.value;
-                                                setPyrolysisReadings(updated);
-                                            }} className="input-field" placeholder="Panel bar" />
-                                        </div>
-                                    ))}
-                                    <button
-                                        onClick={() => setPyrolysisReadings([...pyrolysisReadings, {
-                                            reactorTemp: '', reactorPressure: '',
-                                            firstTankTemp: '', firstTankPressure: '',
-                                            panelTemp: '', panelPressure: ''
-                                        }])}
-                                        className="btn-secondary text-sm w-full"
-                                    >
-                                        + Add Reading
-                                    </button>
-                                </div>
-                                <p className="text-xs text-slate-500 mt-1">Reactor | 1st Tank | Panel (Temp + Pressure)</p>
-                            </div>
+                            <PyrolysisReadings
+                                readings={pyrolysisReadings}
+                                onChange={setPyrolysisReadings}
+                            />
                         )}
 
-                        {/* Steps 10 & 11: Nitrogen Purge Confirmation */}
+                        {/* Steps 10 & 11: Nitrogen Purge */}
                         {(currentStepInfo.stepNumber === 10 || currentStepInfo.stepNumber === 11) && (
                             <div className="mb-4">
                                 <label className="flex items-center gap-3 cursor-pointer">
@@ -549,17 +413,17 @@ export default function BatchWorkflowPage() {
                                 </label>
                                 {'tempThreshold' in currentStepInfo && (
                                     <p className="text-xs text-yellow-400 mt-2">
-                                        ⚠️ Temperature must be at {(currentStepInfo as { tempThreshold?: number }).tempThreshold}°C before proceeding
+                                        Temperature must be at {(currentStepInfo as { tempThreshold?: number }).tempThreshold}C before proceeding
                                     </p>
                                 )}
                             </div>
                         )}
 
-                        {/* Temperature & Pressure (only for PRE_HEATING onwards, except PYROLYSIS which has its own table) */}
+                        {/* Temperature & Pressure (steps 7, 9+, except step 8) */}
                         {currentStepInfo.stepNumber >= 7 && currentStepInfo.stepNumber !== 8 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Temperature (°C)</label>
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Temperature (C)</label>
                                     <input
                                         type="number"
                                         value={stepTemp}
@@ -598,7 +462,7 @@ export default function BatchWorkflowPage() {
                             className="btn-primary w-full flex items-center justify-center gap-2"
                         >
                             {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
-                            ✅ Complete Step {currentStepInfo.stepNumber}
+                            Complete Step {currentStepInfo.stepNumber}
                         </button>
                     </div>
                 )}
@@ -615,75 +479,14 @@ export default function BatchWorkflowPage() {
                             )}
                         </div>
 
-                        {/* Output Form */}
                         {showOutputForm && (
-                            <div className="bg-slate-700/50 p-4 rounded-lg mb-4">
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                                    <select
-                                        value={outputCategory}
-                                        onChange={(e) => setOutputCategory(e.target.value as MaterialCategory)}
-                                        className="input-field"
-                                    >
-                                        <option value="">Select material...</option>
-                                        {MATERIAL_CATEGORIES.filter(m => ['CB-STD', 'CB-HG', 'PO-CRD', 'SW-MIX'].includes(m.value)).map(mat => (
-                                            <option key={mat.value} value={mat.value}>{mat.label}</option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="number"
-                                        value={outputQuantity}
-                                        onChange={(e) => setOutputQuantity(e.target.value)}
-                                        className="input-field"
-                                        placeholder="Quantity"
-                                    />
-                                    <select
-                                        value={outputUnit}
-                                        onChange={(e) => setOutputUnit(e.target.value as 'KG' | 'TONS')}
-                                        className="input-field"
-                                    >
-                                        <option value="KG">KG</option>
-                                        <option value="TONS">TONS</option>
-                                    </select>
-                                    <input
-                                        type="text"
-                                        value={outputGrade}
-                                        onChange={(e) => setOutputGrade(e.target.value)}
-                                        className="input-field"
-                                        placeholder="Grade (optional)"
-                                    />
-                                </div>
-                                {/* Inventory Item Selector */}
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">
-                                        Link to Inventory (optional)
-                                    </label>
-                                    <select
-                                        value={outputInventoryItemId}
-                                        onChange={(e) => setOutputInventoryItemId(e.target.value)}
-                                        className="input-field w-full"
-                                    >
-                                        <option value="">Don't update inventory</option>
-                                        {finishedProductItems.map(item => (
-                                            <option key={item.id} value={item.id}>
-                                                {item.code} - {item.name} ({item.currentStock} {item.unit})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Select an inventory item to automatically update stock when recording output
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={handleRecordOutput}
-                                    disabled={saving || !outputCategory || !outputQuantity}
-                                    className="btn-primary"
-                                >
-                                    Record Output
-                                </button>
-                            </div>
+                            <OutputForm
+                                onSubmit={handleRecordOutput}
+                                finishedProductItems={finishedProductItems}
+                                saving={saving}
+                            />
                         )}
 
-                        {/* Outputs List */}
                         {batch.outputs && batch.outputs.length > 0 ? (
                             <div className="space-y-2">
                                 {batch.outputs.map((output, idx) => (
@@ -711,7 +514,6 @@ export default function BatchWorkflowPage() {
                 {/* Completed State */}
                 {isCompleted && (
                     <div className="glass-card p-8 text-center mb-4 border border-green-500/50 bg-green-500/10">
-                        <div className="text-5xl mb-4">🎉</div>
                         <h3 className="text-2xl font-bold text-green-400 mb-2">Batch Completed!</h3>
                         <p className="text-slate-400">All 14 steps have been completed successfully.</p>
                     </div>
@@ -722,7 +524,7 @@ export default function BatchWorkflowPage() {
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
                         <button
-                            onClick={handleCancelBatchClick}
+                            onClick={() => setCancelDialogOpen(true)}
                             disabled={saving}
                             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all"
                         >

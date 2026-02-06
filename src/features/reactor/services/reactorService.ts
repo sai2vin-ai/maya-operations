@@ -15,7 +15,7 @@ import type { FirestoreDocData } from '../../../types';
 
 const REACTORS_COLLECTION = 'reactors';
 
-// Get all reactors
+/** Fetches all reactors from Firestore. */
 export async function getReactors(): Promise<Reactor[]> {
     const reactorsRef = collection(db, REACTORS_COLLECTION);
     const snapshot = await getDocs(reactorsRef);
@@ -26,7 +26,11 @@ export async function getReactors(): Promise<Reactor[]> {
     })) as Reactor[];
 }
 
-// Get reactor by ID
+/**
+ * Fetches a single reactor by its document ID.
+ * @param reactorId - The Firestore document ID
+ * @returns The reactor object, or null if not found
+ */
 export async function getReactorById(reactorId: string): Promise<Reactor | null> {
     const reactorRef = doc(db, REACTORS_COLLECTION, reactorId);
     const snapshot = await getDoc(reactorRef);
@@ -38,7 +42,11 @@ export async function getReactorById(reactorId: string): Promise<Reactor | null>
     return { id: snapshot.id, ...snapshot.data() } as Reactor;
 }
 
-// Get reactors by status
+/**
+ * Fetches all reactors matching a specific status.
+ * @param status - The reactor status to filter by (e.g., "IDLE", "IN_BATCH")
+ * @returns Array of reactors with the specified status
+ */
 export async function getReactorsByStatus(status: ReactorStatus): Promise<Reactor[]> {
     const reactorsRef = collection(db, REACTORS_COLLECTION);
     const q = query(reactorsRef, where('status', '==', status));
@@ -50,12 +58,17 @@ export async function getReactorsByStatus(status: ReactorStatus): Promise<Reacto
     })) as Reactor[];
 }
 
-// Create reactor
 export interface CreateReactorData {
     reactorNumber: string;
     name: string;
 }
 
+/**
+ * Creates a new reactor document in Firestore with IDLE status and zero batch count.
+ * @param data - Reactor data including reactor number and display name
+ * @param createdBy - UID of the user creating the reactor
+ * @returns The newly created reactor's document ID
+ */
 export async function createReactor(data: CreateReactorData, createdBy: string): Promise<string> {
     const reactorId = `reactor_${data.reactorNumber}`;
     const reactorRef = doc(db, REACTORS_COLLECTION, reactorId);
@@ -75,7 +88,13 @@ export async function createReactor(data: CreateReactorData, createdBy: string):
     return reactorId;
 }
 
-// Update reactor status
+/**
+ * Updates a reactor's operational status and optionally links it to a batch.
+ * @param reactorId - The reactor document ID
+ * @param status - The new reactor status
+ * @param currentBatchId - Optional batch ID to associate with the reactor
+ * @param updatedBy - Optional UID of the user performing the update
+ */
 export async function updateReactorStatus(
     reactorId: string,
     status: ReactorStatus,
@@ -100,17 +119,21 @@ export async function updateReactorStatus(
     await updateDoc(reactorRef, updateData as Record<string, unknown>);
 }
 
-// Set reactor to maintenance
+/** Sets a reactor's status to MAINTENANCE. */
 export async function setReactorMaintenance(reactorId: string, updatedBy: string): Promise<void> {
     await updateReactorStatus(reactorId, 'MAINTENANCE', undefined, updatedBy);
 }
 
-// Set reactor to idle
+/** Sets a reactor's status to IDLE. */
 export async function setReactorIdle(reactorId: string, updatedBy: string): Promise<void> {
     await updateReactorStatus(reactorId, 'IDLE', undefined, updatedBy);
 }
 
-// Update reactor after batch completion
+/**
+ * Increments a reactor's total batch count, clears the current batch, and resets status to IDLE.
+ * Called after a batch is completed.
+ * @param reactorId - The reactor document ID
+ */
 export async function incrementBatchCount(reactorId: string): Promise<void> {
     const reactor = await getReactorById(reactorId);
     if (reactor) {
@@ -132,7 +155,11 @@ export const REACTOR_STATUSES: { value: ReactorStatus; label: string; color: str
     { value: 'OFFLINE', label: 'Offline', color: 'red' },
 ];
 
-// Get status info
+/**
+ * Returns the display label and color for a reactor status.
+ * @param status - The reactor status value
+ * @returns Status info object with value, label, and color
+ */
 export function getReactorStatusInfo(status: ReactorStatus) {
     return REACTOR_STATUSES.find(s => s.value === status) || REACTOR_STATUSES[0];
 }

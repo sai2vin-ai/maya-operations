@@ -10,34 +10,26 @@ import {
     orderBy,
     limit,
     Timestamp,
+    runTransaction,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
-import { updateReactorStatus, incrementBatchCount } from './reactorService';
+import { updateReactorStatus } from './reactorService';
 import type { Batch, BatchStatus, BatchOutput, MaterialCategory } from '../types';
 import type { FirestoreDocData } from '../../../types';
+import { BATCH_STEPS } from '../../../config/batchSteps';
+
+// Re-export for backward compatibility
+export { BATCH_STEPS } from '../../../config/batchSteps';
 
 const BATCHES_COLLECTION = 'batches';
 
-// Define the 14-step workflow
-export const BATCH_STEPS = [
-    { stepNumber: 1, stepName: 'CLEANING', requiresPhoto: true, description: 'Clean jolly and door', canAbort: true },
-    { stepNumber: 2, stepName: 'INSPECTION', requiresPhoto: true, description: 'Safety checks - seals, heating elements', canAbort: true },
-    { stepNumber: 3, stepName: 'LOADING', requiresPhoto: true, description: 'Load raw material, record input weight', canAbort: true },
-    { stepNumber: 4, stepName: 'SEALING', requiresPhoto: true, description: 'Door closing, roller greasing', canAbort: true },
-    { stepNumber: 5, stepName: 'OIL_SEAL_LEVEL', requiresPhoto: true, description: 'Oil seal leveling', canAbort: true },
-    { stepNumber: 6, stepName: 'WATER_SEAL_LEVEL', requiresPhoto: true, description: 'Water seal leveling', canAbort: true },
-    { stepNumber: 7, stepName: 'PRE_HEATING', requiresPhoto: true, description: 'Oil dip photo, record start time', canAbort: 'emergency' },
-    { stepNumber: 8, stepName: 'PYROLYSIS', requiresPhoto: true, description: 'Record temp/pressure readings at reactor, tank, panel', canAbort: 'emergency' },
-    { stepNumber: 9, stepName: 'COOLING', requiresPhoto: false, description: 'Controlled cooldown', canAbort: false },
-    { stepNumber: 10, stepName: 'VENTING', requiresPhoto: true, description: 'Vent at 200°C, nitrogen purging', tempThreshold: 200, canAbort: false },
-    { stepNumber: 11, stepName: 'CARBON_DISCHARGE', requiresPhoto: true, description: 'Open at 70°C, nitrogen purge before opening', tempThreshold: 70, canAbort: false },
-    { stepNumber: 12, stepName: 'STEEL_DISCHARGE', requiresPhoto: true, description: 'Remove and weigh steel wire', canAbort: false },
-    { stepNumber: 13, stepName: 'OIL_TRANSFER', requiresPhoto: true, description: 'Filter oil and transfer to main tank', canAbort: false },
-    { stepNumber: 14, stepName: 'COMPLETE', requiresPhoto: false, description: 'Record final weights - oil, carbon, steel', canAbort: false },
-];
-
-// Generate batch number like M1-20260128-001 (ReactorNumber-Date-SerialNumber)
+/**
+ * Generates a sequential batch number in the format {reactor}-{date}-{serial}.
+ * Queries existing batches to determine the next serial for the given reactor and date.
+ * @param reactorNumber - The reactor identifier (e.g., "M1")
+ * @returns The next available batch number (e.g., "M1-20260128-001")
+ */
 async function generateBatchNumber(reactorNumber: string): Promise<string> {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, ''); // 20260128
@@ -59,7 +51,11 @@ async function generateBatchNumber(reactorNumber: string): Promise<string> {
     return `${prefix}-${String(maxNumber + 1).padStart(3, '0')}`;
 }
 
-// Get all batches
+/**
+ * Fetches batches ordered by start time, with an optional limit.
+ * @param limitCount - Maximum number of batches to return (default: 50)
+ * @returns Array of batches sorted newest first
+ */
 export async function getBatches(limitCount: number = 50): Promise<Batch[]> {
     const batchesRef = collection(db, BATCHES_COLLECTION);
     const q = query(batchesRef, orderBy('startTime', 'desc'), limit(limitCount));
@@ -71,7 +67,11 @@ export async function getBatches(limitCount: number = 50): Promise<Batch[]> {
     })) as Batch[];
 }
 
-// Get batch by ID
+/**
+ * Fetches a single batch by its document ID.
+ * @param batchId - The Firestore document ID
+ * @returns The batch object, or null if not found
+ */
 export async function getBatchById(batchId: string): Promise<Batch | null> {
     const batchRef = doc(db, BATCHES_COLLECTION, batchId);
     const snapshot = await getDoc(batchRef);
@@ -83,7 +83,11 @@ export async function getBatchById(batchId: string): Promise<Batch | null> {
     return { id: snapshot.id, ...snapshot.data() } as Batch;
 }
 
-// Get batches by reactor
+/**
+ * Fetches all batches for a specific reactor, sorted newest first.
+ * @param reactorId - The reactor document ID to filter by
+ * @returns Array of batches belonging to the reactor
+ */
 export async function getBatchesByReactor(reactorId: string): Promise<Batch[]> {
     const batchesRef = collection(db, BATCHES_COLLECTION);
     const q = query(batchesRef, where('reactorId', '==', reactorId), orderBy('startTime', 'desc'));
@@ -95,7 +99,11 @@ export async function getBatchesByReactor(reactorId: string): Promise<Batch[]> {
     })) as Batch[];
 }
 
-// Get active batch for reactor
+/**
+ * Finds the currently active batch (CREATED, IN_PROGRESS, or COOLING) for a reactor.
+ * @param reactorId - The reactor document ID
+ * @returns The active batch, or null if no batch is running
+ */
 export async function getActiveBatch(reactorId: string): Promise<Batch | null> {
     const batchesRef = collection(db, BATCHES_COLLECTION);
     const q = query(
@@ -111,7 +119,6 @@ export async function getActiveBatch(reactorId: string): Promise<Batch | null> {
     return { id: doc.id, ...doc.data() } as Batch;
 }
 
-// Create new batch
 export interface CreateBatchData {
     reactorId: string;
     reactorNumber: string;
@@ -120,6 +127,12 @@ export interface CreateBatchData {
     notes?: string;
 }
 
+/**
+ * Creates a new batch with an auto-generated batch number and sets the reactor status to IN_BATCH.
+ * @param data - Batch creation data including reactor ID and optional input weight
+ * @param createdBy - UID of the user creating the batch
+ * @returns The newly created batch's document ID
+ */
 export async function createBatch(data: CreateBatchData, createdBy: string): Promise<string> {
     const batchNumber = await generateBatchNumber(data.reactorNumber);
     const batchId = batchNumber.replace(/-/g, '_');
@@ -154,7 +167,13 @@ export async function createBatch(data: CreateBatchData, createdBy: string): Pro
     return batchId;
 }
 
-// Upload step photo
+/**
+ * Uploads a step photo to Firebase Storage under the batch's folder.
+ * @param file - The image blob to upload
+ * @param batchNumber - The batch number used for the storage path
+ * @param stepNumber - The step number included in the filename
+ * @returns The download URL of the uploaded photo
+ */
 export async function uploadStepPhoto(file: Blob, batchNumber: string, stepNumber: number): Promise<string> {
     const timestamp = Date.now();
     const path = `batches/${batchNumber}/step_${stepNumber}_${timestamp}.jpg`;
@@ -165,7 +184,6 @@ export async function uploadStepPhoto(file: Blob, batchNumber: string, stepNumbe
     return await getDownloadURL(storageRef);
 }
 
-// Complete a step
 export interface CompleteStepData {
     stepNumber: number;
     notes?: string;
@@ -178,7 +196,6 @@ export interface CompleteStepData {
     gateEntryIds?: string[];
 }
 
-// Pyrolysis reading data for step 8
 export interface PyrolysisReadingData {
     reactorTemp: number;
     reactorPressure: number;
@@ -188,6 +205,14 @@ export interface PyrolysisReadingData {
     panelPressure?: number;
 }
 
+/**
+ * Completes a workflow step for a batch. Advances the batch status based on the step number
+ * (IN_PROGRESS for steps 1-8, COOLING for 9-13, COMPLETED for 14). On completion of the
+ * final step, uses a Firestore transaction to atomically update the batch and reset the reactor.
+ * @param batchId - The batch document ID
+ * @param stepData - Step completion data including readings, photos, and optional pyrolysis data
+ * @param completedBy - UID of the user completing the step
+ */
 export async function completeStep(
     batchId: string,
     stepData: CompleteStepData,
@@ -252,15 +277,28 @@ export async function completeStep(
         updateData.endTime = Timestamp.now();
     }
 
-    await updateDoc(batchRef, updateData);
-
-    // If batch completed, update reactor
+    // Use transaction for batch completion + reactor update to prevent partial state
     if (newStatus === 'COMPLETED' && batch.reactorId) {
-        await incrementBatchCount(batch.reactorId);
+        const reactorRef = doc(db, 'reactors', batch.reactorId);
+        await runTransaction(db, async (transaction) => {
+            const reactorSnap = await transaction.get(reactorRef);
+            const currentBatches = reactorSnap.exists()
+                ? (reactorSnap.data()?.totalBatches || 0)
+                : 0;
+
+            transaction.update(batchRef, updateData);
+            transaction.update(reactorRef, {
+                totalBatches: currentBatches + 1,
+                currentBatchId: null,
+                status: 'IDLE',
+                updatedAt: Timestamp.now(),
+            });
+        });
+    } else {
+        await updateDoc(batchRef, updateData);
     }
 }
 
-// Record batch output
 export interface RecordOutputData {
     materialCategory: MaterialCategory;
     quantity: number;
@@ -270,6 +308,13 @@ export interface RecordOutputData {
     inventoryItemId?: string;
 }
 
+/**
+ * Records a material output for a batch (e.g., carbon black, oil, steel wire). If an
+ * inventory item ID is provided, automatically creates a receipt transaction in inventory.
+ * @param batchId - The batch document ID
+ * @param outputData - Output details including material category, quantity, and optional inventory link
+ * @param recordedBy - UID of the user recording the output
+ */
 export async function recordOutput(
     batchId: string,
     outputData: RecordOutputData,
@@ -314,23 +359,39 @@ export async function recordOutput(
     }
 }
 
-// Cancel batch
+/**
+ * Cancels a batch and atomically resets the associated reactor to IDLE status.
+ * @param batchId - The batch document ID to cancel
+ * @param reason - The reason for cancellation, stored in the notes field
+ * @param cancelledBy - UID of the user cancelling the batch
+ */
 export async function cancelBatch(batchId: string, reason: string, cancelledBy: string): Promise<void> {
     const batch = await getBatchById(batchId);
     if (!batch) throw new Error('Batch not found');
 
     const batchRef = doc(db, BATCHES_COLLECTION, batchId);
-    await updateDoc(batchRef, {
+    const batchUpdate = {
         status: 'CANCELLED',
         notes: `Cancelled: ${reason}`,
         endTime: Timestamp.now(),
         updatedAt: Timestamp.now(),
         updatedBy: cancelledBy,
-    });
+    };
 
-    // Reset reactor to idle
+    // Use transaction to atomically cancel batch + reset reactor
     if (batch.reactorId) {
-        await updateReactorStatus(batch.reactorId, 'IDLE', undefined, cancelledBy);
+        const reactorRef = doc(db, 'reactors', batch.reactorId);
+        await runTransaction(db, async (transaction) => {
+            transaction.update(batchRef, batchUpdate);
+            transaction.update(reactorRef, {
+                status: 'IDLE',
+                currentBatchId: null,
+                updatedAt: Timestamp.now(),
+                updatedBy: cancelledBy,
+            });
+        });
+    } else {
+        await updateDoc(batchRef, batchUpdate);
     }
 }
 
@@ -343,7 +404,11 @@ export const BATCH_STATUSES: { value: BatchStatus; label: string; color: string 
     { value: 'CANCELLED', label: 'Cancelled', color: 'red' },
 ];
 
-// Get status info
+/**
+ * Returns the display label and color for a batch status.
+ * @param status - The batch status value
+ * @returns Status info object with value, label, and color
+ */
 export function getBatchStatusInfo(status: BatchStatus) {
     return BATCH_STATUSES.find(s => s.value === status) || BATCH_STATUSES[0];
 }
