@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { createGateEntry, uploadPhotoFromBlob, MATERIAL_CATEGORIES } from '../services/gateEntryService';
+import { createGateEntry, updateGateEntry, uploadPhotoFromBlob, MATERIAL_CATEGORIES } from '../services/gateEntryService';
 import type { EntryType, MaterialCategory } from '../types';
 
 export default function GateEntryCreatePage() {
@@ -128,12 +128,11 @@ export default function GateEntryCreatePage() {
                 notes: formData.notes || undefined,
             }, userData?.id || '');
 
-            // Upload photo if captured
+            // Upload photo if captured and save URL to entry
             if (photoBlob && entryId) {
                 try {
                     const photoUrl = await uploadPhotoFromBlob(photoBlob, entryId, 'vehicle');
-                    // TODO: Update entry with photo URL
-                    console.log('Photo uploaded:', photoUrl);
+                    await updateGateEntry(entryId, { vehiclePhoto: photoUrl }, userData?.id || '');
                 } catch (photoErr) {
                     console.error('Photo upload failed:', photoErr);
                 }

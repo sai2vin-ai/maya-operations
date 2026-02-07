@@ -169,7 +169,10 @@ export async function createBatch(data: CreateBatchData, createdBy: string, call
     const reactorRef = doc(db, 'reactors', data.reactorId);
     await runTransaction(db, async (transaction) => {
         const reactorSnap = await transaction.get(reactorRef);
-        if (reactorSnap.exists() && reactorSnap.data()?.status === 'IN_BATCH') {
+        if (!reactorSnap.exists()) {
+            throw new Error(`Reactor '${data.reactorId}' does not exist`);
+        }
+        if (reactorSnap.data()?.status === 'IN_BATCH') {
             throw new Error('Reactor already has an active batch');
         }
         transaction.set(batchRef, batchDoc);
@@ -349,8 +352,9 @@ export async function recordOutput(
     const batch = await getBatchById(batchId);
     if (!batch) throw new Error('Batch not found');
 
+    const outputIndex = (batch.outputs || []).length + 1;
     const output: BatchOutput = {
-        id: `output_${Date.now()}`,
+        id: `${batchId}_output_${String(outputIndex).padStart(3, '0')}`,
         materialCategory: outputData.materialCategory,
         quantity: outputData.quantity,
         unit: outputData.unit,
@@ -406,21 +410,20 @@ export async function cancelBatch(batchId: string, reason: string, cancelledBy: 
         updatedBy: cancelledBy,
     };
 
-    // Use transaction to atomically cancel batch + reset reactor
-    if (batch.reactorId) {
-        const reactorRef = doc(db, 'reactors', batch.reactorId);
-        await runTransaction(db, async (transaction) => {
-            transaction.update(batchRef, batchUpdate);
-            transaction.update(reactorRef, {
-                status: 'IDLE',
-                currentBatchId: null,
-                updatedAt: Timestamp.now(),
-                updatedBy: cancelledBy,
-            });
-        });
-    } else {
-        await updateDoc(batchRef, batchUpdate);
+    // Always use transaction to atomically cancel batch + reset reactor
+    if (!batch.reactorId) {
+        throw new Error('Batch has no associated reactor — cannot cancel safely');
     }
+    const reactorRef = doc(db, 'reactors', batch.reactorId);
+    await runTransaction(db, async (transaction) => {
+        transaction.update(batchRef, batchUpdate);
+        transaction.update(reactorRef, {
+            status: 'IDLE',
+            currentBatchId: null,
+            updatedAt: Timestamp.now(),
+            updatedBy: cancelledBy,
+        });
+    });
 }
 
 // Batch statuses for UI

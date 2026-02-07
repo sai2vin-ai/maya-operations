@@ -129,24 +129,6 @@ export async function setReactorIdle(reactorId: string, updatedBy: string): Prom
     await updateReactorStatus(reactorId, 'IDLE', undefined, updatedBy);
 }
 
-/**
- * Increments a reactor's total batch count, clears the current batch, and resets status to IDLE.
- * Called after a batch is completed.
- * @param reactorId - The reactor document ID
- */
-export async function incrementBatchCount(reactorId: string): Promise<void> {
-    const reactor = await getReactorById(reactorId);
-    if (reactor) {
-        const reactorRef = doc(db, REACTORS_COLLECTION, reactorId);
-        await updateDoc(reactorRef, {
-            totalBatches: (reactor.totalBatches || 0) + 1,
-            currentBatchId: null,
-            status: 'IDLE',
-            updatedAt: Timestamp.now(),
-        });
-    }
-}
-
 // Reactor statuses for UI
 export const REACTOR_STATUSES: { value: ReactorStatus; label: string; color: string }[] = [
     { value: 'IDLE', label: 'Idle', color: 'gray' },

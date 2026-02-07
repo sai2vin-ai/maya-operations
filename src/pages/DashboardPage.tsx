@@ -40,8 +40,8 @@ export default function DashboardPage() {
     const [recentModules] = useState<string[]>(getRecentModules);
 
     // Live dashboard stats
-    const { data: reactors } = useQuery({ queryKey: ['reactors'], queryFn: getReactors, staleTime: 30_000 });
-    const { data: todayBatches } = useQuery({
+    const { data: reactors, isError: reactorsError } = useQuery({ queryKey: ['reactors'], queryFn: getReactors, staleTime: 30_000 });
+    const { data: todayBatches, isError: batchesError } = useQuery({
         queryKey: ['batches', 'today'],
         queryFn: () => getBatches(100),
         staleTime: 30_000,
@@ -55,8 +55,9 @@ export default function DashboardPage() {
             });
         },
     });
-    const { data: todayGateEntries } = useQuery({ queryKey: ['gateEntries', 'today'], queryFn: getTodaysEntries, staleTime: 30_000 });
-    const { data: lowStockItems } = useQuery({ queryKey: ['inventory', 'lowStock'], queryFn: getLowStockItems, staleTime: 60_000 });
+    const { data: todayGateEntries, isError: gateError } = useQuery({ queryKey: ['gateEntries', 'today'], queryFn: getTodaysEntries, staleTime: 30_000 });
+    const { data: lowStockItems, isError: inventoryError } = useQuery({ queryKey: ['inventory', 'lowStock'], queryFn: getLowStockItems, staleTime: 60_000 });
+    const statsError = reactorsError || batchesError || gateError || inventoryError;
 
     const activeReactorCount = reactors?.filter(r => r.status === 'IN_BATCH').length ?? 0;
     const totalReactorCount = reactors?.length ?? 0;
@@ -111,6 +112,13 @@ export default function DashboardPage() {
                     </h2>
                     <p className="text-foreground-muted mt-1">Here's what's happening at the plant today.</p>
                 </div>
+
+                {/* Stats loading error */}
+                {statsError && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+                        <p className="text-red-400 text-sm">Failed to load some dashboard stats. Data shown may be stale.</p>
+                    </div>
+                )}
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

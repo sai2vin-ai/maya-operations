@@ -215,6 +215,20 @@ export async function createGateEntry(data: CreateGateEntryData, createdBy: stri
         throw new Error(vehicleValidation.error || 'Invalid vehicle number');
     }
 
+    // Check for duplicate pending entries with same vehicle number
+    const vehicleUpper = data.vehicleNumber.toUpperCase();
+    const duplicateQuery = query(
+        collection(db, GATE_ENTRIES_COLLECTION),
+        where('vehicleNumber', '==', vehicleUpper),
+        where('status', '==', 'PENDING'),
+        limit(1)
+    );
+    const duplicateSnap = await getDocs(duplicateQuery);
+    if (!duplicateSnap.empty) {
+        const existing = duplicateSnap.docs[0].data() as GateEntry;
+        throw new Error(`Vehicle ${vehicleUpper} already has a pending entry (${existing.entryNumber})`);
+    }
+
     const entryNumber = await generateEntryNumber();
     const entryId = entryNumber.replace(/-/g, '_');
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);
