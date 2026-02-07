@@ -58,8 +58,9 @@ const BugReportCreatePage = lazy(() => import('./features/bug-reports/pages/BugR
 const BugReportsPage = lazy(() => import('./features/bug-reports/pages/BugReportsPage'));
 const BugReportDetailPage = lazy(() => import('./features/bug-reports/pages/BugReportDetailPage'));
 
-// User Guide
+// User Guide & Workflows
 const UserGuidePage = lazy(() => import('./pages/UserGuidePage'));
+const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'));
 
 function App() {
   return (
@@ -144,8 +145,9 @@ function App() {
                   <Route path="/bug-reports" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><BugReportsPage /></ProtectedRoute>} />
                   <Route path="/bug-reports/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><BugReportDetailPage /></ProtectedRoute>} />
 
-                  {/* User Guide */}
+                  {/* User Guide & Workflows */}
                   <Route path="/guide" element={<UserGuidePage />} />
+                  <Route path="/workflows" element={<WorkflowsPage />} />
                 </Route>
 
                 {/* Redirect root to dashboard */}
