@@ -295,7 +295,7 @@ export interface RecordTransactionData {
     itemId: string;
     transactionType: TransactionType;
     quantity: number;
-    referenceType?: 'GATE_ENTRY' | 'BATCH' | 'MAINTENANCE_JOB';
+    referenceType?: 'GATE_ENTRY' | 'BATCH' | 'MAINTENANCE_JOB' | 'WEIGHBRIDGE_ENTRY';
     referenceId?: string;
     reason?: string;
     approvedBy?: string;
@@ -343,6 +343,11 @@ export async function recordTransaction(
             throw new Error('Insufficient stock for this transaction');
         }
 
+        // Warn if receipt exceeds maximum stock
+        if (data.transactionType === 'RECEIPT' && item.maximumStock && newBalance > item.maximumStock) {
+            throw new Error(`Receipt would exceed maximum stock (${item.maximumStock}). Current: ${item.currentStock}, receiving: ${data.quantity}`);
+        }
+
         // Create transaction record
         const txnRef = doc(db, INVENTORY_TRANSACTIONS_COLLECTION, txnId);
         const txnDoc: FirestoreDocData = {
@@ -375,54 +380,6 @@ export async function recordTransaction(
 }
 
 /**
- * Records a RECEIPT transaction for raw materials received via a gate entry.
- * @param itemId - The inventory item ID to receive into
- * @param quantity - The quantity received
- * @param gateEntryId - The linked gate entry document ID
- * @param recordedBy - UID of the user recording the receipt
- * @returns The newly created transaction ID
- */
-export async function receiptFromGateEntry(
-    itemId: string,
-    quantity: number,
-    gateEntryId: string,
-    recordedBy: string
-): Promise<string> {
-    return recordTransaction({
-        itemId,
-        transactionType: 'RECEIPT',
-        quantity,
-        referenceType: 'GATE_ENTRY',
-        referenceId: gateEntryId,
-        reason: 'Receipt from gate entry',
-    }, recordedBy);
-}
-
-/**
- * Records an ISSUE transaction for materials consumed by a batch.
- * @param itemId - The inventory item ID to issue from
- * @param quantity - The quantity issued
- * @param batchId - The linked batch document ID
- * @param recordedBy - UID of the user recording the issue
- * @returns The newly created transaction ID
- */
-export async function issueToBatch(
-    itemId: string,
-    quantity: number,
-    batchId: string,
-    recordedBy: string
-): Promise<string> {
-    return recordTransaction({
-        itemId,
-        transactionType: 'ISSUE',
-        quantity,
-        referenceType: 'BATCH',
-        referenceId: batchId,
-        reason: 'Issue to batch production',
-    }, recordedBy);
-}
-
-/**
  * Records a RECEIPT transaction for products created by a batch.
  * @param itemId - The inventory item ID to receive into
  * @param quantity - The quantity produced
@@ -443,30 +400,6 @@ export async function receiptFromBatch(
         referenceType: 'BATCH',
         referenceId: batchId,
         reason: 'Receipt from batch production',
-    }, recordedBy);
-}
-
-/**
- * Records an ISSUE transaction for materials consumed by a maintenance job.
- * @param itemId - The inventory item ID to issue from
- * @param quantity - The quantity issued
- * @param jobId - The linked maintenance job document ID
- * @param recordedBy - UID of the user recording the issue
- * @returns The newly created transaction ID
- */
-export async function issueToMaintenance(
-    itemId: string,
-    quantity: number,
-    jobId: string,
-    recordedBy: string
-): Promise<string> {
-    return recordTransaction({
-        itemId,
-        transactionType: 'ISSUE',
-        quantity,
-        referenceType: 'MAINTENANCE_JOB',
-        referenceId: jobId,
-        reason: 'Issue to maintenance job',
     }, recordedBy);
 }
 

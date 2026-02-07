@@ -12,8 +12,12 @@ import {
     cancelWeighbridgeEntry,
 } from '../services/weighbridgeService';
 import { getInventoryItemsByCategory } from '../../inventory/services/inventoryService';
+import { getEntriesByStatus } from '../../gate/services/gateEntryService';
+import { getBatches } from '../../reactor/services/batchService';
 import type { WeighbridgeEntry, WeighbridgeEntryType } from '../types';
 import type { InventoryItem } from '../../inventory/types';
+import type { GateEntry } from '../../gate/types';
+import type { Batch } from '../../reactor/types';
 
 export default function WeighbridgeEntryPage() {
     const { entryId } = useParams<{ entryId: string }>();
@@ -40,6 +44,8 @@ export default function WeighbridgeEntryPage() {
     const [materialName, setMaterialName] = useState('');
     const [unit, setUnit] = useState<'KG' | 'TONS' | 'KL'>('KG');
     const [notes, setNotes] = useState('');
+    const [gateEntryId, setGateEntryId] = useState('');
+    const [batchId, setBatchId] = useState('');
 
     // Weight entry
     const [weight, setWeight] = useState('');
@@ -47,12 +53,16 @@ export default function WeighbridgeEntryPage() {
 
     // Inventory items for dropdown
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+    // Linked records for dropdowns
+    const [pendingGateEntries, setPendingGateEntries] = useState<GateEntry[]>([]);
+    const [batches, setBatches] = useState<Batch[]>([]);
 
     useEffect(() => {
         if (!isNew && entryId) {
             loadEntry(entryId);
         }
         loadInventoryItems();
+        loadLinkedRecords();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [entryId, isNew, entryType]);
 
@@ -71,6 +81,8 @@ export default function WeighbridgeEntryPage() {
                 setMaterialName(fetchedEntry.materialName || '');
                 setUnit(fetchedEntry.unit);
                 setNotes(fetchedEntry.notes || '');
+                setGateEntryId(fetchedEntry.gateEntryId || '');
+                setBatchId(fetchedEntry.batchId || '');
 
                 // Determine which weight to enter next
                 if (fetchedEntry.grossWeight && !fetchedEntry.tareWeight) {
@@ -98,6 +110,20 @@ export default function WeighbridgeEntryPage() {
         }
     };
 
+    const loadLinkedRecords = async () => {
+        try {
+            if (entryType === 'RM_IN') {
+                const entries = await getEntriesByStatus('PENDING');
+                setPendingGateEntries(entries.filter(e => e.entryType === 'IN'));
+            } else {
+                const allBatches = await getBatches();
+                setBatches(allBatches);
+            }
+        } catch (err) {
+            console.error('Failed to load linked records:', err);
+        }
+    };
+
     const handleCreate = async () => {
         if (!userData?.id || !vehicleNumber) return;
 
@@ -115,6 +141,8 @@ export default function WeighbridgeEntryPage() {
                 materialName: materialName || undefined,
                 unit,
                 notes: notes || undefined,
+                gateEntryId: gateEntryId || undefined,
+                batchId: batchId || undefined,
             }, userData.id);
 
             setSuccess('Entry created!');
@@ -240,6 +268,53 @@ export default function WeighbridgeEntryPage() {
                             </div>
                         </div>
 
+                        {/* Link to Gate Entry (RM_IN) */}
+                        {entryType === 'RM_IN' && pendingGateEntries.length > 0 && (
+                            <div>
+                                <label className="block text-sm text-foreground-muted mb-1">Link to Gate Entry (optional)</label>
+                                <select
+                                    value={gateEntryId}
+                                    onChange={(e) => {
+                                        setGateEntryId(e.target.value);
+                                        const ge = pendingGateEntries.find(g => g.id === e.target.value);
+                                        if (ge) {
+                                            setVehicleNumber(ge.vehicleNumber);
+                                            setDriverName(ge.driverName || '');
+                                            setDriverPhone(ge.driverPhone || '');
+                                            setPartyName(ge.supplierName || '');
+                                        }
+                                    }}
+                                    className="input-field w-full"
+                                >
+                                    <option value="">No linked gate entry</option>
+                                    {pendingGateEntries.map(ge => (
+                                        <option key={ge.id} value={ge.id}>
+                                            {ge.entryNumber} — {ge.vehicleNumber} ({ge.supplierName || 'No supplier'})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Link to Batch (FG_OUT) */}
+                        {entryType === 'FG_OUT' && batches.length > 0 && (
+                            <div>
+                                <label className="block text-sm text-foreground-muted mb-1">Link to Production Batch (optional)</label>
+                                <select
+                                    value={batchId}
+                                    onChange={(e) => setBatchId(e.target.value)}
+                                    className="input-field w-full"
+                                >
+                                    <option value="">No linked batch</option>
+                                    {batches.map(b => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.batchNumber} ({b.status})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         {/* Vehicle Number */}
                         <div>
                             <label className="block text-sm text-foreground-muted mb-1">Vehicle Number *</label>
@@ -356,6 +431,27 @@ export default function WeighbridgeEntryPage() {
                             <div><span className="text-foreground-faint">{entry.entryType === 'RM_IN' ? 'Supplier' : 'Customer'}:</span> <span className="text-foreground">{entry.partyName || '-'}</span></div>
                             <div><span className="text-foreground-faint">Material:</span> <span className="text-foreground">{entry.materialName || '-'}</span></div>
                         </div>
+                        {(entry.gateEntryId || entry.batchId) && (
+                            <div className="mt-4 pt-4 border-t border-border-secondary">
+                                <h4 className="text-sm font-medium text-foreground-muted mb-2">Linked Records</h4>
+                                {entry.gateEntryId && (
+                                    <button
+                                        onClick={() => navigate(`/gate/${entry.gateEntryId}`)}
+                                        className="text-sm text-blue-400 hover:underline"
+                                    >
+                                        View Gate Entry →
+                                    </button>
+                                )}
+                                {entry.batchId && (
+                                    <button
+                                        onClick={() => navigate(`/reactor/batch/${entry.batchId}`)}
+                                        className="text-sm text-blue-400 hover:underline"
+                                    >
+                                        View Production Batch →
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Weight Info */}

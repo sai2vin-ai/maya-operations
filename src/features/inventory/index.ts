@@ -6,7 +6,4 @@ export {
     TRANSACTION_TYPES,
     COMMON_UNITS,
     receiptFromBatch,
-    receiptFromGateEntry,
-    issueToBatch,
-    issueToMaintenance,
 } from './services/inventoryService';

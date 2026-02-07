@@ -10,6 +10,8 @@ import {
     ENTRY_STATUSES,
 } from '../services/gateEntryService';
 import { InputDialog } from '../../../components/ui';
+import { getWeighbridgeEntriesByGateEntryId } from '../../weighbridge/services/weighbridgeService';
+import type { WeighbridgeEntry } from '../../weighbridge/types';
 import type { GateEntry, MaterialCategory, GateEntryStatus } from '../types';
 
 export default function GateEntryDetailPage() {
@@ -24,6 +26,7 @@ export default function GateEntryDetailPage() {
     const [success, setSuccess] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [linkedWeighbridgeEntries, setLinkedWeighbridgeEntries] = useState<WeighbridgeEntry[]>([]);
 
     const [formData, setFormData] = useState({
         materialCategory: '' as MaterialCategory | '',
@@ -51,6 +54,9 @@ export default function GateEntryDetailPage() {
             const fetchedEntry = await getGateEntryById(entryId);
             if (fetchedEntry) {
                 setEntry(fetchedEntry);
+                // Load linked weighbridge entries
+                const wbEntries = await getWeighbridgeEntriesByGateEntryId(entryId);
+                setLinkedWeighbridgeEntries(wbEntries);
                 setFormData({
                     materialCategory: fetchedEntry.materialCategory || '',
                     quantity: fetchedEntry.quantity?.toString() || '',
@@ -502,6 +508,35 @@ export default function GateEntryDetailPage() {
                         )}
                     </div>
                 </div>
+
+                {/* Linked Weighbridge Entries */}
+                {linkedWeighbridgeEntries.length > 0 && (
+                    <div className="glass-card p-6 mb-4">
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Linked Weighbridge Entries</h3>
+                        <div className="space-y-2">
+                            {linkedWeighbridgeEntries.map(wb => (
+                                <div
+                                    key={wb.id}
+                                    onClick={() => navigate(`/weighbridge/${wb.id}`)}
+                                    className="flex items-center justify-between p-3 bg-surface-tertiary/30 rounded-lg cursor-pointer hover:bg-surface-tertiary/50 transition-colors"
+                                >
+                                    <div>
+                                        <span className="text-foreground font-medium">{wb.entryNumber}</span>
+                                        <span className="text-foreground-muted text-sm ml-2">{wb.vehicleNumber}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        {wb.netWeight && (
+                                            <span className="text-foreground-secondary text-sm">
+                                                Net: {wb.netWeight.toLocaleString()} {wb.unit}
+                                            </span>
+                                        )}
+                                        <span className="text-sm text-foreground-muted">{wb.status}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Actions */}
                 {entry.status === 'PENDING' && !isEditing && (

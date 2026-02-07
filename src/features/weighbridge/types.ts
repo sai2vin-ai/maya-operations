@@ -17,6 +17,8 @@ export interface WeighbridgeEntry extends AuditFields {
     driverPhone?: string;
     partyName?: string;            // Supplier for RM_IN, Customer for FG_OUT
     inventoryItemId?: string;      // Link to inventory item
+    gateEntryId?: string;          // Link to gate entry (external vehicles)
+    batchId?: string;              // Link to production batch (internal vehicles)
     materialName?: string;         // Material description
     grossWeight?: number;          // Total weight with load (KG)
     tareWeight?: number;           // Empty vehicle weight (KG)

@@ -248,7 +248,7 @@ export interface InventoryTransaction extends AuditFields {
     transactionType: TransactionType;
     quantity: number;
     balanceAfter: number;
-    referenceType?: 'GATE_ENTRY' | 'BATCH' | 'MAINTENANCE_JOB';
+    referenceType?: 'GATE_ENTRY' | 'BATCH' | 'MAINTENANCE_JOB' | 'WEIGHBRIDGE_ENTRY';
     referenceId?: string;
     reason?: string;
     approvedBy?: string;

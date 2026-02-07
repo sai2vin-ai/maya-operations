@@ -107,6 +107,18 @@ export async function getWeighbridgeEntryById(entryId: string): Promise<Weighbri
     return { id: snapshot.id, ...snapshot.data() } as WeighbridgeEntry;
 }
 
+// Get entries linked to a gate entry
+export async function getWeighbridgeEntriesByGateEntryId(gateEntryId: string): Promise<WeighbridgeEntry[]> {
+    const entriesRef = collection(db, WEIGHBRIDGE_COLLECTION);
+    const q = query(entriesRef, where('gateEntryId', '==', gateEntryId));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+    })) as WeighbridgeEntry[];
+}
+
 // Create weighbridge entry data
 export interface CreateWeighbridgeEntryData {
     entryType: WeighbridgeEntryType;
@@ -118,6 +130,8 @@ export interface CreateWeighbridgeEntryData {
     materialName?: string;
     unit: 'KG' | 'TONS' | 'KL';
     notes?: string;
+    gateEntryId?: string;
+    batchId?: string;
 }
 
 // Create new weighbridge entry
@@ -137,6 +151,8 @@ export async function createWeighbridgeEntry(
         driverPhone: data.driverPhone || null,
         partyName: data.partyName || null,
         inventoryItemId: data.inventoryItemId || null,
+        gateEntryId: data.gateEntryId || null,
+        batchId: data.batchId || null,
         materialName: data.materialName || null,
         grossWeight: null,
         tareWeight: null,
@@ -259,7 +275,7 @@ export async function recordSecondWeightAndComplete(
                 itemId: entry.inventoryItemId,
                 transactionType: 'RECEIPT',
                 quantity: quantityInKg,
-                referenceType: 'GATE_ENTRY',
+                referenceType: 'WEIGHBRIDGE_ENTRY',
                 referenceId: entryId,
                 reason: `Weighbridge IN: ${entry.entryNumber}`,
             }, updatedBy);
@@ -269,7 +285,7 @@ export async function recordSecondWeightAndComplete(
                 itemId: entry.inventoryItemId,
                 transactionType: 'ISSUE',
                 quantity: quantityInKg,
-                referenceType: 'GATE_ENTRY',
+                referenceType: 'WEIGHBRIDGE_ENTRY',
                 referenceId: entryId,
                 reason: `Weighbridge OUT: ${entry.entryNumber}`,
             }, updatedBy);
