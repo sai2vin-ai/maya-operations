@@ -1,7 +1,7 @@
 // Weighbridge Entry Page
 // Create new entry or view/complete existing entry
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
@@ -57,16 +57,7 @@ export default function WeighbridgeEntryPage() {
     const [pendingGateEntries, setPendingGateEntries] = useState<GateEntry[]>([]);
     const [batches, setBatches] = useState<Batch[]>([]);
 
-    useEffect(() => {
-        if (!isNew && entryId) {
-            loadEntry(entryId);
-        }
-        loadInventoryItems();
-        loadLinkedRecords();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [entryId, isNew, entryType]);
-
-    const loadEntry = async (id: string) => {
+    const loadEntry = useCallback(async (id: string) => {
         try {
             setLoading(true);
             const fetchedEntry = await getWeighbridgeEntryById(id);
@@ -98,9 +89,9 @@ export default function WeighbridgeEntryPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const loadInventoryItems = async () => {
+    const loadInventoryItems = useCallback(async () => {
         try {
             const category = entryType === 'RM_IN' ? 'RAW_MATERIAL' : 'FINISHED_PRODUCT';
             const items = await getInventoryItemsByCategory(category);
@@ -108,9 +99,9 @@ export default function WeighbridgeEntryPage() {
         } catch (err) {
             console.error('Failed to load inventory items:', err);
         }
-    };
+    }, [entryType]);
 
-    const loadLinkedRecords = async () => {
+    const loadLinkedRecords = useCallback(async () => {
         try {
             if (entryType === 'RM_IN') {
                 const entries = await getEntriesByStatus('PENDING');
@@ -122,7 +113,15 @@ export default function WeighbridgeEntryPage() {
         } catch (err) {
             console.error('Failed to load linked records:', err);
         }
-    };
+    }, [entryType]);
+
+    useEffect(() => {
+        if (!isNew && entryId) {
+            loadEntry(entryId);
+        }
+        loadInventoryItems();
+        loadLinkedRecords();
+    }, [entryId, isNew, loadEntry, loadInventoryItems, loadLinkedRecords]);
 
     const handleCreate = async () => {
         if (!userData?.id || !vehicleNumber) return;

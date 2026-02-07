@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     getInventoryItemById,
@@ -36,14 +36,7 @@ export default function InventoryItemDetailPage() {
     const [editLocation, setEditLocation] = useState('');
     const [editLoading, setEditLoading] = useState(false);
 
-    useEffect(() => {
-        if (id) {
-            loadItemData();
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
-
-    const loadItemData = async () => {
+    const loadItemData = useCallback(async () => {
         if (!id) return;
 
         try {
@@ -73,7 +66,13 @@ export default function InventoryItemDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            loadItemData();
+        }
+    }, [id, loadItemData]);
 
     const handleRecordTransaction = async (e: React.FormEvent) => {
         e.preventDefault();
