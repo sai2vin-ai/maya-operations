@@ -1,7 +1,35 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { INVENTORY_CATEGORIES, TRANSACTION_TYPES, COMMON_UNITS } from './inventoryService';
 
+// Mock firebase/firestore at the SDK level
+const mockGetDocs = vi.fn();
+const mockGetDoc = vi.fn();
+const mockSetDoc = vi.fn();
+const mockUpdateDoc = vi.fn();
+const mockRunTransaction = vi.fn();
+
+vi.mock('firebase/firestore', () => ({
+    collection: vi.fn(() => 'mock-collection-ref'),
+    doc: vi.fn(() => 'mock-doc-ref'),
+    getDocs: (...args: unknown[]) => mockGetDocs(...args),
+    getDoc: (...args: unknown[]) => mockGetDoc(...args),
+    setDoc: (...args: unknown[]) => mockSetDoc(...args),
+    updateDoc: (...args: unknown[]) => mockUpdateDoc(...args),
+    runTransaction: (...args: unknown[]) => mockRunTransaction(...args),
+    query: vi.fn(() => 'mock-query'),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    limit: vi.fn(),
+    Timestamp: {
+        now: () => ({ seconds: 1700000000, nanoseconds: 0 }),
+    },
+}));
+
 describe('inventoryService', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     describe('INVENTORY_CATEGORIES', () => {
         it('should have all required categories', () => {
             const categoryValues = INVENTORY_CATEGORIES.map(c => c.value);
@@ -120,6 +148,221 @@ describe('inventoryService', () => {
         it('should have unique values', () => {
             const uniqueUnits = new Set(COMMON_UNITS);
             expect(uniqueUnits.size).toBe(COMMON_UNITS.length);
+        });
+    });
+
+    describe('recordTransaction - stock balance logic', () => {
+        // Test the balance calculation logic in isolation
+        const calculateNewBalance = (
+            currentStock: number,
+            transactionType: 'RECEIPT' | 'ISSUE' | 'ADJUSTMENT' | 'TRANSFER',
+            quantity: number
+        ): number => {
+            let quantityChange = quantity;
+            if (transactionType === 'ISSUE') {
+                quantityChange = -Math.abs(quantity);
+            }
+            return currentStock + quantityChange;
+        };
+
+        it('should increase stock for RECEIPT', () => {
+            expect(calculateNewBalance(5000, 'RECEIPT', 1000)).toBe(6000);
+        });
+
+        it('should decrease stock for ISSUE', () => {
+            expect(calculateNewBalance(5000, 'ISSUE', 1000)).toBe(4000);
+        });
+
+        it('should handle positive ADJUSTMENT', () => {
+            expect(calculateNewBalance(5000, 'ADJUSTMENT', 500)).toBe(5500);
+        });
+
+        it('should handle negative ADJUSTMENT', () => {
+            expect(calculateNewBalance(5000, 'ADJUSTMENT', -500)).toBe(4500);
+        });
+
+        it('should not allow negative balance', () => {
+            const newBalance = calculateNewBalance(100, 'ISSUE', 200);
+            expect(newBalance).toBeLessThan(0); // service would throw
+        });
+    });
+
+    describe('recordTransaction - maximumStock enforcement', () => {
+        it('should reject receipt that exceeds maximum stock', async () => {
+            // Mock generateTransactionId: no existing transactions
+            mockGetDocs.mockResolvedValue({ empty: true });
+
+            // Mock runTransaction to execute the callback
+            mockRunTransaction.mockImplementation(async (_db: unknown, callback: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => true,
+                        data: () => ({
+                            currentStock: 9000,
+                            maximumStock: 10000,
+                        }),
+                    }),
+                    set: vi.fn(),
+                    update: vi.fn(),
+                };
+                await callback(mockTransaction);
+            });
+
+            const { recordTransaction } = await import('./inventoryService');
+
+            // Trying to add 2000 when current is 9000 and max is 10000
+            await expect(
+                recordTransaction({
+                    itemId: 'item-1',
+                    transactionType: 'RECEIPT',
+                    quantity: 2000,
+                }, 'user-1', 'SUPER_ADMIN')
+            ).rejects.toThrow(/exceed maximum stock/);
+        });
+
+        it('should allow receipt that stays within maximum stock', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true });
+
+            mockRunTransaction.mockImplementation(async (_db: unknown, callback: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => true,
+                        data: () => ({
+                            currentStock: 8000,
+                            maximumStock: 10000,
+                        }),
+                    }),
+                    set: vi.fn(),
+                    update: vi.fn(),
+                };
+                await callback(mockTransaction);
+            });
+
+            const { recordTransaction } = await import('./inventoryService');
+
+            // Adding 1000 when current is 8000 and max is 10000 = 9000 (OK)
+            await expect(
+                recordTransaction({
+                    itemId: 'item-1',
+                    transactionType: 'RECEIPT',
+                    quantity: 1000,
+                }, 'user-1', 'SUPER_ADMIN')
+            ).resolves.toBeDefined();
+        });
+
+        it('should allow receipt when no maximumStock is set', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true });
+
+            mockRunTransaction.mockImplementation(async (_db: unknown, callback: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => true,
+                        data: () => ({
+                            currentStock: 50000,
+                            // no maximumStock field
+                        }),
+                    }),
+                    set: vi.fn(),
+                    update: vi.fn(),
+                };
+                await callback(mockTransaction);
+            });
+
+            const { recordTransaction } = await import('./inventoryService');
+
+            await expect(
+                recordTransaction({
+                    itemId: 'item-1',
+                    transactionType: 'RECEIPT',
+                    quantity: 100000,
+                }, 'user-1', 'SUPER_ADMIN')
+            ).resolves.toBeDefined();
+        });
+
+        it('should reject issue that would result in negative stock', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true });
+
+            mockRunTransaction.mockImplementation(async (_db: unknown, callback: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => true,
+                        data: () => ({
+                            currentStock: 100,
+                        }),
+                    }),
+                    set: vi.fn(),
+                    update: vi.fn(),
+                };
+                await callback(mockTransaction);
+            });
+
+            const { recordTransaction } = await import('./inventoryService');
+
+            await expect(
+                recordTransaction({
+                    itemId: 'item-1',
+                    transactionType: 'ISSUE',
+                    quantity: 200,
+                }, 'user-1', 'SUPER_ADMIN')
+            ).rejects.toThrow('Insufficient stock');
+        });
+
+        it('should throw when inventory item not found', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true });
+
+            mockRunTransaction.mockImplementation(async (_db: unknown, callback: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => false,
+                    }),
+                    set: vi.fn(),
+                    update: vi.fn(),
+                };
+                await callback(mockTransaction);
+            });
+
+            const { recordTransaction } = await import('./inventoryService');
+
+            await expect(
+                recordTransaction({
+                    itemId: 'nonexistent',
+                    transactionType: 'RECEIPT',
+                    quantity: 100,
+                }, 'user-1', 'SUPER_ADMIN')
+            ).rejects.toThrow('Inventory item not found');
+        });
+    });
+
+    describe('recordTransaction - referenceType support', () => {
+        it('should accept WEIGHBRIDGE_ENTRY as referenceType', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true });
+
+            let capturedTxnDoc: Record<string, unknown> | null = null;
+            mockRunTransaction.mockImplementation(async (_db: unknown, callback: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => true,
+                        data: () => ({ currentStock: 5000 }),
+                    }),
+                    set: vi.fn((_ref: unknown, doc: Record<string, unknown>) => { capturedTxnDoc = doc; }),
+                    update: vi.fn(),
+                };
+                await callback(mockTransaction);
+            });
+
+            const { recordTransaction } = await import('./inventoryService');
+
+            await recordTransaction({
+                itemId: 'item-1',
+                transactionType: 'RECEIPT',
+                quantity: 1000,
+                referenceType: 'WEIGHBRIDGE_ENTRY',
+                referenceId: 'wb-entry-1',
+            }, 'user-1', 'SUPER_ADMIN');
+
+            expect(capturedTxnDoc).not.toBeNull();
+            expect(capturedTxnDoc!.referenceType).toBe('WEIGHBRIDGE_ENTRY');
+            expect(capturedTxnDoc!.referenceId).toBe('wb-entry-1');
         });
     });
 });

@@ -1,6 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MATERIAL_CATEGORIES, ENTRY_STATUSES } from './gateEntryService';
 
+// Mock firebase/firestore at the SDK level
+const mockGetDocs = vi.fn();
+const mockGetDoc = vi.fn();
+const mockSetDoc = vi.fn();
+const mockUpdateDoc = vi.fn();
+
+vi.mock('firebase/firestore', () => ({
+    collection: vi.fn(() => 'mock-collection-ref'),
+    doc: vi.fn(() => 'mock-doc-ref'),
+    getDocs: (...args: unknown[]) => mockGetDocs(...args),
+    getDoc: (...args: unknown[]) => mockGetDoc(...args),
+    setDoc: (...args: unknown[]) => mockSetDoc(...args),
+    updateDoc: (...args: unknown[]) => mockUpdateDoc(...args),
+    query: vi.fn(() => 'mock-query'),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    limit: vi.fn(),
+    Timestamp: {
+        now: () => ({ seconds: 1700000000, nanoseconds: 0 }),
+        fromDate: (d: Date) => ({ seconds: Math.floor(d.getTime() / 1000), nanoseconds: 0 }),
+    },
+}));
+
+vi.mock('firebase/storage', () => ({
+    ref: vi.fn(),
+    uploadBytes: vi.fn(),
+    getDownloadURL: vi.fn(),
+}));
+
 describe('gateEntryService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -154,6 +183,131 @@ describe('gateEntryService', () => {
 
         it('should handle mixed case', () => {
             expect(normalizeVehicleNumber('Tn09Xy1234')).toBe('TN09XY1234');
+        });
+    });
+
+    describe('createGateEntry - duplicate vehicle detection', () => {
+        it('should reject when a pending entry exists for the same vehicle', async () => {
+            // Mock: generateEntryNumber query returns empty (no existing entries)
+            mockGetDocs
+                .mockResolvedValueOnce({ empty: true }) // duplicate check query
+                .mockResolvedValueOnce({ empty: true }); // generateEntryNumber query
+
+            // Now override the duplicate check to return a match
+            mockGetDocs.mockReset();
+            mockGetDocs.mockResolvedValueOnce({
+                empty: false,
+                docs: [{
+                    data: () => ({ entryNumber: 'GE-2026-0001', vehicleNumber: 'KA01AB1234' }),
+                }],
+            });
+
+            const { createGateEntry } = await import('./gateEntryService');
+
+            await expect(
+                createGateEntry(
+                    { entryType: 'IN', vehicleNumber: 'KA01AB1234' },
+                    'user-1',
+                    'SUPER_ADMIN'
+                )
+            ).rejects.toThrow('already has a pending entry');
+        });
+
+        it('should allow creation when no duplicate pending entries exist', async () => {
+            // First call: duplicate check returns empty
+            // Second call: generateEntryNumber returns empty (first entry)
+            mockGetDocs
+                .mockResolvedValueOnce({ empty: true }) // duplicate check
+                .mockResolvedValueOnce({ empty: true }); // entry number generation
+            mockSetDoc.mockResolvedValue(undefined);
+
+            const { createGateEntry } = await import('./gateEntryService');
+
+            const entryId = await createGateEntry(
+                { entryType: 'IN', vehicleNumber: 'KA01AB1234' },
+                'user-1',
+                'SUPER_ADMIN'
+            );
+
+            expect(entryId).toBeDefined();
+            expect(typeof entryId).toBe('string');
+            expect(mockSetDoc).toHaveBeenCalledTimes(1);
+        });
+
+        it('should reject unauthorized callers', async () => {
+            const { createGateEntry } = await import('./gateEntryService');
+
+            await expect(
+                createGateEntry(
+                    { entryType: 'IN', vehicleNumber: 'KA01AB1234' },
+                    'user-1',
+                    'VIEWER' // VIEWER cannot create gate entries
+                )
+            ).rejects.toThrow('Unauthorized');
+        });
+
+        it('should reject invalid vehicle numbers', async () => {
+            const { createGateEntry } = await import('./gateEntryService');
+
+            await expect(
+                createGateEntry(
+                    { entryType: 'IN', vehicleNumber: 'INVALID' },
+                    'user-1',
+                    'SUPER_ADMIN'
+                )
+            ).rejects.toThrow(/vehicle number/i);
+        });
+    });
+
+    describe('cancelGateEntry', () => {
+        it('should append cancellation reason to existing notes', async () => {
+            mockGetDoc.mockResolvedValue({
+                exists: () => true,
+                id: 'entry-1',
+                data: () => ({ notes: 'Original note' }),
+            });
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { cancelGateEntry } = await import('./gateEntryService');
+
+            await cancelGateEntry('entry-1', 'Wrong vehicle', 'user-1', 'SUPER_ADMIN');
+
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+            const updateArgs = mockUpdateDoc.mock.calls[0][1];
+            expect(updateArgs.notes).toContain('Original note');
+            expect(updateArgs.notes).toContain('Cancelled: Wrong vehicle');
+            expect(updateArgs.status).toBe('CANCELLED');
+        });
+
+        it('should set cancellation reason when no existing notes', async () => {
+            mockGetDoc.mockResolvedValue({
+                exists: () => true,
+                id: 'entry-1',
+                data: () => ({ notes: undefined }),
+            });
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { cancelGateEntry } = await import('./gateEntryService');
+
+            await cancelGateEntry('entry-1', 'Duplicate entry', 'user-1', 'SUPER_ADMIN');
+
+            const updateArgs = mockUpdateDoc.mock.calls[0][1];
+            expect(updateArgs.notes).toBe('Cancelled: Duplicate entry');
+        });
+    });
+
+    describe('completeGateEntry', () => {
+        it('should set status to COMPLETED and record exit time', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { completeGateEntry } = await import('./gateEntryService');
+
+            await completeGateEntry('entry-1', 'user-1', 'SUPER_ADMIN');
+
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+            const updateArgs = mockUpdateDoc.mock.calls[0][1];
+            expect(updateArgs.status).toBe('COMPLETED');
+            expect(updateArgs.exitTime).toBeDefined();
         });
     });
 });
