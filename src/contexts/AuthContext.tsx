@@ -30,6 +30,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// E2E test mode: bypass Firebase Auth with a mock SUPER_ADMIN user
+const isE2EMode = import.meta.env.VITE_E2E_MODE === 'true';
+
 interface AuthProviderProps {
     children: ReactNode;
 }
@@ -42,6 +45,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Listen to auth state changes
     useEffect(() => {
+        if (isE2EMode) {
+            setCurrentUser({ uid: 'e2e-test-uid', email: 'admin@test.com' } as User);
+            setUserData({
+                id: 'e2e-test-uid',
+                uid: 'e2e-test-uid',
+                employeeId: 'EMP-001',
+                name: 'E2E Test Admin',
+                email: 'admin@test.com',
+                phone: '+1234567890',
+                role: 'SUPER_ADMIN',
+                status: 'ACTIVE',
+            } as AppUser);
+            setLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
 
