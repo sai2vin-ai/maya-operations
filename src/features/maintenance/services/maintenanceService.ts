@@ -10,43 +10,21 @@ import {
     limit,
     where,
     Timestamp,
+    runTransaction,
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { assertAuthorized } from '../../../lib/authorization';
-import type { Asset, MaintenanceJob, AssetStatus, AssetCriticality, JobType, JobPriority, JobStatus } from '../../../types';
+import type { MaintenanceJob, JobType, JobPriority, JobStatus, JobPartUsed } from '../../../types';
 import { type FirestoreDocData, type UserRole } from '../../../types';
 
 const ASSETS_COLLECTION = 'assets';
 const JOBS_COLLECTION = 'maintenanceJobs';
+const SPARE_PARTS_COLLECTION = 'spareParts';
+const SPARE_PARTS_TRANSACTIONS_COLLECTION = 'sparePartTransactions';
 
 // ============================================
 // CONSTANTS
 // ============================================
-
-export const ASSET_CATEGORIES = [
-    { value: 'REACTOR', label: 'Reactor' },
-    { value: 'PUMP', label: 'Pump' },
-    { value: 'CONVEYOR', label: 'Conveyor' },
-    { value: 'COMPRESSOR', label: 'Compressor' },
-    { value: 'VALVE', label: 'Valve' },
-    { value: 'MOTOR', label: 'Motor' },
-    { value: 'ELECTRICAL', label: 'Electrical Panel' },
-    { value: 'WEIGHBRIDGE', label: 'Weighbridge' },
-    { value: 'OTHER', label: 'Other' },
-];
-
-export const ASSET_LOCATIONS = [
-    'Reactor Bay 1', 'Reactor Bay 2', 'Reactor Bay 3',
-    'Gate Area', 'Weighbridge Area', 'Storage Yard',
-    'Control Room', 'Workshop', 'Utility Block',
-];
-
-export const ASSET_STATUS_CONFIG: Record<AssetStatus, { label: string; color: string }> = {
-    OPERATIONAL: { label: 'Operational', color: 'bg-green-500/20 text-green-400' },
-    BREAKDOWN: { label: 'Breakdown', color: 'bg-red-500/20 text-red-400' },
-    UNDER_MAINTENANCE: { label: 'Under Maintenance', color: 'bg-yellow-500/20 text-yellow-400' },
-    DECOMMISSIONED: { label: 'Decommissioned', color: 'bg-slate-500/20 text-slate-400' },
-};
 
 export const JOB_STATUS_CONFIG: Record<JobStatus, { label: string; color: string }> = {
     OPEN: { label: 'Open', color: 'bg-blue-500/20 text-blue-400' },
@@ -69,133 +47,6 @@ export const JOB_TYPE_CONFIG: Record<JobType, { label: string; color: string }> 
     PREVENTIVE: { label: 'Preventive', color: 'bg-blue-500/20 text-blue-400' },
     CORRECTIVE: { label: 'Corrective', color: 'bg-yellow-500/20 text-yellow-400' },
 };
-
-// ============================================
-// ASSET OPERATIONS
-// ============================================
-
-async function generateAssetCode(): Promise<string> {
-    const prefix = 'AST';
-    const assetsRef = collection(db, ASSETS_COLLECTION);
-    const q = query(
-        assetsRef,
-        where('assetCode', '>=', prefix + '-'),
-        where('assetCode', '<=', prefix + '-\uf8ff'),
-        orderBy('assetCode', 'desc'),
-        limit(1)
-    );
-    const snapshot = await getDocs(q);
-
-    let nextNumber = 1;
-    if (!snapshot.empty) {
-        const lastAsset = snapshot.docs[0].data() as Asset;
-        const num = parseInt(lastAsset.assetCode.split('-')[1]) || 0;
-        nextNumber = num + 1;
-    }
-
-    return `${prefix}-${String(nextNumber).padStart(4, '0')}`;
-}
-
-export async function getAssets(limitCount = 100): Promise<Asset[]> {
-    const assetsRef = collection(db, ASSETS_COLLECTION);
-    const q = query(assetsRef, orderBy('assetCode', 'asc'), limit(limitCount));
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-    })) as Asset[];
-}
-
-export async function getAssetById(assetId: string): Promise<Asset | null> {
-    const assetRef = doc(db, ASSETS_COLLECTION, assetId);
-    const snapshot = await getDoc(assetRef);
-    if (!snapshot.exists()) return null;
-    return { id: snapshot.id, ...snapshot.data() } as Asset;
-}
-
-export interface CreateAssetData {
-    name: string;
-    category: string;
-    location: string;
-    criticality: AssetCriticality;
-    installationDate?: string;
-    pmFrequencyDays?: number;
-}
-
-export async function createAsset(
-    data: CreateAssetData,
-    createdBy: string,
-    callerRole?: UserRole
-): Promise<string> {
-    assertAuthorized(callerRole, 'maintenance:create');
-    const assetCode = await generateAssetCode();
-
-    const assetData: FirestoreDocData = {
-        assetCode,
-        name: data.name,
-        category: data.category,
-        location: data.location,
-        criticality: data.criticality,
-        status: 'OPERATIONAL' as AssetStatus,
-        createdAt: Timestamp.now(),
-        createdBy,
-        updatedAt: Timestamp.now(),
-        updatedBy: createdBy,
-    };
-
-    if (data.installationDate) {
-        assetData.installationDate = Timestamp.fromDate(new Date(data.installationDate));
-    }
-    if (data.pmFrequencyDays) {
-        assetData.pmFrequencyDays = data.pmFrequencyDays;
-        const nextPm = new Date();
-        nextPm.setDate(nextPm.getDate() + data.pmFrequencyDays);
-        assetData.nextPmDate = Timestamp.fromDate(nextPm);
-    }
-
-    const assetsRef = collection(db, ASSETS_COLLECTION);
-    const docRef = await addDoc(assetsRef, assetData);
-    return docRef.id;
-}
-
-export interface UpdateAssetData {
-    name?: string;
-    category?: string;
-    location?: string;
-    criticality?: AssetCriticality;
-    status?: AssetStatus;
-    pmFrequencyDays?: number;
-}
-
-export async function updateAsset(
-    assetId: string,
-    data: UpdateAssetData,
-    updatedBy: string,
-    callerRole?: UserRole
-): Promise<void> {
-    assertAuthorized(callerRole, 'maintenance:update');
-    const assetRef = doc(db, ASSETS_COLLECTION, assetId);
-
-    const updateData: FirestoreDocData = {
-        updatedAt: Timestamp.now(),
-        updatedBy,
-    };
-
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.category !== undefined) updateData.category = data.category;
-    if (data.location !== undefined) updateData.location = data.location;
-    if (data.criticality !== undefined) updateData.criticality = data.criticality;
-    if (data.status !== undefined) updateData.status = data.status;
-    if (data.pmFrequencyDays !== undefined) {
-        updateData.pmFrequencyDays = data.pmFrequencyDays;
-        const nextPm = new Date();
-        nextPm.setDate(nextPm.getDate() + data.pmFrequencyDays);
-        updateData.nextPmDate = Timestamp.fromDate(nextPm);
-    }
-
-    await updateDoc(assetRef, updateData as Record<string, unknown>);
-}
 
 // ============================================
 // JOB OPERATIONS
@@ -314,7 +165,6 @@ export interface UpdateJobData {
     assignedTo?: string;
     rootCause?: string;
     actionTaken?: string;
-    partsUsed?: { itemId: string; quantity: number }[];
 }
 
 export async function updateJob(
@@ -343,7 +193,6 @@ export async function updateJob(
     if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo;
     if (data.rootCause !== undefined) updateData.rootCause = data.rootCause;
     if (data.actionTaken !== undefined) updateData.actionTaken = data.actionTaken;
-    if (data.partsUsed !== undefined) updateData.partsUsed = data.partsUsed;
 
     await updateDoc(jobRef, updateData as Record<string, unknown>);
 
@@ -363,30 +212,125 @@ export async function updateJob(
 }
 
 // ============================================
-// DASHBOARD STATS
+// ISSUE PARTS TO JOB (Atomic Transaction)
 // ============================================
 
-export async function getMaintenanceStats() {
-    const [assets, jobs] = await Promise.all([getAssets(), getJobs()]);
+export interface IssuePartsToJobData {
+    jobId: string;
+    parts: { partId: string; quantity: number }[];
+}
+
+export async function issuePartsToJob(
+    data: IssuePartsToJobData,
+    issuedBy: string,
+    callerRole?: UserRole
+): Promise<void> {
+    assertAuthorized(callerRole, 'maintenance:update');
+
+    await runTransaction(db, async (transaction) => {
+        // 1. Read job document
+        const jobRef = doc(db, JOBS_COLLECTION, data.jobId);
+        const jobSnap = await transaction.get(jobRef);
+        if (!jobSnap.exists()) throw new Error('Job not found');
+        const job = jobSnap.data() as MaintenanceJob;
+
+        // 2. Read all selected spare part docs
+        const partSnaps = await Promise.all(
+            data.parts.map(p => transaction.get(doc(db, SPARE_PARTS_COLLECTION, p.partId)))
+        );
+
+        // 3. Validate each part has sufficient stock
+        const partDocs = partSnaps.map((snap, i) => {
+            if (!snap.exists()) throw new Error(`Spare part ${data.parts[i].partId} not found`);
+            const partData = snap.data();
+            const requested = data.parts[i].quantity;
+            if ((partData.currentStock as number) < requested) {
+                throw new Error(`Insufficient stock for ${partData.name}: available ${partData.currentStock}, requested ${requested}`);
+            }
+            return { ref: snap.ref, data: partData, requested };
+        });
+
+        // 4. Build existing partsUsed map for merging
+        const existingParts = new Map<string, JobPartUsed>();
+        if (job.partsUsed) {
+            for (const p of job.partsUsed) {
+                existingParts.set(p.partId, { ...p });
+            }
+        }
+
+        // 5. For each part: deduct stock, create transaction, merge into partsUsed
+        for (let i = 0; i < partDocs.length; i++) {
+            const { ref: partRef, data: partData, requested } = partDocs[i];
+            const partId = data.parts[i].partId;
+            const newStock = (partData.currentStock as number) - requested;
+
+            // Deduct stock
+            transaction.update(partRef, {
+                currentStock: newStock,
+                updatedAt: Timestamp.now(),
+                updatedBy: issuedBy,
+            });
+
+            // Create SparePartTransaction (type=ISSUE) with jobId/jobNumber
+            const transactionRef = doc(collection(db, SPARE_PARTS_TRANSACTIONS_COLLECTION));
+            transaction.set(transactionRef, {
+                partId,
+                type: 'ISSUE',
+                quantity: requested,
+                balanceAfter: newStock,
+                reason: `Issued to job ${job.jobNumber}`,
+                issuedTo: issuedBy,
+                jobId: data.jobId,
+                jobNumber: job.jobNumber,
+                createdAt: Timestamp.now(),
+                createdBy: issuedBy,
+                updatedAt: Timestamp.now(),
+                updatedBy: issuedBy,
+            });
+
+            // Merge into partsUsed (increment quantity if already listed)
+            const existing = existingParts.get(partId);
+            if (existing) {
+                existing.quantity += requested;
+            } else {
+                existingParts.set(partId, {
+                    partId,
+                    partNumber: partData.partNumber as string,
+                    partName: partData.name as string,
+                    quantity: requested,
+                    unitPrice: (partData.unitPrice as number) || undefined,
+                });
+            }
+        }
+
+        // 6. Update job's partsUsed array
+        transaction.update(jobRef, {
+            partsUsed: Array.from(existingParts.values()),
+            updatedAt: Timestamp.now(),
+            updatedBy: issuedBy,
+        });
+    });
+}
+
+// ============================================
+// JOB STATS
+// ============================================
+
+export async function getJobStats() {
+    const jobs = await getJobs();
 
     const activeJobs = jobs.filter(j => !['COMPLETED', 'CLOSED'].includes(j.status));
-    const breakdownAssets = assets.filter(a => a.status === 'BREAKDOWN');
-
-    const now = new Date();
-    const pmDueAssets = assets.filter(a => {
-        if (!a.nextPmDate) return false;
-        const nextPm = a.nextPmDate.toDate ? a.nextPmDate.toDate() : new Date(a.nextPmDate as unknown as string);
-        return nextPm <= now;
+    const completedThisMonth = jobs.filter(j => {
+        if (j.status !== 'COMPLETED' || !j.completedAt) return false;
+        const completed = j.completedAt.toDate ? j.completedAt.toDate() : new Date(j.completedAt as unknown as string);
+        const now = new Date();
+        return completed.getMonth() === now.getMonth() && completed.getFullYear() === now.getFullYear();
     });
 
     return {
-        totalAssets: assets.length,
-        operationalAssets: assets.filter(a => a.status === 'OPERATIONAL').length,
-        breakdownAssets: breakdownAssets.length,
-        underMaintenance: assets.filter(a => a.status === 'UNDER_MAINTENANCE').length,
-        totalJobs: jobs.length,
         activeJobs: activeJobs.length,
         criticalJobs: activeJobs.filter(j => j.priority === 'CRITICAL').length,
-        pmDue: pmDueAssets.length,
+        pendingParts: activeJobs.filter(j => j.status === 'PENDING_PARTS').length,
+        completedThisMonth: completedThisMonth.length,
     };
 }

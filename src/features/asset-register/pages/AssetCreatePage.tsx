@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../components/ui';
-import { createAsset, ASSET_CATEGORIES, ASSET_LOCATIONS } from '../services/maintenanceService';
+import { createAsset, ASSET_CATEGORIES, ASSET_LOCATIONS } from '../services/assetService';
 import type { AssetCriticality } from '../../../types';
 
 export default function AssetCreatePage() {
@@ -41,7 +41,7 @@ export default function AssetCreatePage() {
             }, userData.id, userData.role);
 
             toast.success('Asset registered successfully');
-            navigate(`/maintenance/assets/${assetId}`);
+            navigate(`/assets/${assetId}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to register asset');
             toast.error('Failed to register asset');
@@ -53,7 +53,7 @@ export default function AssetCreatePage() {
     return (
         <div className="p-6 max-w-2xl mx-auto">
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/maintenance')} className="text-foreground-muted hover:text-foreground">
+                <button onClick={() => navigate('/assets')} className="text-foreground-muted hover:text-foreground">
                     ← Back
                 </button>
                 <h1 className="text-2xl font-bold text-foreground">Register Asset</h1>

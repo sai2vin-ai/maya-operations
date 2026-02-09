@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast, LoadingSpinner } from '../../../components/ui';
-import { useJob, useUpdateJob, useAsset } from '../hooks/useMaintenance';
+import { useJob, useUpdateJob, useIssuePartsToJob } from '../hooks/useMaintenance';
+import { useAsset } from '../../asset-register/hooks/useAssets';
+import SparePartsPicker from '../components/SparePartsPicker';
 import {
     JOB_STATUS_CONFIG,
     JOB_PRIORITY_CONFIG,
     JOB_TYPE_CONFIG,
-    ASSET_STATUS_CONFIG,
 } from '../services/maintenanceService';
+import { ASSET_STATUS_CONFIG } from '../../asset-register/services/assetService';
 import type { JobStatus } from '../../../types';
 
 const STATUS_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
@@ -29,10 +31,12 @@ export default function JobDetailPage() {
     const { data: job, isLoading } = useJob(id);
     const { data: asset } = useAsset(job?.assetId);
     const updateJob = useUpdateJob();
+    const issueParts = useIssuePartsToJob();
 
     const [rootCause, setRootCause] = useState('');
     const [actionTaken, setActionTaken] = useState('');
     const [showCompletion, setShowCompletion] = useState(false);
+    const [showPartsPicker, setShowPartsPicker] = useState(false);
 
     const handleStatusChange = async (newStatus: JobStatus) => {
         if (!id || !userData?.id) return;
@@ -52,6 +56,21 @@ export default function JobDetailPage() {
             toast.success(`Job status updated to ${JOB_STATUS_CONFIG[newStatus].label}`);
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Failed to update status');
+        }
+    };
+
+    const handleIssueParts = async (parts: { partId: string; quantity: number }[]) => {
+        if (!id || !userData?.id) return;
+        try {
+            await issueParts.mutateAsync({
+                data: { jobId: id, parts },
+                issuedBy: userData.id,
+                callerRole: userData.role,
+            });
+            toast.success('Parts issued successfully');
+            setShowPartsPicker(false);
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to issue parts');
         }
     };
 
@@ -155,7 +174,7 @@ export default function JobDetailPage() {
                 <div className="glass-card p-4 mb-4">
                     <h3 className="text-sm font-medium text-foreground-secondary mb-2">Linked Asset</h3>
                     <div
-                        onClick={() => navigate(`/maintenance/assets/${asset.id}`)}
+                        onClick={() => navigate(`/assets/${asset.id}`)}
                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
                     >
                         <div className="flex-1">
@@ -165,6 +184,78 @@ export default function JobDetailPage() {
                         <span className={`px-2 py-0.5 rounded-full text-xs ${ASSET_STATUS_CONFIG[asset.status].color}`}>
                             {ASSET_STATUS_CONFIG[asset.status].label}
                         </span>
+                    </div>
+                </div>
+            )}
+
+            {/* Issue Parts Action */}
+            {(job.status === 'IN_PROGRESS' || job.status === 'PENDING_PARTS') && (
+                <div className="glass-card p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-sm font-medium text-foreground-secondary">Spare Parts</h3>
+                            <p className="text-xs text-foreground-faint">Issue parts from store to this job</p>
+                        </div>
+                        <button
+                            onClick={() => setShowPartsPicker(true)}
+                            className="btn-primary text-sm"
+                        >
+                            Issue Parts
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Parts Picker Modal */}
+            {showPartsPicker && (
+                <SparePartsPicker
+                    onIssueParts={handleIssueParts}
+                    onClose={() => setShowPartsPicker(false)}
+                    isPending={issueParts.isPending}
+                />
+            )}
+
+            {/* Parts Used */}
+            {job.partsUsed && job.partsUsed.length > 0 && (
+                <div className="glass-card p-6 mb-4">
+                    <h3 className="text-lg font-semibold text-foreground mb-3">Parts Used</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-surface-tertiary/50">
+                                <tr>
+                                    <th className="text-left p-3 text-foreground-secondary font-medium text-sm">Part #</th>
+                                    <th className="text-left p-3 text-foreground-secondary font-medium text-sm">Name</th>
+                                    <th className="text-center p-3 text-foreground-secondary font-medium text-sm">Qty</th>
+                                    <th className="text-right p-3 text-foreground-secondary font-medium text-sm">Unit Price</th>
+                                    <th className="text-right p-3 text-foreground-secondary font-medium text-sm">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700">
+                                {job.partsUsed.map((part) => (
+                                    <tr key={part.partId}>
+                                        <td className="p-3 font-mono text-sm text-foreground">{part.partNumber}</td>
+                                        <td className="p-3 text-foreground-secondary text-sm">{part.partName}</td>
+                                        <td className="p-3 text-center text-foreground">{part.quantity}</td>
+                                        <td className="p-3 text-right text-foreground-muted text-sm">
+                                            {part.unitPrice ? `R${part.unitPrice.toFixed(2)}` : '-'}
+                                        </td>
+                                        <td className="p-3 text-right text-foreground text-sm">
+                                            {part.unitPrice ? `R${(part.quantity * part.unitPrice).toFixed(2)}` : '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            {job.partsUsed.some(p => p.unitPrice) && (
+                                <tfoot>
+                                    <tr className="border-t border-slate-600">
+                                        <td colSpan={4} className="p-3 text-right text-foreground-secondary font-medium text-sm">Total Cost</td>
+                                        <td className="p-3 text-right text-foreground font-bold text-sm">
+                                            R{job.partsUsed.reduce((sum, p) => sum + (p.unitPrice ? p.quantity * p.unitPrice : 0), 0).toFixed(2)}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            )}
+                        </table>
                     </div>
                 </div>
             )}

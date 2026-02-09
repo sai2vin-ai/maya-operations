@@ -315,6 +315,14 @@ export type JobType = 'BREAKDOWN' | 'PREVENTIVE' | 'CORRECTIVE';
 export type JobStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'PENDING_PARTS' | 'COMPLETED' | 'CLOSED';
 export type JobPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
+export interface JobPartUsed {
+    partId: string;       // Firestore doc ID in spareParts collection
+    partNumber: string;   // Denormalized for display
+    partName: string;     // Denormalized for display
+    quantity: number;
+    unitPrice?: number;   // Snapshot at time of issue
+}
+
 export interface MaintenanceJob extends AuditFields {
     id: string;
     jobNumber: string;
@@ -330,7 +338,7 @@ export interface MaintenanceJob extends AuditFields {
     completedAt?: Timestamp;
     rootCause?: string;
     actionTaken?: string;
-    partsUsed?: { itemId: string; quantity: number }[];
+    partsUsed?: JobPartUsed[];
 }
 
 // ============================================

@@ -7,7 +7,8 @@ import { getBatches } from '../features/reactor/services/batchService';
 import { getTodaysEntries } from '../features/gate/services/gateEntryService';
 import { getLowStockItems } from '../features/inventory/services/inventoryService';
 import { useActiveShift } from '../features/shifts/hooks/useShifts';
-import { useMaintenanceStats } from '../features/maintenance/hooks/useMaintenance';
+import { useAssetStats } from '../features/asset-register/hooks/useAssets';
+import { useJobStats } from '../features/maintenance/hooks/useMaintenance';
 import { SHIFT_TYPES } from '../features/shifts/services/shiftService';
 
 
@@ -61,7 +62,8 @@ export default function DashboardPage() {
     const { data: todayGateEntries, isError: gateError } = useQuery({ queryKey: ['gateEntries', 'today'], queryFn: getTodaysEntries, staleTime: 30_000 });
     const { data: lowStockItems, isError: inventoryError } = useQuery({ queryKey: ['inventory', 'lowStock'], queryFn: getLowStockItems, staleTime: 60_000 });
     const { data: activeShift } = useActiveShift();
-    const { data: maintenanceStats } = useMaintenanceStats();
+    const { data: assetStats } = useAssetStats();
+    const { data: jobStats } = useJobStats();
     const statsError = reactorsError || batchesError || gateError || inventoryError;
 
     const activeReactorCount = reactors?.filter(r => r.status === 'IN_BATCH').length ?? 0;
@@ -249,36 +251,36 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Maintenance Alerts */}
-                {maintenanceStats && (maintenanceStats.breakdownAssets > 0 || maintenanceStats.criticalJobs > 0 || maintenanceStats.pmDue > 0) && (
+                {((assetStats && (assetStats.breakdownAssets > 0 || assetStats.pmDue > 0)) || (jobStats && jobStats.criticalJobs > 0)) && (
                     <div className="mt-6 mb-4">
                         <div className="flex items-center gap-3 mb-3">
                             <h3 className="text-lg font-semibold text-foreground">Maintenance Alerts</h3>
                             <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent" />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {maintenanceStats.breakdownAssets > 0 && (
-                                <div className="glass-card p-4 border border-red-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/maintenance')}>
+                            {assetStats && assetStats.breakdownAssets > 0 && (
+                                <div className="glass-card p-4 border border-red-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/assets')}>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                        <p className="text-red-400 font-medium text-sm">{maintenanceStats.breakdownAssets} Asset{maintenanceStats.breakdownAssets > 1 ? 's' : ''} Down</p>
+                                        <p className="text-red-400 font-medium text-sm">{assetStats.breakdownAssets} Asset{assetStats.breakdownAssets > 1 ? 's' : ''} Down</p>
                                     </div>
                                     <p className="text-foreground-faint text-xs mt-1">Requires immediate attention</p>
                                 </div>
                             )}
-                            {maintenanceStats.criticalJobs > 0 && (
+                            {jobStats && jobStats.criticalJobs > 0 && (
                                 <div className="glass-card p-4 border border-orange-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/maintenance')}>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-orange-500" />
-                                        <p className="text-orange-400 font-medium text-sm">{maintenanceStats.criticalJobs} Critical Job{maintenanceStats.criticalJobs > 1 ? 's' : ''}</p>
+                                        <p className="text-orange-400 font-medium text-sm">{jobStats.criticalJobs} Critical Job{jobStats.criticalJobs > 1 ? 's' : ''}</p>
                                     </div>
                                     <p className="text-foreground-faint text-xs mt-1">Open critical work orders</p>
                                 </div>
                             )}
-                            {maintenanceStats.pmDue > 0 && (
-                                <div className="glass-card p-4 border border-yellow-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/maintenance')}>
+                            {assetStats && assetStats.pmDue > 0 && (
+                                <div className="glass-card p-4 border border-yellow-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/assets')}>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                                        <p className="text-yellow-400 font-medium text-sm">{maintenanceStats.pmDue} PM Overdue</p>
+                                        <p className="text-yellow-400 font-medium text-sm">{assetStats.pmDue} PM Overdue</p>
                                     </div>
                                     <p className="text-foreground-faint text-xs mt-1">Preventive maintenance due</p>
                                 </div>

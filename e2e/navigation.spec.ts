@@ -62,7 +62,8 @@ test.describe('Navigation', () => {
         await expect(sidebarNav.locator('text=Gate Operations').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Reactor Dashboard').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Inventory').first()).toBeVisible();
-        await expect(sidebarNav.locator('text=Maintenance').first()).toBeVisible();
+        await expect(sidebarNav.locator('text=Asset Register').first()).toBeVisible();
+        await expect(sidebarNav.locator('text=Work Orders').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Quality Control').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Shift Management').first()).toBeVisible();
     });
@@ -82,8 +83,8 @@ test.describe('Navigation', () => {
         await nav.locator('text=Inventory').click();
         await expect(page).toHaveURL(/\/inventory/);
 
-        // Click Maintenance in sidebar
-        await nav.locator('text=Maintenance').click();
+        // Click Work Orders in sidebar
+        await nav.locator('text=Work Orders').click();
         await expect(page).toHaveURL(/\/maintenance/);
     });
 

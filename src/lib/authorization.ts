@@ -28,7 +28,9 @@ type PermissionAction =
     | 'bug_reports:create'
     | 'bug_reports:manage'
     | 'maintenance:create'
-    | 'maintenance:update';
+    | 'maintenance:update'
+    | 'asset_register:create'
+    | 'asset_register:update';
 
 const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
     SUPER_ADMIN: [
@@ -42,6 +44,7 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'spare_parts:create', 'spare_parts:update', 'spare_parts:transact',
         'bug_reports:create', 'bug_reports:manage',
         'maintenance:create', 'maintenance:update',
+        'asset_register:create', 'asset_register:update',
     ],
     PLANT_MANAGER: [
         'users:create', 'users:update',
@@ -52,6 +55,7 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'spare_parts:create', 'spare_parts:update', 'spare_parts:transact',
         'bug_reports:create', 'bug_reports:manage',
         'maintenance:create', 'maintenance:update',
+        'asset_register:create', 'asset_register:update',
     ],
     SHIFT_SUPERVISOR: [
         'gate:create', 'gate:update', 'gate:cancel',
@@ -81,6 +85,7 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'spare_parts:transact',
         'bug_reports:create',
         'maintenance:create', 'maintenance:update',
+        'asset_register:create', 'asset_register:update',
     ],
     VIEWER: [
         'bug_reports:create',

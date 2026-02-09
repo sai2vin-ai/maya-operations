@@ -75,10 +75,13 @@ const QualityDashboardPage = lazy(() => import('./features/quality/pages/Quality
 const QualityCheckCreatePage = lazy(() => import('./features/quality/pages/QualityCheckCreatePage'));
 const QualityCheckDetailPage = lazy(() => import('./features/quality/pages/QualityCheckDetailPage'));
 
-// Maintenance
+// Asset Register
+const AssetListPage = lazy(() => import('./features/asset-register/pages/AssetListPage'));
+const AssetCreatePage = lazy(() => import('./features/asset-register/pages/AssetCreatePage'));
+const AssetDetailPage = lazy(() => import('./features/asset-register/pages/AssetDetailPage'));
+
+// Maintenance (Work Orders)
 const MaintenanceDashboardPage = lazy(() => import('./features/maintenance/pages/MaintenanceDashboardPage'));
-const AssetCreatePage = lazy(() => import('./features/maintenance/pages/AssetCreatePage'));
-const AssetDetailPage = lazy(() => import('./features/maintenance/pages/AssetDetailPage'));
 const JobCreatePage = lazy(() => import('./features/maintenance/pages/JobCreatePage'));
 const JobDetailPage = lazy(() => import('./features/maintenance/pages/JobDetailPage'));
 
@@ -144,12 +147,15 @@ function App() {
                   <Route path="/spare-parts/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><SparePartCreatePage /></ProtectedRoute>} />
                   <Route path="/spare-parts/:partId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}><SparePartDetailPage /></ProtectedRoute>} />
 
-                  {/* Maintenance */}
+                  {/* Asset Register */}
+                  <Route path="/assets" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetListPage /></ProtectedRoute>} />
+                  <Route path="/assets/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetCreatePage /></ProtectedRoute>} />
+                  <Route path="/assets/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetDetailPage /></ProtectedRoute>} />
+
+                  {/* Work Orders (Maintenance) */}
                   <Route path="/maintenance" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><MaintenanceDashboardPage /></ProtectedRoute>} />
-                  <Route path="/maintenance/assets/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetCreatePage /></ProtectedRoute>} />
-                  <Route path="/maintenance/assets/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetDetailPage /></ProtectedRoute>} />
-                  <Route path="/maintenance/jobs/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobCreatePage /></ProtectedRoute>} />
-                  <Route path="/maintenance/jobs/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobDetailPage /></ProtectedRoute>} />
+                  <Route path="/maintenance/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobCreatePage /></ProtectedRoute>} />
+                  <Route path="/maintenance/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobDetailPage /></ProtectedRoute>} />
 
                   {/* Shift Management */}
                   <Route path="/shifts" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR']}><ShiftsPage /></ProtectedRoute>} />

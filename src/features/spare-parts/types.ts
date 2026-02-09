@@ -34,4 +34,6 @@ export interface SparePartTransaction extends AuditFields {
     machineName?: string;     // Machine name for display
     reason?: string;
     issuedTo?: string;        // Person who drew the part
+    jobId?: string;           // Links back to maintenance job
+    jobNumber?: string;       // Denormalized for display
 }

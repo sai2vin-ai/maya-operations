@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast, LoadingSpinner } from '../../../components/ui';
-import { useAsset, useUpdateAsset, useJobsByAsset } from '../hooks/useMaintenance';
+import { useAsset, useUpdateAsset } from '../hooks/useAssets';
+import { useJobsByAsset } from '../../maintenance/hooks/useMaintenance';
 import {
     ASSET_STATUS_CONFIG,
     ASSET_CATEGORIES,
     ASSET_LOCATIONS,
+} from '../services/assetService';
+import {
     JOB_STATUS_CONFIG,
     JOB_PRIORITY_CONFIG,
     JOB_TYPE_CONFIG,
-} from '../services/maintenanceService';
+} from '../../maintenance/services/maintenanceService';
 import type { AssetStatus, AssetCriticality } from '../../../types';
 
 export default function AssetDetailPage() {
@@ -80,7 +83,7 @@ export default function AssetDetailPage() {
     return (
         <div className="p-6 max-w-4xl mx-auto">
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/maintenance')} className="text-foreground-muted hover:text-foreground">
+                <button onClick={() => navigate('/assets')} className="text-foreground-muted hover:text-foreground">
                     ← Back
                 </button>
                 <div className="flex-1">
@@ -170,7 +173,7 @@ export default function AssetDetailPage() {
                 <h3 className="text-sm font-medium text-foreground-secondary mb-3">Quick Actions</h3>
                 <div className="flex flex-wrap gap-2">
                     <button
-                        onClick={() => navigate(`/maintenance/jobs/new?assetId=${id}`)}
+                        onClick={() => navigate(`/maintenance/new?assetId=${id}`)}
                         className="btn-primary text-sm"
                     >
                         Create Work Order
@@ -213,7 +216,7 @@ export default function AssetDetailPage() {
                             return (
                                 <div
                                     key={job.id}
-                                    onClick={() => navigate(`/maintenance/jobs/${job.id}`)}
+                                    onClick={() => navigate(`/maintenance/${job.id}`)}
                                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
                                 >
                                     <div className="flex-1 min-w-0">

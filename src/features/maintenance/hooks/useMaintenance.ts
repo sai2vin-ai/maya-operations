@@ -1,73 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    getAssets,
-    getAssetById,
-    createAsset,
-    updateAsset,
     getJobs,
     getJobsByAsset,
     getJobById,
     createJob,
     updateJob,
-    getMaintenanceStats,
-    type CreateAssetData,
-    type UpdateAssetData,
+    getJobStats,
+    issuePartsToJob,
     type CreateJobData,
     type UpdateJobData,
+    type IssuePartsToJobData,
 } from '../services/maintenanceService';
 import type { UserRole } from '../../../types';
 
 export const maintenanceKeys = {
     all: ['maintenance'] as const,
-    assets: () => [...maintenanceKeys.all, 'assets'] as const,
-    assetDetail: (id: string) => [...maintenanceKeys.all, 'asset', id] as const,
     jobs: () => [...maintenanceKeys.all, 'jobs'] as const,
     jobsByAsset: (assetId: string) => [...maintenanceKeys.all, 'jobs', 'asset', assetId] as const,
     jobDetail: (id: string) => [...maintenanceKeys.all, 'job', id] as const,
     stats: () => [...maintenanceKeys.all, 'stats'] as const,
 };
-
-export function useAssets() {
-    return useQuery({
-        queryKey: maintenanceKeys.assets(),
-        queryFn: () => getAssets(),
-    });
-}
-
-export function useAsset(id: string | undefined) {
-    return useQuery({
-        queryKey: maintenanceKeys.assetDetail(id || ''),
-        queryFn: () => getAssetById(id!),
-        enabled: !!id,
-    });
-}
-
-export function useCreateAsset() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: ({ data, createdBy, callerRole }: { data: CreateAssetData; createdBy: string; callerRole?: UserRole }) =>
-            createAsset(data, createdBy, callerRole),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: maintenanceKeys.assets() });
-            queryClient.invalidateQueries({ queryKey: maintenanceKeys.stats() });
-        },
-    });
-}
-
-export function useUpdateAsset() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: ({ assetId, data, updatedBy, callerRole }: { assetId: string; data: UpdateAssetData; updatedBy: string; callerRole?: UserRole }) =>
-            updateAsset(assetId, data, updatedBy, callerRole),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: maintenanceKeys.assets() });
-            queryClient.invalidateQueries({ queryKey: maintenanceKeys.assetDetail(variables.assetId) });
-            queryClient.invalidateQueries({ queryKey: maintenanceKeys.stats() });
-        },
-    });
-}
 
 export function useJobs() {
     return useQuery({
@@ -117,10 +69,26 @@ export function useUpdateJob() {
     });
 }
 
-export function useMaintenanceStats() {
+export function useJobStats() {
     return useQuery({
         queryKey: maintenanceKeys.stats(),
-        queryFn: getMaintenanceStats,
+        queryFn: getJobStats,
         staleTime: 30_000,
+    });
+}
+
+export function useIssuePartsToJob() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ data, issuedBy, callerRole }: { data: IssuePartsToJobData; issuedBy: string; callerRole?: UserRole }) =>
+            issuePartsToJob(data, issuedBy, callerRole),
+        onSuccess: (_, variables) => {
+            // Invalidate job detail and job lists
+            queryClient.invalidateQueries({ queryKey: maintenanceKeys.jobDetail(variables.data.jobId) });
+            queryClient.invalidateQueries({ queryKey: maintenanceKeys.jobs() });
+            // Cross-module: invalidate spare parts cache
+            queryClient.invalidateQueries({ queryKey: ['spareParts'] });
+        },
     });
 }

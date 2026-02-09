@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../components/ui';
-import { useAssets } from '../hooks/useMaintenance';
+import { useAssets } from '../../asset-register/hooks/useAssets';
 import { createJob } from '../services/maintenanceService';
 import type { JobType, JobPriority } from '../../../types';
 
@@ -40,7 +40,7 @@ export default function JobCreatePage() {
             }, userData.id, userData.role);
 
             toast.success('Work order created successfully');
-            navigate(`/maintenance/jobs/${jobId}`);
+            navigate(`/maintenance/${jobId}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create work order');
             toast.error('Failed to create work order');
