@@ -348,6 +348,70 @@ export const cleanupOldAuditLogs = onSchedule('every day 02:00', async () => {
     console.log(`Deleted ${oldLogs.size} old audit logs`);
 });
 
+// Low Stock Alert - triggers when inventory item stock drops below minimum
+export const onInventoryItemUpdate = onDocumentUpdated('inventoryItems/{itemId}', async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+
+    const itemId = event.params.itemId;
+
+    // Only alert if stock just crossed below minimum (was above, now at/below)
+    if (before.currentStock > before.minimumStock && after.currentStock <= after.minimumStock) {
+        await createNotification({
+            type: 'warning',
+            title: 'Low Stock Alert',
+            message: `${after.name || itemId} stock is at ${after.currentStock} (minimum: ${after.minimumStock})`,
+            targetRoles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER'],
+            entityType: 'inventory',
+            entityId: itemId,
+        });
+    }
+
+    // Critical alert when stock reaches zero
+    if (before.currentStock > 0 && after.currentStock === 0) {
+        await createNotification({
+            type: 'alert',
+            title: 'Out of Stock',
+            message: `${after.name || itemId} is now out of stock!`,
+            targetRoles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER'],
+            entityType: 'inventory',
+            entityId: itemId,
+        });
+    }
+
+    await createAuditLog({
+        action: 'INVENTORY_UPDATED',
+        collection: 'inventoryItems',
+        documentId: itemId,
+        userId: after.updatedBy || undefined,
+        data: {
+            name: after.name,
+            previousStock: before.currentStock,
+            newStock: after.currentStock,
+            minimumStock: after.minimumStock,
+        },
+    });
+});
+
+// Low Stock Alert for Spare Parts
+export const onSparePartUpdate = onDocumentUpdated('spareParts/{partId}', async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+
+    const partId = event.params.partId;
+
+    if (before.currentStock > before.minimumStock && after.currentStock <= after.minimumStock) {
+        await createNotification({
+            type: 'warning',
+            title: 'Spare Part Low Stock',
+            message: `${after.name || after.partNumber || partId} stock is at ${after.currentStock} (minimum: ${after.minimumStock})`,
+            targetRoles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH'],
+        });
+    }
+});
+
 // Daily cleanup of old notifications (keep 30 days)
 export const cleanupOldNotifications = onSchedule('every day 02:30', async () => {
     const cutoffDate = new Date();

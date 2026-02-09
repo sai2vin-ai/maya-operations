@@ -99,10 +99,42 @@ service cloud.firestore {
       allow create, update, delete: if isSupervisor();
     }
     
-    // Maintenance collection
+    // Maintenance collections
     match /maintenance/{recordId} {
       allow read: if isActiveUser();
       allow create, update: if isSupervisor();
+      allow delete: if isManager();
+    }
+
+    match /assets/{assetId} {
+      allow read: if isActiveUser();
+      allow create, update: if isActiveUser() &&
+                              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
+                              ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'MAINTENANCE_TECH'];
+      allow delete: if isManager();
+    }
+
+    match /qualityChecks/{checkId} {
+      allow read: if isActiveUser();
+      allow create, update: if isActiveUser() &&
+                              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
+                              ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'];
+      allow delete: if isManager();
+    }
+
+    match /weighbridgeEntries/{entryId} {
+      allow read: if isActiveUser();
+      allow create, update: if isActiveUser() &&
+                              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
+                              ['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR'];
+      allow delete: if isManager();
+    }
+
+    match /maintenanceJobs/{jobId} {
+      allow read: if isActiveUser();
+      allow create, update: if isActiveUser() &&
+                              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
+                              ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'MAINTENANCE_TECH'];
       allow delete: if isManager();
     }
     

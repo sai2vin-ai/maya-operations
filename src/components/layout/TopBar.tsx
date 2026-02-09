@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { GlobalSearch } from '../ui/GlobalSearch';
 import { useUnreadCount, useRealtimeNotifications } from '../../features/notifications/hooks/useNotifications';
 
 export function TopBar() {
@@ -38,6 +39,9 @@ export function TopBar() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
+                {/* Global Search */}
+                <GlobalSearch />
+
                 {/* Theme Toggle */}
                 <ThemeToggle />
 

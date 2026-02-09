@@ -47,6 +47,7 @@ const WeighbridgeEntryPage = lazy(() => import('./features/weighbridge/pages/Wei
 
 // Audit & Reports
 const AuditLogsPage = lazy(() => import('./features/audit/pages/AuditLogsPage'));
+const UserActivityPage = lazy(() => import('./features/audit/pages/UserActivityPage'));
 const ReportsDashboardPage = lazy(() => import('./features/reports/pages/ReportsDashboardPage'));
 
 // Webhooks
@@ -61,6 +62,25 @@ const BugReportDetailPage = lazy(() => import('./features/bug-reports/pages/BugR
 // User Guide & Workflows
 const UserGuidePage = lazy(() => import('./pages/UserGuidePage'));
 const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'));
+
+// Shifts
+const ShiftsPage = lazy(() => import('./features/shifts/pages/ShiftsPage'));
+
+// Batch Analytics & Vehicle Tracking
+const BatchAnalyticsPage = lazy(() => import('./features/reactor/pages/BatchAnalyticsPage'));
+const VehicleTrackingPage = lazy(() => import('./features/gate/pages/VehicleTrackingPage'));
+
+// Quality Control
+const QualityDashboardPage = lazy(() => import('./features/quality/pages/QualityDashboardPage'));
+const QualityCheckCreatePage = lazy(() => import('./features/quality/pages/QualityCheckCreatePage'));
+const QualityCheckDetailPage = lazy(() => import('./features/quality/pages/QualityCheckDetailPage'));
+
+// Maintenance
+const MaintenanceDashboardPage = lazy(() => import('./features/maintenance/pages/MaintenanceDashboardPage'));
+const AssetCreatePage = lazy(() => import('./features/maintenance/pages/AssetCreatePage'));
+const AssetDetailPage = lazy(() => import('./features/maintenance/pages/AssetDetailPage'));
+const JobCreatePage = lazy(() => import('./features/maintenance/pages/JobCreatePage'));
+const JobDetailPage = lazy(() => import('./features/maintenance/pages/JobDetailPage'));
 
 // Notifications
 const NotificationsPage = lazy(() => import('./features/notifications/pages/NotificationsPage'));
@@ -105,12 +125,14 @@ function App() {
                   <Route path="/gate" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntriesPage /></ProtectedRoute>} />
                   <Route path="/gate/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntryCreatePage /></ProtectedRoute>} />
                   <Route path="/gate/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntryDetailPage /></ProtectedRoute>} />
+                  <Route path="/gate/vehicles" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><VehicleTrackingPage /></ProtectedRoute>} />
 
                   {/* Reactor Operations */}
                   <Route path="/reactor" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><ReactorDashboardPage /></ProtectedRoute>} />
                   <Route path="/reactor/:reactorId/new-batch" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchCreatePage /></ProtectedRoute>} />
                   <Route path="/batch/:batchId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchWorkflowPage /></ProtectedRoute>} />
                   <Route path="/reactor/output" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><ReactorOutputPage /></ProtectedRoute>} />
+                  <Route path="/reactor/analytics" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchAnalyticsPage /></ProtectedRoute>} />
 
                   {/* Inventory */}
                   <Route path="/inventory" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><InventoryPage /></ProtectedRoute>} />
@@ -123,7 +145,14 @@ function App() {
                   <Route path="/spare-parts/:partId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}><SparePartDetailPage /></ProtectedRoute>} />
 
                   {/* Maintenance */}
-                  <Route path="/maintenance" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><ComingSoon title="Maintenance" /></ProtectedRoute>} />
+                  <Route path="/maintenance" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><MaintenanceDashboardPage /></ProtectedRoute>} />
+                  <Route path="/maintenance/assets/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetCreatePage /></ProtectedRoute>} />
+                  <Route path="/maintenance/assets/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetDetailPage /></ProtectedRoute>} />
+                  <Route path="/maintenance/jobs/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobCreatePage /></ProtectedRoute>} />
+                  <Route path="/maintenance/jobs/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobDetailPage /></ProtectedRoute>} />
+
+                  {/* Shift Management */}
+                  <Route path="/shifts" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR']}><ShiftsPage /></ProtectedRoute>} />
 
                   {/* Roles & Permissions */}
                   <Route path="/roles" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><RolesPage /></ProtectedRoute>} />
@@ -133,8 +162,14 @@ function App() {
                   <Route path="/weighbridge/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgeEntryPage /></ProtectedRoute>} />
                   <Route path="/weighbridge/:entryId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgeEntryPage /></ProtectedRoute>} />
 
+                  {/* Quality Control */}
+                  <Route path="/quality" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><QualityDashboardPage /></ProtectedRoute>} />
+                  <Route path="/quality/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><QualityCheckCreatePage /></ProtectedRoute>} />
+                  <Route path="/quality/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><QualityCheckDetailPage /></ProtectedRoute>} />
+
                   {/* Audit Logs */}
                   <Route path="/audit" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><AuditLogsPage /></ProtectedRoute>} />
+                  <Route path="/activity" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UserActivityPage /></ProtectedRoute>} />
 
                   {/* Reports */}
                   <Route path="/reports" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><ReportsDashboardPage /></ProtectedRoute>} />
@@ -170,26 +205,6 @@ function App() {
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
-  );
-}
-
-// Coming Soon placeholder component
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="glass-card p-8 text-center max-w-md">
-        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">{title}</h2>
-        <p className="text-foreground-muted mb-4">This module is coming soon in the next sprint.</p>
-        <Link to="/dashboard" className="btn-primary inline-block">
-          Back to Dashboard
-        </Link>
-      </div>
-    </div>
   );
 }
 

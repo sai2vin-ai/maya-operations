@@ -1,6 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useOperationsSummary, useProductionReport } from '../hooks/useReports';
-import { exportReportSummary, exportToCSV } from '../services/reportService';
+import {
+    exportReportSummary,
+    exportToCSV,
+    getGateEntriesForExport,
+    getWeighbridgeForExport,
+    getInventoryForExport,
+    printReport,
+} from '../services/reportService';
 import { useRecentAuditLogs } from '../../audit/hooks/useAuditLogs';
 import { getActionLabel, getActionColor } from '../../audit/types';
 import type { ReportFilters } from '../types';
@@ -250,6 +257,65 @@ export default function ReportsDashboardPage() {
                             </>
                         )}
 
+                        {/* Export Section */}
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Export Reports</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <ExportCard
+                                title="Gate Entries"
+                                description="Vehicle entry/exit records"
+                                onCSV={async () => {
+                                    const data = await getGateEntriesForExport(filters);
+                                    exportToCSV(data, 'gate_entries');
+                                }}
+                                onPrint={async () => {
+                                    const data = await getGateEntriesForExport(filters);
+                                    printReport('Gate Entries Report', data);
+                                }}
+                            />
+                            <ExportCard
+                                title="Weighbridge"
+                                description="Weighing records"
+                                onCSV={async () => {
+                                    const data = await getWeighbridgeForExport(filters);
+                                    exportToCSV(data, 'weighbridge_records');
+                                }}
+                                onPrint={async () => {
+                                    const data = await getWeighbridgeForExport(filters);
+                                    printReport('Weighbridge Records', data);
+                                }}
+                            />
+                            <ExportCard
+                                title="Inventory"
+                                description="Current stock levels"
+                                onCSV={async () => {
+                                    const data = await getInventoryForExport();
+                                    exportToCSV(data, 'inventory_report');
+                                }}
+                                onPrint={async () => {
+                                    const data = await getInventoryForExport();
+                                    printReport('Inventory Report', data);
+                                }}
+                            />
+                            <ExportCard
+                                title="Production"
+                                description="Batch output details"
+                                onCSV={handleExportProduction}
+                                onPrint={() => {
+                                    if (production && production.length > 0) {
+                                        const data = production.map(p => ({
+                                            'Batch': p.batchNumber,
+                                            'Reactor': p.reactorId,
+                                            'Completed': p.completedAt.toLocaleDateString(),
+                                            'Oil (L)': p.outputs.oil,
+                                            'Carbon (KG)': p.outputs.carbon,
+                                            'Steel (KG)': p.outputs.steel,
+                                        }));
+                                        printReport('Production Report', data);
+                                    }
+                                }}
+                            />
+                        </div>
+
                         {/* Recent Activity */}
                         <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
                         <div className="glass-card overflow-hidden">
@@ -294,6 +360,28 @@ export default function ReportsDashboardPage() {
                     </>
                 )}
             </main>
+        </div>
+    );
+}
+
+function ExportCard({ title, description, onCSV, onPrint }: {
+    title: string;
+    description: string;
+    onCSV: () => void;
+    onPrint: () => void;
+}) {
+    return (
+        <div className="glass-card p-4">
+            <h4 className="text-foreground font-medium mb-1">{title}</h4>
+            <p className="text-foreground-faint text-xs mb-3">{description}</p>
+            <div className="flex gap-2">
+                <button onClick={onCSV} className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+                    CSV
+                </button>
+                <button onClick={onPrint} className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                    Print/PDF
+                </button>
+            </div>
         </div>
     );
 }

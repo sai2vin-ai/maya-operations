@@ -26,7 +26,9 @@ type PermissionAction =
     | 'spare_parts:update'
     | 'spare_parts:transact'
     | 'bug_reports:create'
-    | 'bug_reports:manage';
+    | 'bug_reports:manage'
+    | 'maintenance:create'
+    | 'maintenance:update';
 
 const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
     SUPER_ADMIN: [
@@ -39,6 +41,7 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'webhooks:manage',
         'spare_parts:create', 'spare_parts:update', 'spare_parts:transact',
         'bug_reports:create', 'bug_reports:manage',
+        'maintenance:create', 'maintenance:update',
     ],
     PLANT_MANAGER: [
         'users:create', 'users:update',
@@ -48,6 +51,7 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'weighbridge:create', 'weighbridge:update',
         'spare_parts:create', 'spare_parts:update', 'spare_parts:transact',
         'bug_reports:create', 'bug_reports:manage',
+        'maintenance:create', 'maintenance:update',
     ],
     SHIFT_SUPERVISOR: [
         'gate:create', 'gate:update', 'gate:cancel',
@@ -76,6 +80,7 @@ const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
     MAINTENANCE_TECH: [
         'spare_parts:transact',
         'bug_reports:create',
+        'maintenance:create', 'maintenance:update',
     ],
     VIEWER: [
         'bug_reports:create',

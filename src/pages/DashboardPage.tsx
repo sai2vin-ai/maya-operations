@@ -6,6 +6,9 @@ import { getReactors } from '../features/reactor/services/reactorService';
 import { getBatches } from '../features/reactor/services/batchService';
 import { getTodaysEntries } from '../features/gate/services/gateEntryService';
 import { getLowStockItems } from '../features/inventory/services/inventoryService';
+import { useActiveShift } from '../features/shifts/hooks/useShifts';
+import { useMaintenanceStats } from '../features/maintenance/hooks/useMaintenance';
+import { SHIFT_TYPES } from '../features/shifts/services/shiftService';
 
 
 // Key for storing recent modules in localStorage
@@ -57,6 +60,8 @@ export default function DashboardPage() {
     });
     const { data: todayGateEntries, isError: gateError } = useQuery({ queryKey: ['gateEntries', 'today'], queryFn: getTodaysEntries, staleTime: 30_000 });
     const { data: lowStockItems, isError: inventoryError } = useQuery({ queryKey: ['inventory', 'lowStock'], queryFn: getLowStockItems, staleTime: 60_000 });
+    const { data: activeShift } = useActiveShift();
+    const { data: maintenanceStats } = useMaintenanceStats();
     const statsError = reactorsError || batchesError || gateError || inventoryError;
 
     const activeReactorCount = reactors?.filter(r => r.status === 'IN_BATCH').length ?? 0;
@@ -84,6 +89,7 @@ export default function DashboardPage() {
             { id: 'spare-parts', name: 'Store', icon: '🏪', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH'], color: 'from-indigo-500 to-indigo-600' },
             { id: 'users', name: 'User Management', icon: '👥', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], color: 'from-blue-500 to-blue-600' },
             { id: 'devices', name: 'Device Management', icon: '📱', roles: ['SUPER_ADMIN'], color: 'from-purple-500 to-purple-600' },
+            { id: 'shifts', name: 'Shift Management', icon: '🕐', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR'], color: 'from-emerald-500 to-emerald-600' },
             { id: 'maintenance', name: 'Maintenance', icon: '🔧', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'], color: 'from-yellow-500 to-yellow-600' },
             { id: 'audit', name: 'Audit Logs', icon: '📋', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], color: 'from-slate-500 to-slate-600' },
             { id: 'reports', name: 'Reports', icon: '📈', roles: ['SUPER_ADMIN'], color: 'from-red-500 to-red-600' },
@@ -242,6 +248,45 @@ export default function DashboardPage() {
                     })}
                 </div>
 
+                {/* Maintenance Alerts */}
+                {maintenanceStats && (maintenanceStats.breakdownAssets > 0 || maintenanceStats.criticalJobs > 0 || maintenanceStats.pmDue > 0) && (
+                    <div className="mt-6 mb-4">
+                        <div className="flex items-center gap-3 mb-3">
+                            <h3 className="text-lg font-semibold text-foreground">Maintenance Alerts</h3>
+                            <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent" />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {maintenanceStats.breakdownAssets > 0 && (
+                                <div className="glass-card p-4 border border-red-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/maintenance')}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                        <p className="text-red-400 font-medium text-sm">{maintenanceStats.breakdownAssets} Asset{maintenanceStats.breakdownAssets > 1 ? 's' : ''} Down</p>
+                                    </div>
+                                    <p className="text-foreground-faint text-xs mt-1">Requires immediate attention</p>
+                                </div>
+                            )}
+                            {maintenanceStats.criticalJobs > 0 && (
+                                <div className="glass-card p-4 border border-orange-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/maintenance')}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-orange-500" />
+                                        <p className="text-orange-400 font-medium text-sm">{maintenanceStats.criticalJobs} Critical Job{maintenanceStats.criticalJobs > 1 ? 's' : ''}</p>
+                                    </div>
+                                    <p className="text-foreground-faint text-xs mt-1">Open critical work orders</p>
+                                </div>
+                            )}
+                            {maintenanceStats.pmDue > 0 && (
+                                <div className="glass-card p-4 border border-yellow-500/30 cursor-pointer hover:bg-surface-hover transition-colors" onClick={() => navigate('/maintenance')}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                                        <p className="text-yellow-400 font-medium text-sm">{maintenanceStats.pmDue} PM Overdue</p>
+                                    </div>
+                                    <p className="text-foreground-faint text-xs mt-1">Preventive maintenance due</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Current Shift Info */}
                 <div className="gradient-border-card p-5 mt-8">
                     <div className="flex items-center justify-between">
@@ -253,12 +298,33 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h3 className="text-foreground font-semibold">Current Shift</h3>
-                                <p className="text-foreground-muted text-sm">Shift A &bull; 06:00 - 14:00</p>
+                                {activeShift ? (
+                                    <p className="text-foreground-muted text-sm">
+                                        {SHIFT_TYPES.find(s => s.value === activeShift.shiftType)?.label || `Shift ${activeShift.shiftType}`}
+                                        {' '}&bull;{' '}
+                                        {SHIFT_TYPES.find(s => s.value === activeShift.shiftType)?.time || ''}
+                                    </p>
+                                ) : (
+                                    <p className="text-foreground-faint text-sm">No active shift</p>
+                                )}
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-xs text-foreground-faint uppercase tracking-wider mb-0.5">Supervisor</p>
-                            <p className="text-foreground font-medium">{userData?.name || 'Loading...'}</p>
+                            {activeShift ? (
+                                <>
+                                    <p className="text-xs text-foreground-faint uppercase tracking-wider mb-0.5">Started</p>
+                                    <p className="text-foreground font-medium text-sm">
+                                        {(() => {
+                                            const ts = activeShift.startTime as { toDate?: () => Date };
+                                            return ts?.toDate ? ts.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                                        })()}
+                                    </p>
+                                </>
+                            ) : (
+                                <button onClick={() => navigate('/shifts')} className="text-blue-400 hover:text-blue-300 text-sm">
+                                    Start Shift →
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

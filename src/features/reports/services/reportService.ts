@@ -139,6 +139,127 @@ export async function getProductionReport(filters: ReportFilters): Promise<Produ
 }
 
 /**
+ * Get gate entries for export
+ */
+export async function getGateEntriesForExport(filters: ReportFilters): Promise<Record<string, unknown>[]> {
+    const startTs = Timestamp.fromDate(filters.startDate);
+    const endTs = Timestamp.fromDate(filters.endDate);
+
+    const snapshot = await getDocs(query(
+        collection(db, 'gateEntries'),
+        where('entryTime', '>=', startTs),
+        where('entryTime', '<=', endTs),
+        orderBy('entryTime', 'desc'),
+        limit(500)
+    ));
+
+    return snapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+            'Entry Number': d.entryNumber || '',
+            'Vehicle Number': d.vehicleNumber || '',
+            'Driver Name': d.driverName || '',
+            'Entry Type': d.entryType || '',
+            'Material': d.material || '',
+            'Status': d.status || '',
+            'Entry Time': d.entryTime?.toDate?.()?.toISOString() || '',
+            'Exit Time': d.exitTime?.toDate?.()?.toISOString() || '',
+        };
+    });
+}
+
+/**
+ * Get weighbridge records for export
+ */
+export async function getWeighbridgeForExport(filters: ReportFilters): Promise<Record<string, unknown>[]> {
+    const startTs = Timestamp.fromDate(filters.startDate);
+    const endTs = Timestamp.fromDate(filters.endDate);
+
+    const snapshot = await getDocs(query(
+        collection(db, 'weighbridgeEntries'),
+        where('createdAt', '>=', startTs),
+        where('createdAt', '<=', endTs),
+        orderBy('createdAt', 'desc'),
+        limit(500)
+    ));
+
+    return snapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+            'Ticket Number': d.ticketNumber || '',
+            'Vehicle Number': d.vehicleNumber || '',
+            'Material': d.material || '',
+            'First Weight (kg)': d.firstWeight || '',
+            'Second Weight (kg)': d.secondWeight || '',
+            'Net Weight (kg)': d.netWeight || '',
+            'Status': d.status || '',
+            'Created': d.createdAt?.toDate?.()?.toISOString() || '',
+        };
+    });
+}
+
+/**
+ * Get inventory items for export
+ */
+export async function getInventoryForExport(): Promise<Record<string, unknown>[]> {
+    const snapshot = await getDocs(query(
+        collection(db, 'inventory'),
+        orderBy('code', 'asc')
+    ));
+
+    return snapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+            'Item Code': d.code || '',
+            'Name': d.name || '',
+            'Category': d.category || '',
+            'Current Stock': d.currentStock ?? 0,
+            'Minimum Stock': d.minimumStock ?? 0,
+            'Unit': d.unit || '',
+            'Location': d.location || '',
+            'Status': (d.currentStock ?? 0) <= (d.minimumStock ?? 0) ? 'LOW STOCK' : 'OK',
+        };
+    });
+}
+
+/**
+ * Generate printable HTML report and open print dialog
+ */
+export function printReport(title: string, data: Record<string, unknown>[]): void {
+    if (data.length === 0) return;
+    const headers = Object.keys(data[0]);
+
+    const html = `
+        <!DOCTYPE html>
+        <html><head><title>${title}</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { font-size: 18px; margin-bottom: 5px; }
+            p { color: #666; font-size: 12px; margin-bottom: 15px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th { background: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; font-weight: 600; }
+            td { padding: 6px 8px; border: 1px solid #ddd; }
+            tr:nth-child(even) { background: #fafafa; }
+            @media print { body { padding: 0; } }
+        </style></head><body>
+        <h1>${title}</h1>
+        <p>Generated: ${new Date().toLocaleString()}</p>
+        <table>
+            <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${data.map(row => `<tr>${headers.map(h => `<td>${row[h] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+        </body></html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.print();
+    }
+}
+
+/**
  * Export data to CSV
  */
 export function exportToCSV(data: Record<string, unknown>[], filename: string): void {
