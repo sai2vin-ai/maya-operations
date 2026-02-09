@@ -62,6 +62,9 @@ const BugReportDetailPage = lazy(() => import('./features/bug-reports/pages/BugR
 const UserGuidePage = lazy(() => import('./pages/UserGuidePage'));
 const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'));
 
+// Notifications
+const NotificationsPage = lazy(() => import('./features/notifications/pages/NotificationsPage'));
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -148,6 +151,9 @@ function App() {
                   {/* User Guide & Workflows */}
                   <Route path="/guide" element={<UserGuidePage />} />
                   <Route path="/workflows" element={<WorkflowsPage />} />
+
+                  {/* Notifications */}
+                  <Route path="/notifications" element={<NotificationsPage />} />
                 </Route>
 
                 {/* Redirect root to dashboard */}

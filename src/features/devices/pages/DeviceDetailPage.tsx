@@ -8,11 +8,13 @@ import {
     OPERATING_SYSTEMS,
     DEVICE_STATUSES,
 } from '../services/deviceService';
+import { useToast } from '../../../components/ui';
 import type { Device, DeviceType, DeviceStatus, OperatingSystem } from '../types';
 
 export default function DeviceDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const toast = useToast();
 
     const [device, setDevice] = useState<Device | null>(null);
     const [loading, setLoading] = useState(true);
@@ -79,10 +81,12 @@ export default function DeviceDetailPage() {
             await updateDevice(id, formData);
 
             setSuccess('Device updated successfully');
+            toast.success('Device updated successfully');
             setIsEditing(false);
             await loadDevice(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update device');
+            toast.error('Failed to update device');
         } finally {
             setSaving(false);
         }
@@ -96,9 +100,11 @@ export default function DeviceDetailPage() {
             setError(null);
             await revokeDevice(id);
             setSuccess('Device revoked');
+            toast.success('Device revoked');
             await loadDevice(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to revoke device');
+            toast.error('Failed to revoke device');
         } finally {
             setSaving(false);
         }

@@ -8,12 +8,14 @@ import {
     USER_ROLES,
     USER_STATUSES,
 } from '../services/userService';
+import { useToast } from '../../../components/ui';
 import type { User, UserRole, UserStatus } from '../types';
 
 export default function UserDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { userData: currentUser } = useAuth();
+    const toast = useToast();
 
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -78,10 +80,12 @@ export default function UserDetailPage() {
             await updateUser(id, formData, currentUser.id || '');
 
             setSuccess('User updated successfully');
+            toast.success('User updated successfully');
             setIsEditing(false);
             await loadUser(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update user');
+            toast.error('Failed to update user');
         } finally {
             setSaving(false);
         }
@@ -95,8 +99,10 @@ export default function UserDetailPage() {
             setError(null);
             await sendPasswordReset(user.email);
             setSuccess('Password reset email sent');
+            toast.success('Password reset email sent');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to send password reset');
+            toast.error('Failed to send password reset');
         } finally {
             setSaving(false);
         }

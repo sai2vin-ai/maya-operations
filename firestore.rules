@@ -111,5 +111,17 @@ service cloud.firestore {
       allow read: if isActiveUser();
       allow create, update, delete: if isManager();
     }
+
+    // Notifications collection (written by Cloud Functions only)
+    match /notifications/{notificationId} {
+      allow read: if isActiveUser();
+      allow write: if false; // Only Cloud Functions can write
+
+      // Per-user read status subcollection
+      match /readBy/{userId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+      }
+    }
   }
 }

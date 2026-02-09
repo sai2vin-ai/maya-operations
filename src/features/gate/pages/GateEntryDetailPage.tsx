@@ -9,7 +9,7 @@ import {
     MATERIAL_CATEGORIES,
     ENTRY_STATUSES,
 } from '../services/gateEntryService';
-import { InputDialog } from '../../../components/ui';
+import { InputDialog, useToast } from '../../../components/ui';
 import { getWeighbridgeEntriesByGateEntryId } from '../../weighbridge/services/weighbridgeService';
 import type { WeighbridgeEntry } from '../../weighbridge/types';
 import type { GateEntry, MaterialCategory, GateEntryStatus } from '../types';
@@ -18,6 +18,7 @@ export default function GateEntryDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
 
     const [entry, setEntry] = useState<GateEntry | null>(null);
     const [loading, setLoading] = useState(true);
@@ -106,10 +107,12 @@ export default function GateEntryDetailPage() {
             }, userData.id);
 
             setSuccess('Entry updated successfully');
+            toast.success('Entry updated successfully');
             setIsEditing(false);
             await loadEntry(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update entry');
+            toast.error('Failed to update entry');
         } finally {
             setSaving(false);
         }
@@ -123,9 +126,11 @@ export default function GateEntryDetailPage() {
             setError(null);
             await completeGateEntry(id, userData.id);
             setSuccess('Entry marked as completed');
+            toast.success('Entry marked as completed');
             await loadEntry(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to complete entry');
+            toast.error('Failed to complete entry');
         } finally {
             setSaving(false);
         }
@@ -143,10 +148,12 @@ export default function GateEntryDetailPage() {
             setError(null);
             await cancelGateEntry(id, reason, userData.id);
             setSuccess('Entry cancelled');
+            toast.success('Entry cancelled');
             setCancelDialogOpen(false);
             await loadEntry(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to cancel entry');
+            toast.error('Failed to cancel entry');
         } finally {
             setSaving(false);
         }

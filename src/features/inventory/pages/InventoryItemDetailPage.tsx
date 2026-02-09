@@ -9,12 +9,14 @@ import {
     TRANSACTION_TYPES,
 } from '../services/inventoryService';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../components/ui';
 import type { InventoryItem, InventoryTransaction, InventoryCategory, TransactionType } from '../types';
 
 export default function InventoryItemDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
 
     const [item, setItem] = useState<InventoryItem | null>(null);
     const [transactions, setTransactions] = useState<InventoryTransaction[]>([]);
@@ -80,7 +82,7 @@ export default function InventoryItemDetailPage() {
         if (!userData?.id || !id) return;
 
         if (transactionQty <= 0) {
-            alert('Quantity must be greater than 0');
+            toast.error('Quantity must be greater than 0');
             return;
         }
 
@@ -95,11 +97,12 @@ export default function InventoryItemDetailPage() {
             }, userData.id);
 
             setShowTransactionModal(false);
+            toast.success('Transaction recorded successfully');
             setTransactionQty(0);
             setTransactionReason('');
             await loadItemData();
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to record transaction');
+            toast.error(err instanceof Error ? err.message : 'Failed to record transaction');
         } finally {
             setTransactionLoading(false);
         }
@@ -121,9 +124,10 @@ export default function InventoryItemDetailPage() {
             }, userData.id);
 
             setShowEditModal(false);
+            toast.success('Item updated successfully');
             await loadItemData();
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to update item');
+            toast.error(err instanceof Error ? err.message : 'Failed to update item');
         } finally {
             setEditLoading(false);
         }

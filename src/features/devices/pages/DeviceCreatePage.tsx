@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../components/ui';
 import { createDevice, DEVICE_TYPES, OPERATING_SYSTEMS } from '../services/deviceService';
 import type { DeviceType, OperatingSystem } from '../types';
 
 export default function DeviceCreatePage() {
     const navigate = useNavigate();
     const { userData: currentUser } = useAuth();
+    const toast = useToast();
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -55,10 +57,12 @@ export default function DeviceCreatePage() {
             setError(null);
 
             await createDevice(formData, currentUser?.id || '');
+            toast.success('Device registered successfully');
             navigate('/devices');
         } catch (err) {
             console.error('Error creating device:', err);
             setError(err instanceof Error ? err.message : 'Failed to register device');
+            toast.error('Failed to register device');
         } finally {
             setSaving(false);
         }

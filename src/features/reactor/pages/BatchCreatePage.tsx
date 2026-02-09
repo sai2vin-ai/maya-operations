@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../components/ui';
 import { getReactorById } from '../services/reactorService';
 import { createBatch } from '../services/batchService';
 import type { Reactor } from '../types';
@@ -9,6 +10,7 @@ export default function BatchCreatePage() {
     const { reactorId } = useParams<{ reactorId: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
 
     const [reactor, setReactor] = useState<Reactor | null>(null);
     const [loading, setLoading] = useState(true);
@@ -68,10 +70,11 @@ export default function BatchCreatePage() {
                 notes: formData.notes || undefined,
             }, userData.id);
 
-            // Navigate to batch workflow
+            toast.success('Batch created successfully');
             navigate(`/batch/${batchId}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create batch');
+            toast.error('Failed to create batch');
         } finally {
             setSaving(false);
         }

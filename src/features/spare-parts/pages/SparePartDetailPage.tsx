@@ -13,12 +13,14 @@ import {
     SPARE_PART_CATEGORIES,
     SPARE_PART_UNITS,
 } from '../services/sparePartsService';
+import { useToast } from '../../../components/ui';
 import type { SparePart, SparePartTransaction, SparePartCategory } from '../types';
 
 export default function SparePartDetailPage() {
     const { partId } = useParams<{ partId: string }>();
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
 
     const [part, setPart] = useState<SparePart | null>(null);
     const [transactions, setTransactions] = useState<SparePartTransaction[]>([]);
@@ -101,10 +103,12 @@ export default function SparePartDetailPage() {
             }, userData.id);
 
             setSuccess('Spare part updated!');
+            toast.success('Spare part updated successfully');
             setEditing(false);
             await loadPart(partId);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update spare part');
+            toast.error('Failed to update spare part');
         } finally {
             setSaving(false);
         }
@@ -125,12 +129,14 @@ export default function SparePartDetailPage() {
             );
 
             setSuccess('Stock received!');
+            toast.success('Stock received successfully');
             setShowReceiptForm(false);
             setTxnQuantity('');
             setTxnReason('');
             await loadPart(partId);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to record receipt');
+            toast.error('Failed to record receipt');
         } finally {
             setSaving(false);
         }
@@ -154,6 +160,7 @@ export default function SparePartDetailPage() {
             );
 
             setSuccess('Stock issued!');
+            toast.success('Stock issued successfully');
             setShowIssueForm(false);
             setTxnQuantity('');
             setTxnReason('');
@@ -163,6 +170,7 @@ export default function SparePartDetailPage() {
             await loadPart(partId);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to record issue');
+            toast.error('Failed to record issue');
         } finally {
             setSaving(false);
         }

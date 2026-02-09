@@ -1,12 +1,14 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../components/ui';
 import { createGateEntry, updateGateEntry, uploadPhotoFromBlob, MATERIAL_CATEGORIES } from '../services/gateEntryService';
 import type { EntryType, MaterialCategory } from '../types';
 
 export default function GateEntryCreatePage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -138,10 +140,12 @@ export default function GateEntryCreatePage() {
                 }
             }
 
+            toast.success('Gate entry created successfully');
             navigate('/gate');
         } catch (err) {
             console.error('Error creating gate entry:', err);
             setError(err instanceof Error ? err.message : 'Failed to create gate entry');
+            toast.error('Failed to create gate entry');
         } finally {
             setSaving(false);
         }

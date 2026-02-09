@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../components/ui';
 import {
     createSparePart,
     SPARE_PART_CATEGORIES,
@@ -14,6 +15,7 @@ import type { SparePartCategory } from '../types';
 export default function SparePartCreatePage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -55,9 +57,11 @@ export default function SparePartCreatePage() {
                 unitPrice: unitPrice ? parseFloat(unitPrice) : undefined,
             }, userData.id);
 
+            toast.success('Spare part created successfully');
             navigate(`/spare-parts/${partId}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create spare part');
+            toast.error('Failed to create spare part');
         } finally {
             setSaving(false);
         }

@@ -33,6 +33,26 @@ async function createAuditLog(log: Omit<AuditLog, 'timestamp'>) {
 }
 
 // ============================================
+// NOTIFICATIONS
+// ============================================
+
+interface NotificationData {
+    type: 'info' | 'success' | 'warning' | 'alert';
+    title: string;
+    message: string;
+    targetRoles: string[];
+    entityType?: string;
+    entityId?: string;
+}
+
+async function createNotification(data: NotificationData) {
+    await db.collection('notifications').add({
+        ...data,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+}
+
+// ============================================
 // GATE ENTRY TRIGGERS
 // ============================================
 
@@ -50,6 +70,15 @@ export const onGateEntryCreate = onDocumentCreated('gateEntries/{entryId}', asyn
             vehicleNumber: data?.vehicleNumber,
             entryType: data?.entryType,
         },
+    });
+
+    await createNotification({
+        type: 'info',
+        title: 'New Gate Entry',
+        message: `Vehicle ${data?.vehicleNumber} (${data?.entryType}) — ${data?.entryNumber}`,
+        targetRoles: ['GATE_OPERATOR', 'SHIFT_SUPERVISOR', 'PLANT_MANAGER', 'SUPER_ADMIN'],
+        entityType: 'gateEntry',
+        entityId: event.params.entryId,
     });
 });
 
@@ -92,6 +121,15 @@ export const onBatchCreate = onDocumentCreated('batches/{batchId}', async (event
             inputWeight: data?.inputWeight,
         },
     });
+
+    await createNotification({
+        type: 'info',
+        title: 'New Batch Created',
+        message: `Batch ${data?.batchNumber} started on reactor ${data?.reactorId}`,
+        targetRoles: ['REACTOR_OPERATOR', 'SHIFT_SUPERVISOR', 'PLANT_MANAGER', 'SUPER_ADMIN'],
+        entityType: 'batch',
+        entityId: event.params.batchId,
+    });
 });
 
 // Log batch status changes and step completions
@@ -112,6 +150,26 @@ export const onBatchUpdate = onDocumentUpdated('batches/{batchId}', async (event
                 newStatus: after?.status,
             },
         });
+
+        if (after?.status === 'COMPLETED') {
+            await createNotification({
+                type: 'success',
+                title: 'Batch Completed',
+                message: `Batch ${after?.batchNumber} has been completed`,
+                targetRoles: ['PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'SUPER_ADMIN'],
+                entityType: 'batch',
+                entityId: event.params.batchId,
+            });
+        } else if (after?.status === 'CANCELLED') {
+            await createNotification({
+                type: 'warning',
+                title: 'Batch Cancelled',
+                message: `Batch ${after?.batchNumber} has been cancelled`,
+                targetRoles: ['PLANT_MANAGER', 'SUPER_ADMIN'],
+                entityType: 'batch',
+                entityId: event.params.batchId,
+            });
+        }
     }
 
     // Step completion
@@ -148,6 +206,15 @@ export const onUserCreate = onDocumentCreated('users/{userId}', async (event) =>
             role: data?.role,
             name: data?.name,
         },
+    });
+
+    await createNotification({
+        type: 'info',
+        title: 'New User Added',
+        message: `${data?.name} (${data?.role}) has been added to the system`,
+        targetRoles: ['SUPER_ADMIN', 'PLANT_MANAGER'],
+        entityType: 'user',
+        entityId: event.params.userId,
     });
 });
 
@@ -209,6 +276,17 @@ export const onReactorUpdate = onDocumentUpdated('reactors/{reactorId}', async (
                 currentBatchId: after?.currentBatchId,
             },
         });
+
+        if (after?.status === 'MAINTENANCE' || after?.status === 'OFFLINE') {
+            await createNotification({
+                type: 'alert',
+                title: `Reactor ${after?.status === 'MAINTENANCE' ? 'Under Maintenance' : 'Offline'}`,
+                message: `Reactor ${after?.reactorNumber} is now ${after?.status}`,
+                targetRoles: ['PLANT_MANAGER', 'MAINTENANCE_TECH', 'SUPER_ADMIN'],
+                entityType: 'reactor',
+                entityId: event.params.reactorId,
+            });
+        }
     }
 });
 
@@ -232,6 +310,15 @@ export const onDeviceUpdate = onDocumentUpdated('devices/{deviceId}', async (eve
                 deviceName: after?.deviceName,
                 reason: after?.revokeReason,
             },
+        });
+
+        await createNotification({
+            type: 'warning',
+            title: 'Device Revoked',
+            message: `Device ${after?.name || after?.deviceId} has been revoked`,
+            targetRoles: ['SUPER_ADMIN'],
+            entityType: 'device',
+            entityId: event.params.deviceId,
         });
     }
 });
@@ -259,6 +346,31 @@ export const cleanupOldAuditLogs = onSchedule('every day 02:00', async () => {
 
     await batch.commit();
     console.log(`Deleted ${oldLogs.size} old audit logs`);
+});
+
+// Daily cleanup of old notifications (keep 30 days)
+export const cleanupOldNotifications = onSchedule('every day 02:30', async () => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 30);
+
+    const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
+
+    const oldNotifications = await db.collection('notifications')
+        .where('createdAt', '<', cutoffTimestamp)
+        .limit(500)
+        .get();
+
+    const writeBatch = db.batch();
+    for (const doc of oldNotifications.docs) {
+        const readByDocs = await doc.ref.collection('readBy').get();
+        readByDocs.docs.forEach((readDoc) => {
+            writeBatch.delete(readDoc.ref);
+        });
+        writeBatch.delete(doc.ref);
+    }
+
+    await writeBatch.commit();
+    console.log(`Deleted ${oldNotifications.size} old notifications`);
 });
 
 // Daily stats aggregation

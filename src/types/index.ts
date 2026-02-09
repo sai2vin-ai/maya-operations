@@ -368,6 +368,24 @@ export function getTimestampMillis(ts: unknown): number {
 }
 
 // ============================================
+// NOTIFICATION TYPES
+// ============================================
+
+export type NotificationType = 'info' | 'success' | 'warning' | 'alert';
+
+export interface AppNotification {
+    id: string;
+    type: NotificationType;
+    title: string;
+    message: string;
+    targetRoles: UserRole[];
+    entityType?: string;      // 'gateEntry', 'batch', 'reactor', etc.
+    entityId?: string;        // Document ID for navigation
+    createdAt: Timestamp;
+    expiresAt?: Timestamp;
+}
+
+// ============================================
 // OFFLINE SYNC TYPES
 // ============================================
 

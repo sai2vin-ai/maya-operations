@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../components/ui';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../../../lib/firebase';
@@ -10,6 +11,7 @@ import type { UserRole } from '../types';
 export default function UserCreatePage() {
     const navigate = useNavigate();
     const { userData: currentUser } = useAuth();
+    const toast = useToast();
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -72,9 +74,11 @@ export default function UserCreatePage() {
                 updatedBy: currentUser?.id || '',
             });
 
+            toast.success('User created successfully');
             navigate('/users');
         } catch (err) {
             console.error('Error creating user:', err);
+            toast.error('Failed to create user');
             const firebaseError = err as { code?: string; message?: string };
             if (firebaseError.code === 'auth/email-already-in-use') {
                 setError('An account with this email already exists');

@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createInventoryItem, INVENTORY_CATEGORIES, COMMON_UNITS } from '../services/inventoryService';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../components/ui';
 import type { InventoryCategory } from '../types';
 
 export default function InventoryItemCreatePage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -46,9 +48,11 @@ export default function InventoryItemCreatePage() {
                 initialStock: initialStock || undefined,
             }, userData.id);
 
+            toast.success('Inventory item created successfully');
             navigate('/inventory');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create inventory item');
+            toast.error('Failed to create inventory item');
         } finally {
             setLoading(false);
         }

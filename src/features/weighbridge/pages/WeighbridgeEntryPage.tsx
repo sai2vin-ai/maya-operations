@@ -17,6 +17,7 @@ import { getBatches } from '../../reactor/services/batchService';
 import type { WeighbridgeEntry, WeighbridgeEntryType } from '../types';
 import type { InventoryItem } from '../../inventory/types';
 import type { GateEntry } from '../../gate/types';
+import { useToast } from '../../../components/ui';
 import type { Batch } from '../../reactor/types';
 
 export default function WeighbridgeEntryPage() {
@@ -24,6 +25,7 @@ export default function WeighbridgeEntryPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { userData } = useAuth();
+    const toast = useToast();
 
     const isNew = !entryId || entryId === 'new';
     const defaultType = (searchParams.get('type') as WeighbridgeEntryType) || 'RM_IN';
@@ -145,9 +147,11 @@ export default function WeighbridgeEntryPage() {
             }, userData.id);
 
             setSuccess('Entry created!');
+            toast.success('Weighbridge entry created successfully');
             navigate(`/weighbridge/${id}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create entry');
+            toast.error('Failed to create weighbridge entry');
         } finally {
             setSaving(false);
         }
@@ -166,10 +170,12 @@ export default function WeighbridgeEntryPage() {
                 // First weight
                 await recordFirstWeight(entryId, { weight: weightValue, isGross }, userData.id);
                 setSuccess('First weight recorded!');
+                toast.success('First weight recorded');
             } else if (entry?.status === 'FIRST_WEIGHT') {
                 // Second weight - complete entry
                 await recordSecondWeightAndComplete(entryId, { weight: weightValue, isGross }, userData.id);
                 setSuccess('Entry completed! Inventory updated.');
+                toast.success('Entry completed! Inventory updated');
             }
 
             // Reload entry
@@ -177,6 +183,7 @@ export default function WeighbridgeEntryPage() {
             setWeight('');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to record weight');
+            toast.error('Failed to record weight');
         } finally {
             setSaving(false);
         }
@@ -189,9 +196,11 @@ export default function WeighbridgeEntryPage() {
         try {
             setSaving(true);
             await cancelWeighbridgeEntry(entryId, userData.id);
+            toast.success('Entry cancelled');
             navigate('/weighbridge');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to cancel entry');
+            toast.error('Failed to cancel entry');
         } finally {
             setSaving(false);
         }
