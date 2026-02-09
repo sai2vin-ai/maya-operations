@@ -9,25 +9,31 @@ export interface NavItem {
     gradient?: string;
 }
 
+export interface NavGroup {
+    id: string;
+    label: string;
+    items: NavItem[];
+}
+
 /**
  * All navigation items with role-based access.
- * Used by Sidebar for navigation and DashboardPage for module cards.
+ * Flat list used by DashboardPage module cards and anywhere grouping isn't needed.
  */
 export const NAV_ITEMS: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: 'dashboard', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR', 'WEIGHBRIDGE_OPERATOR', 'REACTOR_OPERATOR', 'STORES_KEEPER', 'MAINTENANCE_TECH', 'VIEWER'], gradient: 'from-blue-500 to-indigo-600' },
-    { id: 'weighbridge', label: 'Weighbridge', path: '/weighbridge', icon: 'weighbridge', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR'], gradient: 'from-teal-500 to-teal-600' },
     { id: 'gate', label: 'Gate Operations', path: '/gate', icon: 'gate', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR'], gradient: 'from-green-500 to-green-600' },
+    { id: 'weighbridge', label: 'Weighbridge', path: '/weighbridge', icon: 'weighbridge', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR'], gradient: 'from-teal-500 to-teal-600' },
     { id: 'reactor', label: 'Reactor Dashboard', path: '/reactor', icon: 'reactor', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'], gradient: 'from-orange-500 to-orange-600' },
     { id: 'reactor/output', label: 'Reactor Output', path: '/reactor/output', icon: 'output', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'], gradient: 'from-amber-500 to-amber-600' },
-    { id: 'inventory', label: 'Inventory', path: '/inventory', icon: 'inventory', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER'], gradient: 'from-cyan-500 to-cyan-600' },
     { id: 'reactor/analytics', label: 'Batch Analytics', path: '/reactor/analytics', icon: 'analytics', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'], gradient: 'from-pink-500 to-pink-600' },
     { id: 'quality', label: 'Quality Control', path: '/quality', icon: 'quality', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'], gradient: 'from-lime-500 to-lime-600' },
+    { id: 'inventory', label: 'Inventory', path: '/inventory', icon: 'inventory', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER'], gradient: 'from-cyan-500 to-cyan-600' },
     { id: 'spare-parts', label: 'Store', path: '/spare-parts', icon: 'store', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH'], gradient: 'from-indigo-500 to-indigo-600' },
-    { id: 'users', label: 'User Management', path: '/users', icon: 'users', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], gradient: 'from-blue-500 to-blue-600' },
-    { id: 'devices', label: 'Device Management', path: '/devices', icon: 'devices', roles: ['SUPER_ADMIN'], gradient: 'from-purple-500 to-purple-600' },
-    { id: 'shifts', label: 'Shift Management', path: '/shifts', icon: 'shifts', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR'], gradient: 'from-emerald-500 to-emerald-600' },
     { id: 'asset-register', label: 'Asset Register', path: '/assets', icon: 'asset', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'], gradient: 'from-emerald-500 to-teal-600' },
     { id: 'maintenance', label: 'Work Orders', path: '/maintenance', icon: 'maintenance', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'], gradient: 'from-yellow-500 to-yellow-600' },
+    { id: 'shifts', label: 'Shift Management', path: '/shifts', icon: 'shifts', roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR'], gradient: 'from-emerald-500 to-emerald-600' },
+    { id: 'users', label: 'User Management', path: '/users', icon: 'users', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], gradient: 'from-blue-500 to-blue-600' },
+    { id: 'devices', label: 'Device Management', path: '/devices', icon: 'devices', roles: ['SUPER_ADMIN'], gradient: 'from-purple-500 to-purple-600' },
     { id: 'audit', label: 'Audit Logs', path: '/audit', icon: 'audit', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], gradient: 'from-slate-500 to-slate-600' },
     { id: 'activity', label: 'User Activity', path: '/activity', icon: 'activity', roles: ['SUPER_ADMIN', 'PLANT_MANAGER'], gradient: 'from-sky-500 to-sky-600' },
     { id: 'reports', label: 'Reports', path: '/reports', icon: 'reports', roles: ['SUPER_ADMIN'], gradient: 'from-red-500 to-red-600' },
@@ -36,10 +42,81 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 /**
- * Get navigation items filtered by user role.
+ * Grouped navigation structure for the sidebar.
+ * Dashboard is ungrouped (rendered first), then grouped sections follow.
+ */
+export const NAV_GROUPS: NavGroup[] = [
+    {
+        id: 'operations',
+        label: 'Operations',
+        items: [
+            NAV_ITEMS.find(i => i.id === 'gate')!,
+            NAV_ITEMS.find(i => i.id === 'weighbridge')!,
+            NAV_ITEMS.find(i => i.id === 'reactor')!,
+            NAV_ITEMS.find(i => i.id === 'reactor/output')!,
+            NAV_ITEMS.find(i => i.id === 'reactor/analytics')!,
+            NAV_ITEMS.find(i => i.id === 'quality')!,
+        ],
+    },
+    {
+        id: 'inventory-stores',
+        label: 'Inventory & Stores',
+        items: [
+            NAV_ITEMS.find(i => i.id === 'inventory')!,
+            NAV_ITEMS.find(i => i.id === 'spare-parts')!,
+        ],
+    },
+    {
+        id: 'assets-maintenance',
+        label: 'Assets & Maintenance',
+        items: [
+            NAV_ITEMS.find(i => i.id === 'asset-register')!,
+            NAV_ITEMS.find(i => i.id === 'maintenance')!,
+            NAV_ITEMS.find(i => i.id === 'shifts')!,
+        ],
+    },
+    {
+        id: 'administration',
+        label: 'Administration',
+        items: [
+            NAV_ITEMS.find(i => i.id === 'users')!,
+            NAV_ITEMS.find(i => i.id === 'devices')!,
+            NAV_ITEMS.find(i => i.id === 'audit')!,
+            NAV_ITEMS.find(i => i.id === 'activity')!,
+            NAV_ITEMS.find(i => i.id === 'reports')!,
+        ],
+    },
+    {
+        id: 'support',
+        label: 'Support',
+        items: [
+            NAV_ITEMS.find(i => i.id === 'workflows')!,
+            NAV_ITEMS.find(i => i.id === 'bug-reports')!,
+        ],
+    },
+];
+
+/** Dashboard item shown above all groups. */
+export const DASHBOARD_NAV_ITEM = NAV_ITEMS.find(i => i.id === 'dashboard')!;
+
+/**
+ * Get navigation items filtered by user role (flat list).
  */
 export function getNavItemsForRole(role: UserRole): NavItem[] {
     return NAV_ITEMS.filter(item => item.roles.includes(role));
+}
+
+/**
+ * Get grouped navigation filtered by user role.
+ * Empty groups are excluded.
+ */
+export function getNavGroupsForRole(role: UserRole): NavGroup[] {
+    return NAV_GROUPS
+        .map(group => ({
+            ...group,
+            items: group.items.filter(item => item.roles.includes(role)),
+        }))
+        .filter(group => group.items.length > 0);
 }
 
 /**

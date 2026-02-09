@@ -79,8 +79,8 @@ test.describe('Navigation', () => {
         await nav.locator('text=Gate Operations').click();
         await expect(page).toHaveURL(/\/gate/);
 
-        // Click Inventory in sidebar
-        await nav.locator('text=Inventory').click();
+        // Click Inventory in sidebar (use exact match to avoid "Inventory & Stores" group label)
+        await nav.getByRole('button', { name: 'Inventory', exact: true }).click();
         await expect(page).toHaveURL(/\/inventory/);
 
         // Click Work Orders in sidebar

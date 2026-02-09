@@ -1,7 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSidebar } from '../../contexts/SidebarContext';
-import { getNavItemsForRole, NAV_ICON_PATHS } from '../../config/navigation';
+import { getNavGroupsForRole, DASHBOARD_NAV_ITEM, NAV_ICON_PATHS } from '../../config/navigation';
+import type { NavItem } from '../../config/navigation';
 
 function NavIcon({ icon, className = '' }: { icon: string; className?: string }) {
     const iconData = NAV_ICON_PATHS[icon];
@@ -19,7 +20,8 @@ export function Sidebar() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const navItems = userData ? getNavItemsForRole(userData.role) : [];
+    const navGroups = userData ? getNavGroupsForRole(userData.role) : [];
+    const showDashboard = userData ? DASHBOARD_NAV_ITEM.roles.includes(userData.role) : false;
 
     const isActive = (path: string) => {
         if (path === '/dashboard') return location.pathname === '/dashboard';
@@ -29,6 +31,30 @@ export function Sidebar() {
     const handleNav = (path: string) => {
         navigate(path);
         closeMobile();
+    };
+
+    const renderNavButton = (item: NavItem) => {
+        const active = isActive(item.path);
+        return (
+            <button
+                key={item.id}
+                onClick={() => handleNav(item.path)}
+                title={isCollapsed ? item.label : undefined}
+                className={`
+                    w-full flex items-center gap-3 rounded-lg transition-all duration-200 text-left
+                    ${isCollapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'}
+                    ${active
+                        ? 'bg-blue-600/15 text-blue-400 ring-1 ring-blue-500/25'
+                        : 'text-foreground-muted hover:bg-surface-hover hover:text-foreground'
+                    }
+                `}
+            >
+                <NavIcon icon={item.icon} className={active ? 'text-blue-400' : ''} />
+                {!isCollapsed && (
+                    <span className="text-sm font-medium truncate">{item.label}</span>
+                )}
+            </button>
+        );
     };
 
     const sidebarContent = (
@@ -47,30 +73,29 @@ export function Sidebar() {
             </div>
 
             {/* Navigation Items */}
-            <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1">
-                {navItems.map(item => {
-                    const active = isActive(item.path);
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => handleNav(item.path)}
-                            title={isCollapsed ? item.label : undefined}
-                            className={`
-                                w-full flex items-center gap-3 rounded-lg transition-all duration-200 text-left
-                                ${isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'}
-                                ${active
-                                    ? 'bg-blue-600/15 text-blue-400 ring-1 ring-blue-500/25'
-                                    : 'text-foreground-muted hover:bg-surface-hover hover:text-foreground'
-                                }
-                            `}
-                        >
-                            <NavIcon icon={item.icon} className={active ? 'text-blue-400' : ''} />
-                            {!isCollapsed && (
-                                <span className="text-sm font-medium truncate">{item.label}</span>
-                            )}
-                        </button>
-                    );
-                })}
+            <nav className="flex-1 overflow-y-auto py-2 px-2">
+                {/* Dashboard (always above groups) */}
+                {showDashboard && (
+                    <div className="mb-1">
+                        {renderNavButton(DASHBOARD_NAV_ITEM)}
+                    </div>
+                )}
+
+                {/* Grouped sections */}
+                {navGroups.map(group => (
+                    <div key={group.id} className="mt-3">
+                        {isCollapsed ? (
+                            <div className="mx-2 border-t border-border" />
+                        ) : (
+                            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-foreground-faint">
+                                {group.label}
+                            </p>
+                        )}
+                        <div className="space-y-0.5 mt-1">
+                            {group.items.map(renderNavButton)}
+                        </div>
+                    </div>
+                ))}
             </nav>
 
             {/* Collapse Toggle (desktop only) */}
