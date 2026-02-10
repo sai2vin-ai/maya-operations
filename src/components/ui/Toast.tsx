@@ -37,10 +37,26 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts((prev) => [...prev, toast]);
     }, []);
 
-    const success = useCallback((message: string, duration?: number) => addToast('success', message, duration), [addToast]);
+    const success = useCallback(
+        (message: string, duration?: number) => addToast('success', message, duration),
+        [addToast],
+    );
     const error = useCallback((message: string, duration?: number) => addToast('error', message, duration), [addToast]);
-    const warning = useCallback((message: string, duration?: number) => addToast('warning', message, duration), [addToast]);
+    const warning = useCallback(
+        (message: string, duration?: number) => addToast('warning', message, duration),
+        [addToast],
+    );
     const info = useCallback((message: string, duration?: number) => addToast('info', message, duration), [addToast]);
+
+    // Listen for global mutation errors from queryClient
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent<{ message: string }>).detail;
+            addToast('error', detail.message);
+        };
+        window.addEventListener('mutation-error', handler);
+        return () => window.removeEventListener('mutation-error', handler);
+    }, [addToast]);
 
     return (
         <ToastContext.Provider value={{ toasts, addToast, removeToast, success, error, warning, info }}>
@@ -99,7 +115,8 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
         warning: {
             bg: 'bg-yellow-500/20 border-yellow-500/50',
             icon: 'text-yellow-500',
-            iconPath: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+            iconPath:
+                'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
         },
         info: {
             bg: 'bg-blue-500/20 border-blue-500/50',
@@ -120,7 +137,12 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
             `}
             role="alert"
         >
-            <svg className={`w-5 h-5 flex-shrink-0 ${style.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+                className={`w-5 h-5 flex-shrink-0 ${style.icon}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={style.iconPath} />
             </svg>
             <p className="text-foreground text-sm flex-1">{toast.message}</p>

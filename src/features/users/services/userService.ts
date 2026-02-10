@@ -1,22 +1,10 @@
-import {
-    collection,
-    doc,
-    getDocs,
-    getDoc,
-    setDoc,
-    updateDoc,
-    query,
-    where,
-    Timestamp,
-} from 'firebase/firestore';
-import {
-    createUserWithEmailAndPassword,
-    sendPasswordResetEmail,
-} from 'firebase/auth';
+import { collection, doc, getDocs, getDoc, setDoc, updateDoc, query, where, Timestamp } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../../../lib/firebase';
 import type { User, UserRole, UserStatus } from '../types';
 import { validateEmail, validateName, validatePhone, validateEmployeeId } from '../../../utils/validation';
 import { assertAuthorized } from '../../../lib/authorization';
+import { userSchema, parseDocs, parseDoc } from '../../../lib/schemas';
 
 const USERS_COLLECTION = 'users';
 
@@ -26,10 +14,8 @@ export async function getUsers(): Promise<User[]> {
     // Note: Not ordering by createdAt since manually created docs may not have this field
     const snapshot = await getDocs(usersRef);
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as User[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(userSchema, raw, 'getUsers') as User[];
 }
 
 /**
@@ -45,7 +31,7 @@ export async function getUserById(userId: string): Promise<User | null> {
         return null;
     }
 
-    return { id: snapshot.id, ...snapshot.data() } as User;
+    return parseDoc(userSchema, { id: snapshot.id, ...snapshot.data() }, 'getUserById') as User;
 }
 
 /**
@@ -58,7 +44,7 @@ export async function getUsersByRole(role: UserRole): Promise<User[]> {
     const q = query(usersRef, where('role', '==', role));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as User[];
@@ -133,7 +119,7 @@ export async function createUser(data: CreateUserData, createdBy: string, caller
 export async function createUserDocument(
     uid: string,
     data: Omit<CreateUserData, 'password'>,
-    createdBy: string
+    createdBy: string,
 ): Promise<void> {
     const userRef = doc(db, USERS_COLLECTION, uid);
 
@@ -173,7 +159,7 @@ export async function updateUser(
     userId: string,
     data: UpdateUserData,
     updatedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'users:update');
     const userRef = doc(db, USERS_COLLECTION, userId);

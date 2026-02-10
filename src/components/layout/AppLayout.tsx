@@ -11,7 +11,13 @@ export function AppLayout() {
             <div className="flex flex-col flex-1 min-w-0">
                 <TopBar />
                 <main className="flex-1 overflow-y-auto page-bg">
-                    <Suspense fallback={<LoadingSpinner fullScreen message="Loading..." />}>
+                    <Suspense
+                        fallback={
+                            <div className="flex items-center justify-center h-full">
+                                <LoadingSpinner message="Loading page..." />
+                            </div>
+                        }
+                    >
                         <Outlet />
                     </Suspense>
                 </main>

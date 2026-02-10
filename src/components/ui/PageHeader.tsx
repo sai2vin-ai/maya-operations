@@ -19,9 +19,20 @@ export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps
                         <button
                             onClick={() => navigate(backTo)}
                             className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
+                            aria-label="Go back"
                         >
-                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            <svg
+                                className="w-5 h-5 text-foreground-muted"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                />
                             </svg>
                         </button>
                     )}

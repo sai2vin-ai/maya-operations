@@ -1,12 +1,4 @@
-import {
-    collection,
-    query,
-    where,
-    getDocs,
-    Timestamp,
-    orderBy,
-    limit,
-} from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import type { ReportSummary, ProductionReportItem, ReportFilters } from '../types';
 
@@ -17,46 +9,47 @@ export async function getOperationsSummary(filters: ReportFilters): Promise<Repo
     const startTs = Timestamp.fromDate(filters.startDate);
     const endTs = Timestamp.fromDate(filters.endDate);
 
-    // Parallel queries for efficiency
-    const [
-        usersSnapshot,
-        batchesSnapshot,
-        gateEntriesSnapshot,
-        inventorySnapshot,
-    ] = await Promise.all([
-        // Users
-        getDocs(collection(db, 'users')),
+    // Parallel queries for efficiency (bounded to prevent excessive reads)
+    const [usersSnapshot, batchesSnapshot, gateEntriesSnapshot, inventorySnapshot] = await Promise.all([
+        // Users - only count active, bounded
+        getDocs(query(collection(db, 'users'), limit(1000))),
         // Batches in date range
-        getDocs(query(
-            collection(db, 'batches'),
-            where('createdAt', '>=', startTs),
-            where('createdAt', '<=', endTs)
-        )),
+        getDocs(
+            query(
+                collection(db, 'batches'),
+                where('createdAt', '>=', startTs),
+                where('createdAt', '<=', endTs),
+                limit(1000),
+            ),
+        ),
         // Gate entries in date range
-        getDocs(query(
-            collection(db, 'gateEntries'),
-            where('entryTime', '>=', startTs),
-            where('entryTime', '<=', endTs)
-        )),
-        // Inventory
-        getDocs(collection(db, 'inventory')),
+        getDocs(
+            query(
+                collection(db, 'gateEntries'),
+                where('entryTime', '>=', startTs),
+                where('entryTime', '<=', endTs),
+                limit(1000),
+            ),
+        ),
+        // Inventory - bounded
+        getDocs(query(collection(db, 'inventory'), limit(1000))),
     ]);
 
     // Process users
-    const users = usersSnapshot.docs.map(doc => doc.data());
-    const activeUsers = users.filter(u => u.status === 'ACTIVE').length;
+    const users = usersSnapshot.docs.map((doc) => doc.data());
+    const activeUsers = users.filter((u) => u.status === 'ACTIVE').length;
 
     // Process batches
-    const batches = batchesSnapshot.docs.map(doc => doc.data());
-    const completedBatches = batches.filter(b => b.status === 'COMPLETED').length;
-    const inProgressBatches = batches.filter(b => b.status === 'IN_PROGRESS').length;
+    const batches = batchesSnapshot.docs.map((doc) => doc.data());
+    const completedBatches = batches.filter((b) => b.status === 'COMPLETED').length;
+    const inProgressBatches = batches.filter((b) => b.status === 'IN_PROGRESS').length;
 
     // Calculate production totals from completed batches
     let totalOil = 0;
     let totalCarbon = 0;
     let totalSteel = 0;
 
-    batches.forEach(batch => {
+    batches.forEach((batch) => {
         if (batch.status === 'COMPLETED' && batch.outputs) {
             batch.outputs.forEach((output: { type: string; quantity: number }) => {
                 if (output.type === 'OIL') totalOil += output.quantity || 0;
@@ -67,17 +60,15 @@ export async function getOperationsSummary(filters: ReportFilters): Promise<Repo
     });
 
     // Process gate entries
-    const gateEntries = gateEntriesSnapshot.docs.map(doc => doc.data());
-    const completedGateEntries = gateEntries.filter(e => e.status === 'COMPLETED').length;
+    const gateEntries = gateEntriesSnapshot.docs.map((doc) => doc.data());
+    const completedGateEntries = gateEntries.filter((e) => e.status === 'COMPLETED').length;
 
     // Process inventory
-    const inventory = inventorySnapshot.docs.map(doc => doc.data());
-    const rawMaterials = inventory.filter(i => i.category === 'RAW_MATERIAL').length;
-    const finishedProducts = inventory.filter(i => i.category === 'FINISHED_PRODUCT').length;
-    const lowStockItems = inventory.filter(i =>
-        i.currentStock !== undefined &&
-        i.minimumStock !== undefined &&
-        i.currentStock <= i.minimumStock
+    const inventory = inventorySnapshot.docs.map((doc) => doc.data());
+    const rawMaterials = inventory.filter((i) => i.category === 'RAW_MATERIAL').length;
+    const finishedProducts = inventory.filter((i) => i.category === 'FINISHED_PRODUCT').length;
+    const lowStockItems = inventory.filter(
+        (i) => i.currentStock !== undefined && i.minimumStock !== undefined && i.currentStock <= i.minimumStock,
     ).length;
 
     return {
@@ -108,18 +99,22 @@ export async function getProductionReport(filters: ReportFilters): Promise<Produ
     const startTs = Timestamp.fromDate(filters.startDate);
     const endTs = Timestamp.fromDate(filters.endDate);
 
-    const snapshot = await getDocs(query(
-        collection(db, 'batches'),
-        where('status', '==', 'COMPLETED'),
-        where('endTime', '>=', startTs),
-        where('endTime', '<=', endTs),
-        orderBy('endTime', 'desc'),
-        limit(100)
-    ));
+    const snapshot = await getDocs(
+        query(
+            collection(db, 'batches'),
+            where('status', '==', 'COMPLETED'),
+            where('endTime', '>=', startTs),
+            where('endTime', '<=', endTs),
+            orderBy('endTime', 'desc'),
+            limit(100),
+        ),
+    );
 
-    return snapshot.docs.map(doc => {
+    return snapshot.docs.map((doc) => {
         const data = doc.data();
-        let oil = 0, carbon = 0, steel = 0;
+        let oil = 0,
+            carbon = 0,
+            steel = 0;
 
         if (data.outputs) {
             data.outputs.forEach((output: { type: string; quantity: number }) => {
@@ -145,23 +140,25 @@ export async function getGateEntriesForExport(filters: ReportFilters): Promise<R
     const startTs = Timestamp.fromDate(filters.startDate);
     const endTs = Timestamp.fromDate(filters.endDate);
 
-    const snapshot = await getDocs(query(
-        collection(db, 'gateEntries'),
-        where('entryTime', '>=', startTs),
-        where('entryTime', '<=', endTs),
-        orderBy('entryTime', 'desc'),
-        limit(500)
-    ));
+    const snapshot = await getDocs(
+        query(
+            collection(db, 'gateEntries'),
+            where('entryTime', '>=', startTs),
+            where('entryTime', '<=', endTs),
+            orderBy('entryTime', 'desc'),
+            limit(500),
+        ),
+    );
 
-    return snapshot.docs.map(doc => {
+    return snapshot.docs.map((doc) => {
         const d = doc.data();
         return {
             'Entry Number': d.entryNumber || '',
             'Vehicle Number': d.vehicleNumber || '',
             'Driver Name': d.driverName || '',
             'Entry Type': d.entryType || '',
-            'Material': d.material || '',
-            'Status': d.status || '',
+            Material: d.material || '',
+            Status: d.status || '',
             'Entry Time': d.entryTime?.toDate?.()?.toISOString() || '',
             'Exit Time': d.exitTime?.toDate?.()?.toISOString() || '',
         };
@@ -175,25 +172,27 @@ export async function getWeighbridgeForExport(filters: ReportFilters): Promise<R
     const startTs = Timestamp.fromDate(filters.startDate);
     const endTs = Timestamp.fromDate(filters.endDate);
 
-    const snapshot = await getDocs(query(
-        collection(db, 'weighbridgeEntries'),
-        where('createdAt', '>=', startTs),
-        where('createdAt', '<=', endTs),
-        orderBy('createdAt', 'desc'),
-        limit(500)
-    ));
+    const snapshot = await getDocs(
+        query(
+            collection(db, 'weighbridgeEntries'),
+            where('createdAt', '>=', startTs),
+            where('createdAt', '<=', endTs),
+            orderBy('createdAt', 'desc'),
+            limit(500),
+        ),
+    );
 
-    return snapshot.docs.map(doc => {
+    return snapshot.docs.map((doc) => {
         const d = doc.data();
         return {
             'Ticket Number': d.ticketNumber || '',
             'Vehicle Number': d.vehicleNumber || '',
-            'Material': d.material || '',
+            Material: d.material || '',
             'First Weight (kg)': d.firstWeight || '',
             'Second Weight (kg)': d.secondWeight || '',
             'Net Weight (kg)': d.netWeight || '',
-            'Status': d.status || '',
-            'Created': d.createdAt?.toDate?.()?.toISOString() || '',
+            Status: d.status || '',
+            Created: d.createdAt?.toDate?.()?.toISOString() || '',
         };
     });
 }
@@ -202,22 +201,19 @@ export async function getWeighbridgeForExport(filters: ReportFilters): Promise<R
  * Get inventory items for export
  */
 export async function getInventoryForExport(): Promise<Record<string, unknown>[]> {
-    const snapshot = await getDocs(query(
-        collection(db, 'inventory'),
-        orderBy('code', 'asc')
-    ));
+    const snapshot = await getDocs(query(collection(db, 'inventory'), orderBy('code', 'asc'), limit(1000)));
 
-    return snapshot.docs.map(doc => {
+    return snapshot.docs.map((doc) => {
         const d = doc.data();
         return {
             'Item Code': d.code || '',
-            'Name': d.name || '',
-            'Category': d.category || '',
+            Name: d.name || '',
+            Category: d.category || '',
             'Current Stock': d.currentStock ?? 0,
             'Minimum Stock': d.minimumStock ?? 0,
-            'Unit': d.unit || '',
-            'Location': d.location || '',
-            'Status': (d.currentStock ?? 0) <= (d.minimumStock ?? 0) ? 'LOW STOCK' : 'OK',
+            Unit: d.unit || '',
+            Location: d.location || '',
+            Status: (d.currentStock ?? 0) <= (d.minimumStock ?? 0) ? 'LOW STOCK' : 'OK',
         };
     });
 }
@@ -245,8 +241,8 @@ export function printReport(title: string, data: Record<string, unknown>[]): voi
         <h1>${title}</h1>
         <p>Generated: ${new Date().toLocaleString()}</p>
         <table>
-            <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-            <tbody>${data.map(row => `<tr>${headers.map(h => `<td>${row[h] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
+            <thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${data.map((row) => `<tr>${headers.map((h) => `<td>${row[h] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
         </table>
         </body></html>
     `;
@@ -271,16 +267,18 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string): 
     // Build CSV content
     const csvContent = [
         headers.join(','),
-        ...data.map(row =>
-            headers.map(header => {
-                const value = row[header];
-                // Handle special cases
-                if (value === null || value === undefined) return '';
-                if (typeof value === 'object') return JSON.stringify(value).replace(/,/g, ';');
-                if (typeof value === 'string' && value.includes(',')) return `"${value}"`;
-                return String(value);
-            }).join(',')
-        )
+        ...data.map((row) =>
+            headers
+                .map((header) => {
+                    const value = row[header];
+                    // Handle special cases
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'object') return JSON.stringify(value).replace(/,/g, ';');
+                    if (typeof value === 'string' && value.includes(',')) return `"${value}"`;
+                    return String(value);
+                })
+                .join(','),
+        ),
     ].join('\n');
 
     // Create and download file
@@ -314,7 +312,7 @@ export function exportReportSummary(summary: ReportSummary, filters: ReportFilte
             'Raw Materials Items': summary.inventoryStats.rawMaterials,
             'Finished Products Items': summary.inventoryStats.finishedProducts,
             'Low Stock Alerts': summary.inventoryStats.lowStockItems,
-        }
+        },
     ];
 
     exportToCSV(data, 'operations_summary');

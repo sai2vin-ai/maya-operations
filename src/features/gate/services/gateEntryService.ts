@@ -17,6 +17,7 @@ import type { GateEntry, EntryType, MaterialCategory, GateEntryStatus } from '..
 import type { FirestoreDocData, UserRole } from '../../../types';
 import { assertAuthorized } from '../../../lib/authorization';
 import { validateFile, generateSafeFilename, validateVehicleNumber, sanitizeString } from '../../../utils/validation';
+import { gateEntrySchema, parseDocs, parseDoc } from '../../../lib/schemas';
 
 const GATE_ENTRIES_COLLECTION = 'gateEntries';
 
@@ -43,7 +44,7 @@ async function generateEntryNumber(): Promise<string> {
         where('entryNumber', '>=', prefix),
         where('entryNumber', '<=', prefix + '\uf8ff'),
         orderBy('entryNumber', 'desc'),
-        limit(1)
+        limit(1),
     );
 
     const snapshot = await getDocs(q);
@@ -68,10 +69,8 @@ export async function getGateEntries(limitCount: number = 50): Promise<GateEntry
     const q = query(entriesRef, orderBy('entryTime', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as GateEntry[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(gateEntrySchema, raw, 'getGateEntries') as GateEntry[];
 }
 
 /** Fetches all gate entries created since midnight today. */
@@ -81,17 +80,11 @@ export async function getTodaysEntries(): Promise<GateEntry[]> {
     const todayTimestamp = Timestamp.fromDate(today);
 
     const entriesRef = collection(db, GATE_ENTRIES_COLLECTION);
-    const q = query(
-        entriesRef,
-        where('entryTime', '>=', todayTimestamp),
-        orderBy('entryTime', 'desc')
-    );
+    const q = query(entriesRef, where('entryTime', '>=', todayTimestamp), orderBy('entryTime', 'desc'));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as GateEntry[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(gateEntrySchema, raw, 'getTodaysEntries') as GateEntry[];
 }
 
 /**
@@ -107,7 +100,7 @@ export async function getGateEntryById(entryId: string): Promise<GateEntry | nul
         return null;
     }
 
-    return { id: snapshot.id, ...snapshot.data() } as GateEntry;
+    return parseDoc(gateEntrySchema, { id: snapshot.id, ...snapshot.data() }, 'getGateEntryById') as GateEntry;
 }
 
 /**
@@ -120,10 +113,8 @@ export async function getEntriesByStatus(status: GateEntryStatus): Promise<GateE
     const q = query(entriesRef, where('status', '==', status), orderBy('entryTime', 'desc'));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as GateEntry[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(gateEntrySchema, raw, 'getEntriesByStatus') as GateEntry[];
 }
 
 /**
@@ -156,7 +147,11 @@ export async function uploadVehiclePhoto(file: File, entryNumber: string): Promi
  * @param type - Photo type label used in the filename ("vehicle" or "weighbridge")
  * @returns The download URL of the uploaded photo
  */
-export async function uploadPhotoFromBlob(blob: Blob, entryNumber: string, type: 'vehicle' | 'weighbridge'): Promise<string> {
+export async function uploadPhotoFromBlob(
+    blob: Blob,
+    entryNumber: string,
+    type: 'vehicle' | 'weighbridge',
+): Promise<string> {
     // Validate blob size
     const maxSizeBytes = UPLOAD_CONFIG.maxSizeMB * 1024 * 1024;
     if (blob.size > maxSizeBytes) {
@@ -206,7 +201,11 @@ export interface CreateGateEntryData {
  * @param createdBy - UID of the user creating the entry
  * @returns The newly created entry's document ID
  */
-export async function createGateEntry(data: CreateGateEntryData, createdBy: string, callerRole?: UserRole): Promise<string> {
+export async function createGateEntry(
+    data: CreateGateEntryData,
+    createdBy: string,
+    callerRole?: UserRole,
+): Promise<string> {
     assertAuthorized(callerRole, 'gate:create');
 
     // Validate vehicle number
@@ -221,7 +220,7 @@ export async function createGateEntry(data: CreateGateEntryData, createdBy: stri
         collection(db, GATE_ENTRIES_COLLECTION),
         where('vehicleNumber', '==', vehicleUpper),
         where('status', '==', 'PENDING'),
-        limit(1)
+        limit(1),
     );
     const duplicateSnap = await getDocs(duplicateQuery);
     if (!duplicateSnap.empty) {
@@ -300,7 +299,7 @@ export async function updateGateEntry(
     entryId: string,
     data: UpdateGateEntryData,
     updatedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'gate:update');
 
@@ -360,7 +359,12 @@ export async function completeGateEntry(entryId: string, updatedBy: string, call
  * @param reason - The reason for cancellation
  * @param updatedBy - UID of the user cancelling the entry
  */
-export async function cancelGateEntry(entryId: string, reason: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
+export async function cancelGateEntry(
+    entryId: string,
+    reason: string,
+    updatedBy: string,
+    callerRole?: UserRole,
+): Promise<void> {
     assertAuthorized(callerRole, 'gate:cancel');
 
     const entryRef = doc(db, GATE_ENTRIES_COLLECTION, entryId);

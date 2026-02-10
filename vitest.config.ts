@@ -12,13 +12,13 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html'],
-            exclude: [
-                'node_modules/',
-                'src/test/',
-                '**/*.d.ts',
-                '**/*.config.*',
-                'src/main.tsx',
-            ],
+            exclude: ['node_modules/', 'src/test/', '**/*.d.ts', '**/*.config.*', 'src/main.tsx'],
+            thresholds: {
+                statements: 60,
+                branches: 55,
+                functions: 55,
+                lines: 60,
+            },
         },
     },
 });

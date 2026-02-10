@@ -4,6 +4,7 @@ import {
     orderBy,
     limit,
     getDocs,
+    getDoc,
     doc,
     setDoc,
     writeBatch,
@@ -16,14 +17,10 @@ import type { AppNotification } from '../../../types';
 const NOTIFICATIONS_COLLECTION = 'notifications';
 
 export async function getNotifications(maxResults = 50): Promise<AppNotification[]> {
-    const q = query(
-        collection(db, NOTIFICATIONS_COLLECTION),
-        orderBy('createdAt', 'desc'),
-        limit(maxResults)
-    );
+    const q = query(collection(db, NOTIFICATIONS_COLLECTION), orderBy('createdAt', 'desc'), limit(maxResults));
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => ({
+    return snapshot.docs.map((d) => ({
         id: d.id,
         ...d.data(),
     })) as AppNotification[];
@@ -33,18 +30,23 @@ export async function getReadNotificationIds(userId: string): Promise<Set<string
     const notifications = await getNotifications(100);
     const readIds = new Set<string>();
 
-    for (const notification of notifications) {
+    // Batch check all notifications in parallel instead of sequential N+1
+    const checks = notifications.map(async (notification) => {
         try {
-            const readBySnap = await getDocs(
-                query(collection(db, NOTIFICATIONS_COLLECTION, notification.id, 'readBy'), limit(1))
-            );
-            const userDoc = readBySnap.docs.find(d => d.id === userId);
-            if (userDoc) {
-                readIds.add(notification.id);
+            const readByRef = doc(db, NOTIFICATIONS_COLLECTION, notification.id, 'readBy', userId);
+            const snap = await getDoc(readByRef);
+            if (snap.exists()) {
+                return notification.id;
             }
         } catch {
             // Ignore individual read errors
         }
+        return null;
+    });
+
+    const results = await Promise.all(checks);
+    for (const id of results) {
+        if (id) readIds.add(id);
     }
 
     return readIds;
@@ -72,16 +74,12 @@ export async function markAllAsRead(notificationIds: string[], userId: string): 
 
 export function subscribeToNotifications(
     callback: (notifications: AppNotification[]) => void,
-    maxResults = 50
+    maxResults = 50,
 ): () => void {
-    const q = query(
-        collection(db, NOTIFICATIONS_COLLECTION),
-        orderBy('createdAt', 'desc'),
-        limit(maxResults)
-    );
+    const q = query(collection(db, NOTIFICATIONS_COLLECTION), orderBy('createdAt', 'desc'), limit(maxResults));
 
     return onSnapshot(q, (snapshot) => {
-        const notifications = snapshot.docs.map(d => ({
+        const notifications = snapshot.docs.map((d) => ({
             id: d.id,
             ...d.data(),
         })) as AppNotification[];

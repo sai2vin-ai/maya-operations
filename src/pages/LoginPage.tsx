@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+
+const MAX_ATTEMPTS = 5;
+const BASE_DELAY_MS = 1000;
 
 export default function LoginPage() {
     const { loginWithEmail, error, clearError, loading } = useAuth();
@@ -7,23 +10,38 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [localLoading, setLocalLoading] = useState(false);
+    const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+    const failedAttempts = useRef(0);
+
+    const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil;
 
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isLockedOut) return;
+
         clearError();
         setLocalLoading(true);
 
         try {
             await loginWithEmail(email, password);
-            // Redirect happens automatically via ProtectedRoute
+            failedAttempts.current = 0;
+            setLockoutUntil(null);
         } catch {
-            // Error is already set in context
+            failedAttempts.current += 1;
+            if (failedAttempts.current >= MAX_ATTEMPTS) {
+                const delay = BASE_DELAY_MS * Math.pow(2, failedAttempts.current - MAX_ATTEMPTS);
+                const until = Date.now() + Math.min(delay, 60_000); // Max 60s lockout
+                setLockoutUntil(until);
+                setTimeout(() => setLockoutUntil(null), Math.min(delay, 60_000));
+            }
         } finally {
             setLocalLoading(false);
         }
     };
 
     const isLoading = loading || localLoading;
+
+    const lockoutSeconds = isLockedOut ? Math.ceil((lockoutUntil! - Date.now()) / 1000) : 0;
 
     return (
         <div className="min-h-screen page-bg flex items-center justify-center p-4">
@@ -42,10 +60,42 @@ export default function LoginPage() {
                     {/* Error Display */}
                     {error && (
                         <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg flex items-center gap-2">
-                            <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <svg
+                                className="w-5 h-5 text-red-500 flex-shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
                             </svg>
                             <span className="text-red-400 text-sm">{error}</span>
+                        </div>
+                    )}
+
+                    {/* Lockout Warning */}
+                    {isLockedOut && (
+                        <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg flex items-center gap-2">
+                            <svg
+                                className="w-5 h-5 text-yellow-500 flex-shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                            </svg>
+                            <span className="text-yellow-400 text-sm">
+                                Too many failed attempts. Try again in {lockoutSeconds}s.
+                            </span>
                         </div>
                     )}
 
@@ -64,11 +114,14 @@ export default function LoginPage() {
                                 className="input-field w-full"
                                 placeholder="you@company.com"
                                 required
-                                disabled={isLoading}
+                                disabled={isLoading || isLockedOut}
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-foreground-secondary mb-1">
+                            <label
+                                htmlFor="password"
+                                className="block text-sm font-medium text-foreground-secondary mb-1"
+                            >
                                 Password
                             </label>
                             <input
@@ -80,12 +133,12 @@ export default function LoginPage() {
                                 className="input-field w-full"
                                 placeholder="••••••••"
                                 required
-                                disabled={isLoading}
+                                disabled={isLoading || isLockedOut}
                             />
                         </div>
                         <button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isLoading || isLockedOut}
                             className="btn-primary w-full py-3 flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
@@ -101,9 +154,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-foreground-faint text-sm mt-6">
-                    Maya Recycling © 2025
-                </p>
+                <p className="text-center text-foreground-faint text-sm mt-6">Maya Recycling © 2025</p>
             </div>
         </div>
     );

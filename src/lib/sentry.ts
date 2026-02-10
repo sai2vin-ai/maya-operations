@@ -4,9 +4,8 @@ import * as Sentry from '@sentry/react';
 const isDevelopment = import.meta.env.DEV;
 const isProduction = import.meta.env.PROD;
 
-// Initialize Sentry
+// Initialize Sentry - only performs heavy setup when DSN is configured
 export function initSentry() {
-    // Only initialize if DSN is configured
     const dsn = import.meta.env.VITE_SENTRY_DSN;
 
     if (!dsn) {
@@ -55,7 +54,7 @@ export function initSentry() {
                     'auth/too-many-requests',
                     'auth/network-request-failed',
                 ];
-                if (ignoredMessages.some(msg => error.message.includes(msg))) {
+                if (ignoredMessages.some((msg) => error.message.includes(msg))) {
                     return null;
                 }
             }
