@@ -14,7 +14,7 @@ import './index.css';
 // Lazy load all pages - Platform pages stay in src/pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const RolesPage = lazy(() => import('./pages/RolesPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 // Feature pages - lazy loaded from feature modules
 const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
@@ -89,145 +89,615 @@ const JobDetailPage = lazy(() => import('./features/maintenance/pages/JobDetailP
 const NotificationsPage = lazy(() => import('./features/notifications/pages/NotificationsPage'));
 
 function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <OfflineProvider>
-            <ToastProvider>
-            <OfflineBanner />
-            <SidebarProvider>
-            <Suspense fallback={<LoadingSpinner fullScreen message="Loading..." />}>
-              <Routes>
-                {/* Public Routes (no sidebar/topbar) */}
-                <Route
-                  path="/login"
-                  element={
-                    <PublicRoute>
-                      <LoginPage />
-                    </PublicRoute>
-                  }
-                />
+    return (
+        <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+                <AuthProvider>
+                    <OfflineProvider>
+                        <ToastProvider>
+                            <OfflineBanner />
+                            <SidebarProvider>
+                                <Suspense fallback={<LoadingSpinner fullScreen message="Loading..." />}>
+                                    <Routes>
+                                        {/* Public Routes (no sidebar/topbar) */}
+                                        <Route
+                                            path="/login"
+                                            element={
+                                                <PublicRoute>
+                                                    <LoginPage />
+                                                </PublicRoute>
+                                            }
+                                        />
 
-                {/* All protected routes wrapped in AppLayout */}
-                <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                  {/* Dashboard */}
-                  <Route path="/dashboard" element={<DashboardPage />} />
+                                        {/* All protected routes wrapped in AppLayout */}
+                                        <Route
+                                            element={
+                                                <ProtectedRoute>
+                                                    <AppLayout />
+                                                </ProtectedRoute>
+                                            }
+                                        >
+                                            {/* Dashboard */}
+                                            <Route path="/dashboard" element={<DashboardPage />} />
 
-                  {/* User Management */}
-                  <Route path="/users" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UsersPage /></ProtectedRoute>} />
-                  <Route path="/users/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UserCreatePage /></ProtectedRoute>} />
-                  <Route path="/users/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UserDetailPage /></ProtectedRoute>} />
+                                            {/* User Management */}
+                                            <Route
+                                                path="/users"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                                                        <UsersPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/users/new"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                                                        <UserCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/users/:id"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                                                        <UserDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Device Management */}
-                  <Route path="/devices" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><DevicesPage /></ProtectedRoute>} />
-                  <Route path="/devices/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><DeviceCreatePage /></ProtectedRoute>} />
-                  <Route path="/devices/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><DeviceDetailPage /></ProtectedRoute>} />
+                                            {/* Device Management */}
+                                            <Route
+                                                path="/devices"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                                                        <DevicesPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/devices/new"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                                                        <DeviceCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/devices/:id"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                                                        <DeviceDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Gate Operations */}
-                  <Route path="/gate" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntriesPage /></ProtectedRoute>} />
-                  <Route path="/gate/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntryCreatePage /></ProtectedRoute>} />
-                  <Route path="/gate/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><GateEntryDetailPage /></ProtectedRoute>} />
-                  <Route path="/gate/vehicles" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR']}><VehicleTrackingPage /></ProtectedRoute>} />
+                                            {/* Gate Operations */}
+                                            <Route
+                                                path="/gate"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'GATE_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <GateEntriesPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/gate/new"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'GATE_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <GateEntryCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/gate/:id"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'GATE_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <GateEntryDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/gate/vehicles"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'GATE_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <VehicleTrackingPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Reactor Operations */}
-                  <Route path="/reactor" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><ReactorDashboardPage /></ProtectedRoute>} />
-                  <Route path="/reactor/:reactorId/new-batch" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchCreatePage /></ProtectedRoute>} />
-                  <Route path="/batch/:batchId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchWorkflowPage /></ProtectedRoute>} />
-                  <Route path="/reactor/output" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><ReactorOutputPage /></ProtectedRoute>} />
-                  <Route path="/reactor/analytics" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><BatchAnalyticsPage /></ProtectedRoute>} />
+                                            {/* Reactor Operations */}
+                                            <Route
+                                                path="/reactor"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <ReactorDashboardPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/reactor/:reactorId/new-batch"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <BatchCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/batch/:batchId"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <BatchWorkflowPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/reactor/output"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <ReactorOutputPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/reactor/analytics"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <BatchAnalyticsPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Inventory */}
-                  <Route path="/inventory" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><InventoryPage /></ProtectedRoute>} />
-                  <Route path="/inventory/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><InventoryItemCreatePage /></ProtectedRoute>} />
-                  <Route path="/inventory/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><InventoryItemDetailPage /></ProtectedRoute>} />
+                                            {/* Inventory */}
+                                            <Route
+                                                path="/inventory"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}
+                                                    >
+                                                        <InventoryPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/inventory/new"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}
+                                                    >
+                                                        <InventoryItemCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/inventory/:id"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}
+                                                    >
+                                                        <InventoryItemDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Spare Parts */}
-                  <Route path="/spare-parts" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}><SparePartsPage /></ProtectedRoute>} />
-                  <Route path="/spare-parts/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}><SparePartCreatePage /></ProtectedRoute>} />
-                  <Route path="/spare-parts/:partId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH']}><SparePartDetailPage /></ProtectedRoute>} />
+                                            {/* Spare Parts */}
+                                            <Route
+                                                path="/spare-parts"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'STORES_KEEPER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <SparePartsPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/spare-parts/new"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER']}
+                                                    >
+                                                        <SparePartCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/spare-parts/:partId"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'STORES_KEEPER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <SparePartDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Asset Register */}
-                  <Route path="/assets" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetListPage /></ProtectedRoute>} />
-                  <Route path="/assets/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetCreatePage /></ProtectedRoute>} />
-                  <Route path="/assets/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><AssetDetailPage /></ProtectedRoute>} />
+                                            {/* Asset Register */}
+                                            <Route
+                                                path="/assets"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <AssetListPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/assets/new"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <AssetCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/assets/:id"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <AssetDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Work Orders (Maintenance) */}
-                  <Route path="/maintenance" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><MaintenanceDashboardPage /></ProtectedRoute>} />
-                  <Route path="/maintenance/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobCreatePage /></ProtectedRoute>} />
-                  <Route path="/maintenance/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH']}><JobDetailPage /></ProtectedRoute>} />
+                                            {/* Work Orders (Maintenance) */}
+                                            <Route
+                                                path="/maintenance"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <MaintenanceDashboardPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/maintenance/new"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <JobCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/maintenance/:id"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'MAINTENANCE_TECH',
+                                                        ]}
+                                                    >
+                                                        <JobDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Shift Management */}
-                  <Route path="/shifts" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR']}><ShiftsPage /></ProtectedRoute>} />
+                                            {/* Shift Management */}
+                                            <Route
+                                                path="/shifts"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                        ]}
+                                                    >
+                                                        <ShiftsPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Roles & Permissions */}
-                  <Route path="/roles" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><RolesPage /></ProtectedRoute>} />
+                                            {/* Settings */}
+                                            <Route
+                                                path="/settings"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                                                        <SettingsPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route path="/roles" element={<Navigate to="/settings" replace />} />
 
-                  {/* Weighbridge */}
-                  <Route path="/weighbridge" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgePage /></ProtectedRoute>} />
-                  <Route path="/weighbridge/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgeEntryPage /></ProtectedRoute>} />
-                  <Route path="/weighbridge/:entryId" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR']}><WeighbridgeEntryPage /></ProtectedRoute>} />
+                                            {/* Weighbridge */}
+                                            <Route
+                                                path="/weighbridge"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'WEIGHBRIDGE_OPERATOR',
+                                                            'GATE_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <WeighbridgePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/weighbridge/new"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'WEIGHBRIDGE_OPERATOR',
+                                                            'GATE_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <WeighbridgeEntryPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/weighbridge/:entryId"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'WEIGHBRIDGE_OPERATOR',
+                                                            'GATE_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <WeighbridgeEntryPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Quality Control */}
-                  <Route path="/quality" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><QualityDashboardPage /></ProtectedRoute>} />
-                  <Route path="/quality/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><QualityCheckCreatePage /></ProtectedRoute>} />
-                  <Route path="/quality/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR']}><QualityCheckDetailPage /></ProtectedRoute>} />
+                                            {/* Quality Control */}
+                                            <Route
+                                                path="/quality"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <QualityDashboardPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/quality/new"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <QualityCheckCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/quality/:id"
+                                                element={
+                                                    <ProtectedRoute
+                                                        allowedRoles={[
+                                                            'SUPER_ADMIN',
+                                                            'PLANT_MANAGER',
+                                                            'SHIFT_SUPERVISOR',
+                                                            'REACTOR_OPERATOR',
+                                                        ]}
+                                                    >
+                                                        <QualityCheckDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Audit Logs */}
-                  <Route path="/audit" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><AuditLogsPage /></ProtectedRoute>} />
-                  <Route path="/activity" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><UserActivityPage /></ProtectedRoute>} />
+                                            {/* Audit Logs */}
+                                            <Route
+                                                path="/audit"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                                                        <AuditLogsPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/activity"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                                                        <UserActivityPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Reports */}
-                  <Route path="/reports" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><ReportsDashboardPage /></ProtectedRoute>} />
+                                            {/* Reports */}
+                                            <Route
+                                                path="/reports"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                                                        <ReportsDashboardPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Webhooks */}
-                  <Route path="/webhooks" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><WebhooksPage /></ProtectedRoute>} />
-                  <Route path="/webhooks/new" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']}><WebhookCreatePage /></ProtectedRoute>} />
+                                            {/* Webhooks */}
+                                            <Route
+                                                path="/webhooks"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                                                        <WebhooksPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/webhooks/new"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                                                        <WebhookCreatePage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* Bug Reports */}
-                  <Route path="/bug-reports/new" element={<BugReportCreatePage />} />
-                  <Route path="/bug-reports" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><BugReportsPage /></ProtectedRoute>} />
-                  <Route path="/bug-reports/:id" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}><BugReportDetailPage /></ProtectedRoute>} />
+                                            {/* Bug Reports */}
+                                            <Route path="/bug-reports/new" element={<BugReportCreatePage />} />
+                                            <Route
+                                                path="/bug-reports"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                                                        <BugReportsPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/bug-reports/:id"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLANT_MANAGER']}>
+                                                        <BugReportDetailPage />
+                                                    </ProtectedRoute>
+                                                }
+                                            />
 
-                  {/* User Guide & Workflows */}
-                  <Route path="/guide" element={<UserGuidePage />} />
-                  <Route path="/workflows" element={<WorkflowsPage />} />
+                                            {/* User Guide & Workflows */}
+                                            <Route path="/guide" element={<UserGuidePage />} />
+                                            <Route path="/workflows" element={<WorkflowsPage />} />
 
-                  {/* Notifications */}
-                  <Route path="/notifications" element={<NotificationsPage />} />
-                </Route>
+                                            {/* Notifications */}
+                                            <Route path="/notifications" element={<NotificationsPage />} />
+                                        </Route>
 
-                {/* Redirect root to dashboard */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                                        {/* Redirect root to dashboard */}
+                                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-                {/* 404 - Not Found */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            </SidebarProvider>
-            <SyncStatusIndicator />
-            </ToastProvider>
-          </OfflineProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
+                                        {/* 404 - Not Found */}
+                                        <Route path="*" element={<NotFound />} />
+                                    </Routes>
+                                </Suspense>
+                            </SidebarProvider>
+                            <SyncStatusIndicator />
+                        </ToastProvider>
+                    </OfflineProvider>
+                </AuthProvider>
+            </BrowserRouter>
+        </QueryClientProvider>
+    );
 }
 
 // 404 Not Found component
 function NotFound() {
-  return (
-    <div className="min-h-screen page-bg flex items-center justify-center">
-      <div className="glass-card p-8 text-center max-w-md">
-        <div className="text-6xl font-bold text-foreground-faint mb-4">404</div>
-        <h2 className="text-xl font-bold text-foreground mb-2">Page Not Found</h2>
-        <p className="text-foreground-muted mb-4">The page you're looking for doesn't exist.</p>
-        <Link to="/dashboard" className="btn-primary inline-block">
-          Go to Dashboard
-        </Link>
-      </div>
-    </div>
-  );
+    return (
+        <div className="min-h-screen page-bg flex items-center justify-center">
+            <div className="glass-card p-8 text-center max-w-md">
+                <div className="text-6xl font-bold text-foreground-faint mb-4">404</div>
+                <h2 className="text-xl font-bold text-foreground mb-2">Page Not Found</h2>
+                <p className="text-foreground-muted mb-4">The page you're looking for doesn't exist.</p>
+                <Link to="/dashboard" className="btn-primary inline-block">
+                    Go to Dashboard
+                </Link>
+            </div>
+        </div>
+    );
 }
 
 export default App;
