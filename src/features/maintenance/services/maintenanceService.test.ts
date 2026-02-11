@@ -1,7 +1,47 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JOB_STATUS_CONFIG, JOB_PRIORITY_CONFIG, JOB_TYPE_CONFIG } from './maintenanceService';
 
+// Use vi.hoisted so mocks survive vi.mock hoisting
+const { mockGetDocs, mockGetDoc, mockAddDoc, mockUpdateDoc, mockRunTransaction, mockAssertAuthorized } = vi.hoisted(
+    () => ({
+        mockGetDocs: vi.fn(),
+        mockGetDoc: vi.fn(),
+        mockAddDoc: vi.fn(),
+        mockUpdateDoc: vi.fn(),
+        mockRunTransaction: vi.fn(),
+        mockAssertAuthorized: vi.fn(),
+    }),
+);
+
+vi.mock('firebase/firestore', () => ({
+    collection: vi.fn(() => 'mock-collection-ref'),
+    doc: vi.fn(() => 'mock-doc-ref'),
+    getDocs: mockGetDocs,
+    getDoc: mockGetDoc,
+    addDoc: mockAddDoc,
+    updateDoc: mockUpdateDoc,
+    runTransaction: mockRunTransaction,
+    query: vi.fn(() => 'mock-query'),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    limit: vi.fn(),
+    Timestamp: {
+        now: () => ({ seconds: 1700000000, nanoseconds: 0 }),
+        fromDate: (d: Date) => ({ seconds: Math.floor(d.getTime() / 1000), nanoseconds: 0 }),
+    },
+}));
+
+vi.mock('../../../lib/firebase', () => ({ db: {}, auth: {}, secondaryAuth: {} }));
+vi.mock('../../../lib/authorization', () => ({
+    assertAuthorized: mockAssertAuthorized,
+}));
+
 describe('maintenanceService', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockAddDoc.mockResolvedValue({ id: 'new-job-id' });
+    });
+
     describe('JOB_STATUS_CONFIG', () => {
         it('should have all required job statuses', () => {
             const statusKeys = Object.keys(JOB_STATUS_CONFIG);
@@ -156,6 +196,306 @@ describe('maintenanceService', () => {
 
         it('should use yellow color for CORRECTIVE type', () => {
             expect(JOB_TYPE_CONFIG.CORRECTIVE.color).toContain('yellow');
+        });
+    });
+
+    describe('createJob', () => {
+        it('should create job with generated job number', async () => {
+            // generateJobNumber internally calls getDocs - return empty to get JOB-YYYY-0001
+            mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { createJob } = await import('./maintenanceService');
+
+            const result = await createJob(
+                {
+                    assetId: 'asset-1',
+                    jobType: 'PREVENTIVE',
+                    priority: 'MEDIUM',
+                    description: 'Routine maintenance',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
+
+            expect(result).toBe('new-job-id');
+            expect(mockAddDoc).toHaveBeenCalledTimes(1);
+            const jobData = mockAddDoc.mock.calls[0][1] as unknown as Record<string, unknown>;
+            expect(jobData.jobNumber).toMatch(/^JOB-\d{4}-0001$/);
+            expect(jobData.assetId).toBe('asset-1');
+            expect(jobData.jobType).toBe('PREVENTIVE');
+            expect(jobData.priority).toBe('MEDIUM');
+            expect(jobData.description).toBe('Routine maintenance');
+            expect(jobData.reportedBy).toBe('user-1');
+        });
+
+        it('should set status to ASSIGNED when assignedTo provided', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { createJob } = await import('./maintenanceService');
+
+            await createJob(
+                {
+                    assetId: 'asset-1',
+                    jobType: 'CORRECTIVE',
+                    priority: 'HIGH',
+                    description: 'Fix motor',
+                    assignedTo: 'tech-1',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
+
+            const jobData = mockAddDoc.mock.calls[0][1] as unknown as Record<string, unknown>;
+            expect(jobData.status).toBe('ASSIGNED');
+            expect(jobData.assignedTo).toBe('tech-1');
+        });
+
+        it('should set status to OPEN when no assignedTo', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
+
+            const { createJob } = await import('./maintenanceService');
+
+            await createJob(
+                {
+                    assetId: 'asset-1',
+                    jobType: 'PREVENTIVE',
+                    priority: 'LOW',
+                    description: 'Inspect belt',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
+
+            const jobData = mockAddDoc.mock.calls[0][1] as unknown as Record<string, unknown>;
+            expect(jobData.status).toBe('OPEN');
+        });
+
+        it('should update asset to BREAKDOWN for breakdown jobs', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { createJob } = await import('./maintenanceService');
+
+            await createJob(
+                {
+                    assetId: 'asset-1',
+                    jobType: 'BREAKDOWN',
+                    priority: 'CRITICAL',
+                    description: 'Motor failure',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
+
+            // updateDoc should be called once for the asset status update
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+            const assetUpdate = mockUpdateDoc.mock.calls[0][1];
+            expect(assetUpdate.status).toBe('BREAKDOWN');
+        });
+
+        it('should check authorization', async () => {
+            mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
+
+            const { createJob } = await import('./maintenanceService');
+
+            await createJob(
+                {
+                    assetId: 'asset-1',
+                    jobType: 'PREVENTIVE',
+                    priority: 'LOW',
+                    description: 'Check valve',
+                },
+                'user-1',
+                'MAINTENANCE_TECH',
+            );
+
+            expect(mockAssertAuthorized).toHaveBeenCalledWith('MAINTENANCE_TECH', 'maintenance:create');
+        });
+    });
+
+    describe('updateJob', () => {
+        it('should set startedAt for IN_PROGRESS status', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+            // Mock getJobById call (for COMPLETED/CLOSED branch - not hit here)
+
+            const { updateJob } = await import('./maintenanceService');
+
+            await updateJob('job-1', { status: 'IN_PROGRESS' }, 'user-1', 'SUPER_ADMIN');
+
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+            const updateArgs = mockUpdateDoc.mock.calls[0][1];
+            expect(updateArgs.status).toBe('IN_PROGRESS');
+            expect(updateArgs.startedAt).toBeDefined();
+            expect(updateArgs.updatedBy).toBe('user-1');
+        });
+
+        it('should set completedAt for COMPLETED status', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+            // After updateDoc, updateJob calls getJobById to fetch job for asset update
+            mockGetDoc.mockResolvedValue({
+                exists: () => true,
+                id: 'job-1',
+                data: () => ({
+                    assetId: 'asset-1',
+                    jobType: 'BREAKDOWN',
+                    status: 'COMPLETED',
+                }),
+            });
+
+            const { updateJob } = await import('./maintenanceService');
+
+            await updateJob('job-1', { status: 'COMPLETED' }, 'user-1', 'SUPER_ADMIN');
+
+            // First call: update the job, second call: update the asset to OPERATIONAL
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(2);
+            const jobUpdate = mockUpdateDoc.mock.calls[0][1];
+            expect(jobUpdate.status).toBe('COMPLETED');
+            expect(jobUpdate.completedAt).toBeDefined();
+        });
+
+        it('should update asset to OPERATIONAL when COMPLETED', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+            mockGetDoc.mockResolvedValue({
+                exists: () => true,
+                id: 'job-1',
+                data: () => ({
+                    assetId: 'asset-1',
+                    jobType: 'BREAKDOWN',
+                    status: 'COMPLETED',
+                }),
+            });
+
+            const { updateJob } = await import('./maintenanceService');
+
+            await updateJob('job-1', { status: 'COMPLETED' }, 'user-1', 'SUPER_ADMIN');
+
+            // Second updateDoc call should be for the asset
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(2);
+            const assetUpdate = mockUpdateDoc.mock.calls[1][1];
+            expect(assetUpdate.status).toBe('OPERATIONAL');
+        });
+
+        it('should check authorization', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { updateJob } = await import('./maintenanceService');
+
+            await updateJob('job-1', { assignedTo: 'tech-2' }, 'user-1', 'PLANT_MANAGER');
+
+            expect(mockAssertAuthorized).toHaveBeenCalledWith('PLANT_MANAGER', 'maintenance:update');
+        });
+    });
+
+    describe('getJobs', () => {
+        it('should return jobs', async () => {
+            mockGetDocs.mockResolvedValue({
+                docs: [
+                    {
+                        id: 'job-1',
+                        data: () => ({
+                            jobNumber: 'JOB-2026-0001',
+                            assetId: 'asset-1',
+                            status: 'OPEN',
+                            priority: 'HIGH',
+                        }),
+                    },
+                    {
+                        id: 'job-2',
+                        data: () => ({
+                            jobNumber: 'JOB-2026-0002',
+                            assetId: 'asset-2',
+                            status: 'COMPLETED',
+                            priority: 'LOW',
+                        }),
+                    },
+                ],
+            });
+
+            const { getJobs } = await import('./maintenanceService');
+
+            const result = await getJobs();
+
+            expect(result).toHaveLength(2);
+            expect(result[0].id).toBe('job-1');
+            expect(result[0].jobNumber).toBe('JOB-2026-0001');
+            expect(result[1].id).toBe('job-2');
+        });
+    });
+
+    describe('getJobById', () => {
+        it('should return null when not found', async () => {
+            mockGetDoc.mockResolvedValue({
+                exists: () => false,
+            });
+
+            const { getJobById } = await import('./maintenanceService');
+
+            const result = await getJobById('nonexistent');
+
+            expect(result).toBeNull();
+        });
+    });
+
+    describe('getJobStats', () => {
+        it('should compute stats from jobs', async () => {
+            const now = new Date();
+            mockGetDocs.mockResolvedValue({
+                docs: [
+                    {
+                        id: 'job-1',
+                        data: () => ({
+                            status: 'OPEN',
+                            priority: 'CRITICAL',
+                        }),
+                    },
+                    {
+                        id: 'job-2',
+                        data: () => ({
+                            status: 'IN_PROGRESS',
+                            priority: 'HIGH',
+                        }),
+                    },
+                    {
+                        id: 'job-3',
+                        data: () => ({
+                            status: 'PENDING_PARTS',
+                            priority: 'MEDIUM',
+                        }),
+                    },
+                    {
+                        id: 'job-4',
+                        data: () => ({
+                            status: 'COMPLETED',
+                            priority: 'LOW',
+                            completedAt: {
+                                toDate: () => now,
+                            },
+                        }),
+                    },
+                    {
+                        id: 'job-5',
+                        data: () => ({
+                            status: 'CLOSED',
+                            priority: 'LOW',
+                        }),
+                    },
+                ],
+            });
+
+            const { getJobStats } = await import('./maintenanceService');
+
+            const stats = await getJobStats();
+
+            // Active jobs = not COMPLETED or CLOSED: job-1, job-2, job-3 = 3
+            expect(stats.activeJobs).toBe(3);
+            // Critical active jobs: job-1 = 1
+            expect(stats.criticalJobs).toBe(1);
+            // Pending parts: job-3 = 1
+            expect(stats.pendingParts).toBe(1);
+            // Completed this month: job-4 has completedAt this month = 1
+            expect(stats.completedThisMonth).toBe(1);
         });
     });
 });

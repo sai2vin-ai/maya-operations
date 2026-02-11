@@ -29,6 +29,8 @@ vi.mock('../../inventory/services/inventoryService', () => ({
     recordTransaction: vi.fn().mockResolvedValue('txn-1'),
 }));
 
+vi.mock('../../../lib/authorization', () => ({ assertAuthorized: vi.fn() }));
+
 describe('weighbridgeService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -133,12 +135,16 @@ describe('weighbridgeService', () => {
 
             const { createWeighbridgeEntry } = await import('./weighbridgeService');
 
-            await createWeighbridgeEntry({
-                entryType: 'RM_IN',
-                vehicleNumber: 'KA01AB1234',
-                unit: 'KG',
-                gateEntryId: 'gate-entry-123',
-            }, 'user-1', 'SUPER_ADMIN');
+            await createWeighbridgeEntry(
+                {
+                    entryType: 'RM_IN',
+                    vehicleNumber: 'KA01AB1234',
+                    unit: 'KG',
+                    gateEntryId: 'gate-entry-123',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
 
             expect(mockAddDoc).toHaveBeenCalledTimes(1);
             const entryData = mockAddDoc.mock.calls[0][1];
@@ -151,12 +157,16 @@ describe('weighbridgeService', () => {
 
             const { createWeighbridgeEntry } = await import('./weighbridgeService');
 
-            await createWeighbridgeEntry({
-                entryType: 'FG_OUT',
-                vehicleNumber: 'MH12CD5678',
-                unit: 'TONS',
-                batchId: 'batch-456',
-            }, 'user-1', 'SUPER_ADMIN');
+            await createWeighbridgeEntry(
+                {
+                    entryType: 'FG_OUT',
+                    vehicleNumber: 'MH12CD5678',
+                    unit: 'TONS',
+                    batchId: 'batch-456',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
 
             const entryData = mockAddDoc.mock.calls[0][1];
             expect(entryData.batchId).toBe('batch-456');
@@ -168,11 +178,15 @@ describe('weighbridgeService', () => {
 
             const { createWeighbridgeEntry } = await import('./weighbridgeService');
 
-            await createWeighbridgeEntry({
-                entryType: 'RM_IN',
-                vehicleNumber: 'KA01AB1234',
-                unit: 'KG',
-            }, 'user-1', 'SUPER_ADMIN');
+            await createWeighbridgeEntry(
+                {
+                    entryType: 'RM_IN',
+                    vehicleNumber: 'KA01AB1234',
+                    unit: 'KG',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
 
             const entryData = mockAddDoc.mock.calls[0][1];
             expect(entryData.gateEntryId).toBeNull();
@@ -185,11 +199,15 @@ describe('weighbridgeService', () => {
 
             const { createWeighbridgeEntry } = await import('./weighbridgeService');
 
-            await createWeighbridgeEntry({
-                entryType: 'RM_IN',
-                vehicleNumber: 'ka01ab1234',
-                unit: 'KG',
-            }, 'user-1', 'SUPER_ADMIN');
+            await createWeighbridgeEntry(
+                {
+                    entryType: 'RM_IN',
+                    vehicleNumber: 'ka01ab1234',
+                    unit: 'KG',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
 
             const entryData = mockAddDoc.mock.calls[0][1];
             expect(entryData.vehicleNumber).toBe('KA01AB1234');
@@ -260,12 +278,7 @@ describe('weighbridgeService', () => {
             const { recordSecondWeightAndComplete } = await import('./weighbridgeService');
 
             await expect(
-                recordSecondWeightAndComplete(
-                    'wb-1',
-                    { weight: 3000, isGross: true },
-                    'user-1',
-                    'SUPER_ADMIN'
-                )
+                recordSecondWeightAndComplete('wb-1', { weight: 3000, isGross: true }, 'user-1', 'SUPER_ADMIN'),
             ).rejects.toThrow(/Gross weight cannot be less than tare weight/);
         });
 
@@ -287,12 +300,7 @@ describe('weighbridgeService', () => {
 
             const { recordSecondWeightAndComplete } = await import('./weighbridgeService');
 
-            await recordSecondWeightAndComplete(
-                'wb-1',
-                { weight: 2000, isGross: false },
-                'user-1',
-                'SUPER_ADMIN'
-            );
+            await recordSecondWeightAndComplete('wb-1', { weight: 2000, isGross: false }, 'user-1', 'SUPER_ADMIN');
 
             expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
             const updateArgs = mockUpdateDoc.mock.calls[0][1];
@@ -308,12 +316,7 @@ describe('weighbridgeService', () => {
             const { recordSecondWeightAndComplete } = await import('./weighbridgeService');
 
             await expect(
-                recordSecondWeightAndComplete(
-                    'nonexistent',
-                    { weight: 5000, isGross: true },
-                    'user-1',
-                    'SUPER_ADMIN'
-                )
+                recordSecondWeightAndComplete('nonexistent', { weight: 5000, isGross: true }, 'user-1', 'SUPER_ADMIN'),
             ).rejects.toThrow('Weighbridge entry not found');
         });
     });
@@ -340,12 +343,7 @@ describe('weighbridgeService', () => {
 
             const { recordSecondWeightAndComplete } = await import('./weighbridgeService');
 
-            await recordSecondWeightAndComplete(
-                'wb-1',
-                { weight: 2000, isGross: false },
-                'user-1',
-                'SUPER_ADMIN'
-            );
+            await recordSecondWeightAndComplete('wb-1', { weight: 2000, isGross: false }, 'user-1', 'SUPER_ADMIN');
 
             expect(recordTransaction).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -354,7 +352,7 @@ describe('weighbridgeService', () => {
                     referenceType: 'WEIGHBRIDGE_ENTRY',
                     referenceId: 'wb-1',
                 }),
-                'user-1'
+                'user-1',
             );
         });
 
@@ -379,12 +377,7 @@ describe('weighbridgeService', () => {
 
             const { recordSecondWeightAndComplete } = await import('./weighbridgeService');
 
-            await recordSecondWeightAndComplete(
-                'wb-1',
-                { weight: 2000, isGross: false },
-                'user-1',
-                'SUPER_ADMIN'
-            );
+            await recordSecondWeightAndComplete('wb-1', { weight: 2000, isGross: false }, 'user-1', 'SUPER_ADMIN');
 
             expect(recordTransaction).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -392,7 +385,7 @@ describe('weighbridgeService', () => {
                     transactionType: 'ISSUE',
                     referenceType: 'WEIGHBRIDGE_ENTRY',
                 }),
-                'user-1'
+                'user-1',
             );
         });
 
@@ -417,18 +410,13 @@ describe('weighbridgeService', () => {
 
             const { recordSecondWeightAndComplete } = await import('./weighbridgeService');
 
-            await recordSecondWeightAndComplete(
-                'wb-1',
-                { weight: 2, isGross: false },
-                'user-1',
-                'SUPER_ADMIN'
-            );
+            await recordSecondWeightAndComplete('wb-1', { weight: 2, isGross: false }, 'user-1', 'SUPER_ADMIN');
 
             expect(recordTransaction).toHaveBeenCalledWith(
                 expect.objectContaining({
                     quantity: 3000,
                 }),
-                'user-1'
+                'user-1',
             );
         });
 
@@ -454,14 +442,77 @@ describe('weighbridgeService', () => {
 
             const { recordSecondWeightAndComplete } = await import('./weighbridgeService');
 
-            await recordSecondWeightAndComplete(
-                'wb-1',
-                { weight: 2000, isGross: false },
-                'user-1',
-                'SUPER_ADMIN'
-            );
+            await recordSecondWeightAndComplete('wb-1', { weight: 2000, isGross: false }, 'user-1', 'SUPER_ADMIN');
 
             expect(recordTransaction).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('recordFirstWeight', () => {
+        it('should set grossWeight when isGross is true', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { recordFirstWeight } = await import('./weighbridgeService');
+
+            await recordFirstWeight('wb-1', { weight: 5000, isGross: true }, 'user-1', 'SUPER_ADMIN');
+
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+            const updateData = mockUpdateDoc.mock.calls[0][1];
+            expect(updateData.grossWeight).toBe(5000);
+            expect(updateData).not.toHaveProperty('tareWeight');
+            expect(updateData.status).toBe('FIRST_WEIGHT');
+            expect(updateData.updatedBy).toBe('user-1');
+        });
+
+        it('should set tareWeight when isGross is false', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { recordFirstWeight } = await import('./weighbridgeService');
+
+            await recordFirstWeight('wb-1', { weight: 2000, isGross: false }, 'user-1', 'SUPER_ADMIN');
+
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+            const updateData = mockUpdateDoc.mock.calls[0][1];
+            expect(updateData.tareWeight).toBe(2000);
+            expect(updateData).not.toHaveProperty('grossWeight');
+            expect(updateData.status).toBe('FIRST_WEIGHT');
+        });
+
+        it('should check authorization', async () => {
+            const { assertAuthorized } = await import('../../../lib/authorization');
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { recordFirstWeight } = await import('./weighbridgeService');
+
+            await recordFirstWeight('wb-1', { weight: 5000, isGross: true }, 'user-1', 'SUPER_ADMIN');
+
+            expect(assertAuthorized).toHaveBeenCalledWith('SUPER_ADMIN', 'weighbridge:update');
+        });
+    });
+
+    describe('cancelWeighbridgeEntry', () => {
+        it('should set status to CANCELLED', async () => {
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { cancelWeighbridgeEntry } = await import('./weighbridgeService');
+
+            await cancelWeighbridgeEntry('wb-1', 'user-1', 'SUPER_ADMIN');
+
+            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+            const updateData = mockUpdateDoc.mock.calls[0][1];
+            expect(updateData.status).toBe('CANCELLED');
+            expect(updateData.updatedBy).toBe('user-1');
+        });
+
+        it('should check authorization', async () => {
+            const { assertAuthorized } = await import('../../../lib/authorization');
+            mockUpdateDoc.mockResolvedValue(undefined);
+
+            const { cancelWeighbridgeEntry } = await import('./weighbridgeService');
+
+            await cancelWeighbridgeEntry('wb-1', 'user-1', 'SUPER_ADMIN');
+
+            expect(assertAuthorized).toHaveBeenCalledWith('SUPER_ADMIN', 'weighbridge:update');
         });
     });
 });
