@@ -61,10 +61,7 @@ describe('useSpareParts hooks integration', () => {
 
             vi.mocked(sparePartsService.getSpareParts).mockResolvedValue(mockParts);
 
-            const { result } = renderHook(
-                () => useSpareParts({ category: 'MOTOR' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useSpareParts({ category: 'MOTOR' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -82,10 +79,7 @@ describe('useSpareParts hooks integration', () => {
 
             vi.mocked(sparePartsService.getSpareParts).mockResolvedValue(mockParts);
 
-            const { result } = renderHook(
-                () => useSpareParts({ searchQuery: 'motor' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useSpareParts({ searchQuery: 'motor' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -103,10 +97,7 @@ describe('useSpareParts hooks integration', () => {
 
             vi.mocked(sparePartsService.getSpareParts).mockResolvedValue(mockParts);
 
-            const { result } = renderHook(
-                () => useSpareParts({ searchQuery: 'pmp' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useSpareParts({ searchQuery: 'pmp' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -124,10 +115,7 @@ describe('useSpareParts hooks integration', () => {
 
             vi.mocked(sparePartsService.getSpareParts).mockResolvedValue(mockParts);
 
-            const { result } = renderHook(
-                () => useSpareParts({ searchQuery: 'B-2' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useSpareParts({ searchQuery: 'B-2' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -188,7 +176,8 @@ describe('useSpareParts hooks integration', () => {
 
             expect(sparePartsService.createSparePart).toHaveBeenCalledWith(
                 createData.data,
-                createData.createdBy
+                createData.createdBy,
+                undefined,
             );
         });
     });
@@ -214,7 +203,8 @@ describe('useSpareParts hooks integration', () => {
                 'part-123',
                 10,
                 'Purchase order received',
-                'admin'
+                'admin',
+                undefined,
             );
         });
     });
@@ -246,7 +236,8 @@ describe('useSpareParts hooks integration', () => {
                 'Main Reactor 1',
                 'Replacement',
                 'John Doe',
-                'admin'
+                'admin',
+                undefined,
             );
         });
     });
@@ -255,11 +246,7 @@ describe('useSpareParts hooks integration', () => {
         it('should generate correct query keys', () => {
             expect(sparePartKeys.all).toEqual(['spareParts']);
             expect(sparePartKeys.lists()).toEqual(['spareParts', 'list']);
-            expect(sparePartKeys.list({ category: 'MOTOR' })).toEqual([
-                'spareParts',
-                'list',
-                { category: 'MOTOR' },
-            ]);
+            expect(sparePartKeys.list({ category: 'MOTOR' })).toEqual(['spareParts', 'list', { category: 'MOTOR' }]);
             expect(sparePartKeys.details()).toEqual(['spareParts', 'detail']);
             expect(sparePartKeys.detail('123')).toEqual(['spareParts', 'detail', '123']);
         });

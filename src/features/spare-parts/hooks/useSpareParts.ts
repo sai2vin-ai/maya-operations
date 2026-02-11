@@ -10,6 +10,7 @@ import {
     type UpdateSparePartData,
 } from '../services/sparePartsService';
 import type { SparePartCategory } from '../types';
+import type { UserRole } from '../../../types';
 
 // Query keys
 export const sparePartKeys = {
@@ -78,8 +79,15 @@ export function useCreateSparePart() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ data, createdBy }: { data: CreateSparePartData; createdBy: string }) =>
-            createSparePart(data, createdBy),
+        mutationFn: ({
+            data,
+            createdBy,
+            callerRole,
+        }: {
+            data: CreateSparePartData;
+            createdBy: string;
+            callerRole?: UserRole;
+        }) => createSparePart(data, createdBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: sparePartKeys.all });
         },
@@ -95,11 +103,13 @@ export function useUpdateSparePart() {
             partId,
             data,
             updatedBy,
+            callerRole,
         }: {
             partId: string;
             data: UpdateSparePartData;
             updatedBy: string;
-        }) => updateSparePart(partId, data, updatedBy),
+            callerRole?: UserRole;
+        }) => updateSparePart(partId, data, updatedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: sparePartKeys.all });
             queryClient.invalidateQueries({ queryKey: sparePartKeys.detail(variables.partId) });
@@ -117,12 +127,14 @@ export function useReceiptSparePart() {
             quantity,
             reason,
             recordedBy,
+            callerRole,
         }: {
             partId: string;
             quantity: number;
             reason: string;
             recordedBy: string;
-        }) => receiptSparePart(partId, quantity, reason, recordedBy),
+            callerRole?: UserRole;
+        }) => receiptSparePart(partId, quantity, reason, recordedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: sparePartKeys.all });
             queryClient.invalidateQueries({ queryKey: sparePartKeys.detail(variables.partId) });
@@ -143,6 +155,7 @@ export function useIssueSparePart() {
             reason,
             issuedTo,
             recordedBy,
+            callerRole,
         }: {
             partId: string;
             quantity: number;
@@ -151,7 +164,8 @@ export function useIssueSparePart() {
             reason: string;
             issuedTo: string;
             recordedBy: string;
-        }) => issueSparePart(partId, quantity, machineId, machineName, reason, issuedTo, recordedBy),
+            callerRole?: UserRole;
+        }) => issueSparePart(partId, quantity, machineId, machineName, reason, issuedTo, recordedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: sparePartKeys.all });
             queryClient.invalidateQueries({ queryKey: sparePartKeys.detail(variables.partId) });

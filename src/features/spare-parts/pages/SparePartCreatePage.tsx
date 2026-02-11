@@ -5,11 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../components/ui';
-import {
-    createSparePart,
-    SPARE_PART_CATEGORIES,
-    SPARE_PART_UNITS,
-} from '../services/sparePartsService';
+import { createSparePart, SPARE_PART_CATEGORIES, SPARE_PART_UNITS } from '../services/sparePartsService';
 import type { SparePartCategory } from '../types';
 
 export default function SparePartCreatePage() {
@@ -44,18 +40,22 @@ export default function SparePartCreatePage() {
             setSaving(true);
             setError(null);
 
-            const partId = await createSparePart({
-                name,
-                category,
-                fileNumber: fileNumber || undefined,
-                description: description || undefined,
-                unit,
-                currentStock: parseInt(currentStock),
-                minimumStock: parseInt(minimumStock),
-                location: location || undefined,
-                usedFor: usedFor || undefined,
-                unitPrice: unitPrice ? parseFloat(unitPrice) : undefined,
-            }, userData.id);
+            const partId = await createSparePart(
+                {
+                    name,
+                    category,
+                    fileNumber: fileNumber || undefined,
+                    description: description || undefined,
+                    unit,
+                    currentStock: parseInt(currentStock),
+                    minimumStock: parseInt(minimumStock),
+                    location: location || undefined,
+                    usedFor: usedFor || undefined,
+                    unitPrice: unitPrice ? parseFloat(unitPrice) : undefined,
+                },
+                userData.id,
+                userData.role,
+            );
 
             toast.success('Spare part created successfully');
             navigate(`/spare-parts/${partId}`);
@@ -71,7 +71,10 @@ export default function SparePartCreatePage() {
         <div className="p-6 max-w-2xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/spare-parts')} className="text-foreground-muted hover:text-foreground">
+                <button
+                    onClick={() => navigate('/spare-parts')}
+                    className="text-foreground-muted hover:text-foreground"
+                >
                     ← Back
                 </button>
                 <h1 className="text-2xl font-bold text-foreground">Add Spare Part</h1>
@@ -106,8 +109,10 @@ export default function SparePartCreatePage() {
                             onChange={(e) => setCategory(e.target.value as SparePartCategory)}
                             className="input-field w-full"
                         >
-                            {SPARE_PART_CATEGORIES.map(cat => (
-                                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                            {SPARE_PART_CATEGORIES.map((cat) => (
+                                <option key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -140,7 +145,9 @@ export default function SparePartCreatePage() {
                 {/* Stock and Unit */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Initial Stock *</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                            Initial Stock *
+                        </label>
                         <input
                             type="number"
                             value={currentStock}
@@ -152,7 +159,9 @@ export default function SparePartCreatePage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Minimum Stock *</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                            Minimum Stock *
+                        </label>
                         <input
                             type="number"
                             value={minimumStock}
@@ -165,13 +174,11 @@ export default function SparePartCreatePage() {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-foreground-secondary mb-1">Unit</label>
-                        <select
-                            value={unit}
-                            onChange={(e) => setUnit(e.target.value)}
-                            className="input-field w-full"
-                        >
-                            {SPARE_PART_UNITS.map(u => (
-                                <option key={u} value={u}>{u}</option>
+                        <select value={unit} onChange={(e) => setUnit(e.target.value)} className="input-field w-full">
+                            {SPARE_PART_UNITS.map((u) => (
+                                <option key={u} value={u}>
+                                    {u}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -180,7 +187,9 @@ export default function SparePartCreatePage() {
                 {/* Location and Used For */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Storage Location</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                            Storage Location
+                        </label>
                         <input
                             type="text"
                             value={location}
@@ -190,7 +199,9 @@ export default function SparePartCreatePage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Used For (Machine)</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                            Used For (Machine)
+                        </label>
                         <input
                             type="text"
                             value={usedFor}
@@ -222,7 +233,9 @@ export default function SparePartCreatePage() {
                         disabled={saving || !name || !currentStock || !minimumStock}
                         className="btn-primary w-full flex items-center justify-center gap-2"
                     >
-                        {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                        {saving && (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        )}
                         Add Spare Part
                     </button>
                 </div>

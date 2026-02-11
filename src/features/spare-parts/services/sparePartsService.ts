@@ -49,7 +49,7 @@ export async function generatePartNumber(category: SparePartCategory): Promise<s
         where('partNumber', '>=', prefix + '-'),
         where('partNumber', '<=', prefix + '-\uf8ff'),
         orderBy('partNumber', 'desc'),
-        limit(1)
+        limit(1),
     );
     const snapshot = await getDocs(q);
 
@@ -69,7 +69,7 @@ export async function getSpareParts(limitCount: number = 100): Promise<SparePart
     const q = query(partsRef, orderBy('partNumber', 'asc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as SparePart[];
@@ -81,7 +81,7 @@ export async function getSparePartsByCategory(category: SparePartCategory): Prom
     const q = query(partsRef, where('category', '==', category));
     const snapshot = await getDocs(q);
 
-    const parts = snapshot.docs.map(doc => ({
+    const parts = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as SparePart[];
@@ -103,12 +103,12 @@ export async function getSparePartById(partId: string): Promise<SparePart | null
 // Get low stock parts
 export async function getLowStockParts(): Promise<SparePart[]> {
     const parts = await getSpareParts();
-    return parts.filter(part => part.currentStock <= part.minimumStock);
+    return parts.filter((part) => part.currentStock <= part.minimumStock);
 }
 
 // Create spare part data interface
 export interface CreateSparePartData {
-    partNumber?: string;      // Optional - auto-generate if not provided
+    partNumber?: string; // Optional - auto-generate if not provided
     fileNumber?: string;
     name: string;
     description?: string;
@@ -126,10 +126,10 @@ export interface CreateSparePartData {
 export async function createSparePart(
     data: CreateSparePartData,
     createdBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<string> {
     assertAuthorized(callerRole, 'spare_parts:create');
-    const partNumber = data.partNumber || await generatePartNumber(data.category);
+    const partNumber = data.partNumber || (await generatePartNumber(data.category));
 
     const partData = {
         partNumber,
@@ -155,12 +155,15 @@ export async function createSparePart(
 
     // Record initial stock as receipt if > 0
     if (data.currentStock > 0) {
-        await recordSparePartTransaction({
-            partId: docRef.id,
-            type: 'RECEIPT',
-            quantity: data.currentStock,
-            reason: 'Initial stock',
-        }, createdBy);
+        await recordSparePartTransaction(
+            {
+                partId: docRef.id,
+                type: 'RECEIPT',
+                quantity: data.currentStock,
+                reason: 'Initial stock',
+            },
+            createdBy,
+        );
     }
 
     return docRef.id;
@@ -185,7 +188,7 @@ export async function updateSparePart(
     partId: string,
     data: UpdateSparePartData,
     updatedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'spare_parts:update');
     const partRef = doc(db, SPARE_PARTS_COLLECTION, partId);
@@ -224,7 +227,7 @@ export interface RecordSparePartTransactionData {
 export async function recordSparePartTransaction(
     data: RecordSparePartTransactionData,
     recordedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<string> {
     assertAuthorized(callerRole, 'spare_parts:transact');
     return runTransaction(db, async (transaction) => {
@@ -282,18 +285,14 @@ export async function recordSparePartTransaction(
 // Get transactions for a spare part - simplified to avoid composite index
 export async function getSparePartTransactions(
     partId: string,
-    limitCount: number = 50
+    limitCount: number = 50,
 ): Promise<SparePartTransaction[]> {
     const transactionsRef = collection(db, SPARE_PARTS_TRANSACTIONS_COLLECTION);
     // Single field query to avoid composite index requirement
-    const q = query(
-        transactionsRef,
-        where('partId', '==', partId),
-        limit(limitCount)
-    );
+    const q = query(transactionsRef, where('partId', '==', partId), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    const transactions = snapshot.docs.map(doc => ({
+    const transactions = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as SparePartTransaction[];
@@ -311,14 +310,19 @@ export async function receiptSparePart(
     partId: string,
     quantity: number,
     reason: string,
-    recordedBy: string
+    recordedBy: string,
+    callerRole?: UserRole,
 ): Promise<string> {
-    return recordSparePartTransaction({
-        partId,
-        type: 'RECEIPT',
-        quantity,
-        reason,
-    }, recordedBy);
+    return recordSparePartTransaction(
+        {
+            partId,
+            type: 'RECEIPT',
+            quantity,
+            reason,
+        },
+        recordedBy,
+        callerRole,
+    );
 }
 
 // Issue helper
@@ -329,15 +333,20 @@ export async function issueSparePart(
     machineName: string | undefined,
     reason: string,
     issuedTo: string,
-    recordedBy: string
+    recordedBy: string,
+    callerRole?: UserRole,
 ): Promise<string> {
-    return recordSparePartTransaction({
-        partId,
-        type: 'ISSUE',
-        quantity,
-        machineId,
-        machineName,
-        reason,
-        issuedTo,
-    }, recordedBy);
+    return recordSparePartTransaction(
+        {
+            partId,
+            type: 'ISSUE',
+            quantity,
+            machineId,
+            machineName,
+            reason,
+            issuedTo,
+        },
+        recordedBy,
+        callerRole,
+    );
 }
