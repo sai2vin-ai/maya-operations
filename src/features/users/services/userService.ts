@@ -1,6 +1,6 @@
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, query, where, Timestamp } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { db, auth } from '../../../lib/firebase';
+import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { db, auth, secondaryAuth } from '../../../lib/firebase';
 import type { User, UserRole, UserStatus } from '../types';
 import { validateEmail, validateName, validatePhone, validateEmployeeId } from '../../../utils/validation';
 import { assertAuthorized } from '../../../lib/authorization';
@@ -85,9 +85,11 @@ export async function createUser(data: CreateUserData, createdBy: string, caller
     const empIdVal = validateEmployeeId(data.employeeId);
     if (!empIdVal.isValid) throw new Error(empIdVal.error);
 
-    // Create user in Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+    // Create user in secondary Auth instance so admin session is preserved
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, data.email, data.password);
     const uid = userCredential.user.uid;
+    // Sign out from secondary auth to clean up
+    await signOut(secondaryAuth);
 
     // Create user document in Firestore
     const userDoc: Omit<User, 'id'> = {

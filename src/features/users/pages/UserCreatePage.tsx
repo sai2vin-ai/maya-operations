@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../components/ui';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
-import { auth, db } from '../../../lib/firebase';
+import { secondaryAuth, db } from '../../../lib/firebase';
 import { USER_ROLES } from '../services/userService';
 import type { UserRole } from '../types';
 
@@ -28,7 +28,7 @@ export default function UserCreatePage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
         setError(null);
     };
 
@@ -55,9 +55,15 @@ export default function UserCreatePage() {
             setSaving(true);
             setError(null);
 
-            // Create user in Firebase Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+            // Create user in secondary Auth instance so admin session is preserved
+            const userCredential = await createUserWithEmailAndPassword(
+                secondaryAuth,
+                formData.email,
+                formData.password,
+            );
             const uid = userCredential.user.uid;
+            // Sign out from secondary auth to clean up
+            await signOut(secondaryAuth);
 
             // Create user document in Firestore
             await setDoc(doc(db, 'users', uid), {
@@ -103,7 +109,12 @@ export default function UserCreatePage() {
                         onClick={() => navigate('/users')}
                         className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg
+                            className="w-5 h-5 text-foreground-muted"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
@@ -212,7 +223,9 @@ export default function UserCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Phone Number</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                    Phone Number
+                                </label>
                                 <input
                                     type="tel"
                                     name="phone"
@@ -240,8 +253,10 @@ export default function UserCreatePage() {
                                 className="input-field w-full md:w-1/2"
                                 required
                             >
-                                {USER_ROLES.map(role => (
-                                    <option key={role.value} value={role.value}>{role.label}</option>
+                                {USER_ROLES.map((role) => (
+                                    <option key={role.value} value={role.value}>
+                                        {role.label}
+                                    </option>
                                 ))}
                             </select>
                             <p className="text-foreground-faint text-sm mt-2">
@@ -252,19 +267,13 @@ export default function UserCreatePage() {
 
                     {/* Submit */}
                     <div className="flex justify-end gap-3">
-                        <button
-                            type="button"
-                            onClick={() => navigate('/users')}
-                            className="btn-secondary"
-                        >
+                        <button type="button" onClick={() => navigate('/users')} className="btn-secondary">
                             Cancel
                         </button>
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="btn-primary flex items-center gap-2"
-                        >
-                            {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                        <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
+                            {saving && (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            )}
                             Create User
                         </button>
                     </div>
