@@ -4,16 +4,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useToast, LoadingSpinner } from '../../../components/ui';
 import { useAsset, useUpdateAsset } from '../hooks/useAssets';
 import { useJobsByAsset } from '../../maintenance/hooks/useMaintenance';
-import {
-    ASSET_STATUS_CONFIG,
-    ASSET_CATEGORIES,
-    ASSET_LOCATIONS,
-} from '../services/assetService';
-import {
-    JOB_STATUS_CONFIG,
-    JOB_PRIORITY_CONFIG,
-    JOB_TYPE_CONFIG,
-} from '../../maintenance/services/maintenanceService';
+import { ASSET_STATUS_CONFIG, ASSET_CATEGORIES, ASSET_LOCATIONS } from '../services/assetService';
+import { JOB_STATUS_CONFIG, JOB_PRIORITY_CONFIG, JOB_TYPE_CONFIG } from '../../maintenance/services/maintenanceService';
 import type { AssetStatus, AssetCriticality } from '../../../types';
 
 export default function AssetDetailPage() {
@@ -48,7 +40,13 @@ export default function AssetDetailPage() {
         try {
             await updateAsset.mutateAsync({
                 assetId: id,
-                data: { name, category, location, criticality, pmFrequencyDays: pmFrequencyDays ? parseInt(pmFrequencyDays) : undefined },
+                data: {
+                    name,
+                    category,
+                    location,
+                    criticality,
+                    pmFrequencyDays: pmFrequencyDays ? parseInt(pmFrequencyDays) : undefined,
+                },
                 updatedBy: userData.id,
                 callerRole: userData.role,
             });
@@ -78,7 +76,7 @@ export default function AssetDetailPage() {
     if (!asset) return <div className="p-6 text-center text-foreground-muted">Asset not found</div>;
 
     const statusConfig = ASSET_STATUS_CONFIG[asset.status];
-    const activeJobs = jobs.filter(j => !['COMPLETED', 'CLOSED'].includes(j.status));
+    const activeJobs = jobs.filter((j) => !['COMPLETED', 'CLOSED'].includes(j.status));
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
@@ -98,11 +96,21 @@ export default function AssetDetailPage() {
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground">Details</h2>
                     {!editing ? (
-                        <button onClick={startEdit} className="btn-secondary text-sm">Edit</button>
+                        <button onClick={startEdit} className="btn-secondary text-sm">
+                            Edit
+                        </button>
                     ) : (
                         <div className="flex gap-2">
-                            <button onClick={() => setEditing(false)} className="btn-secondary text-sm">Cancel</button>
-                            <button onClick={handleSave} disabled={updateAsset.isPending} className="btn-primary text-sm">Save</button>
+                            <button onClick={() => setEditing(false)} className="btn-secondary text-sm">
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={updateAsset.isPending}
+                                className="btn-primary text-sm"
+                            >
+                                Save
+                            </button>
                         </div>
                     )}
                 </div>
@@ -111,23 +119,48 @@ export default function AssetDetailPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm text-foreground-secondary mb-1">Name</label>
-                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field w-full" />
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="input-field w-full"
+                            />
                         </div>
                         <div>
                             <label className="block text-sm text-foreground-secondary mb-1">Category</label>
-                            <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field w-full">
-                                {ASSET_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                            <select
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="input-field w-full"
+                            >
+                                {ASSET_CATEGORIES.map((c) => (
+                                    <option key={c.value} value={c.value}>
+                                        {c.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div>
                             <label className="block text-sm text-foreground-secondary mb-1">Location</label>
-                            <select value={location} onChange={(e) => setLocation(e.target.value)} className="input-field w-full">
-                                {ASSET_LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                            <select
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                                className="input-field w-full"
+                            >
+                                {ASSET_LOCATIONS.map((l) => (
+                                    <option key={l} value={l}>
+                                        {l}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div>
                             <label className="block text-sm text-foreground-secondary mb-1">Criticality</label>
-                            <select value={criticality} onChange={(e) => setCriticality(e.target.value as AssetCriticality)} className="input-field w-full">
+                            <select
+                                value={criticality}
+                                onChange={(e) => setCriticality(e.target.value as AssetCriticality)}
+                                className="input-field w-full"
+                            >
                                 <option value="HIGH">High</option>
                                 <option value="MEDIUM">Medium</option>
                                 <option value="LOW">Low</option>
@@ -135,7 +168,13 @@ export default function AssetDetailPage() {
                         </div>
                         <div>
                             <label className="block text-sm text-foreground-secondary mb-1">PM Frequency (days)</label>
-                            <input type="number" value={pmFrequencyDays} onChange={(e) => setPmFrequencyDays(e.target.value)} className="input-field w-full" min="1" />
+                            <input
+                                type="number"
+                                value={pmFrequencyDays}
+                                onChange={(e) => setPmFrequencyDays(e.target.value)}
+                                className="input-field w-full"
+                                min="1"
+                            />
                         </div>
                     </div>
                 ) : (
@@ -154,15 +193,29 @@ export default function AssetDetailPage() {
                         </div>
                         <div>
                             <p className="text-sm text-foreground-muted">PM Frequency</p>
-                            <p className="text-foreground">{asset.pmFrequencyDays ? `${asset.pmFrequencyDays} days` : 'Not set'}</p>
+                            <p className="text-foreground">
+                                {asset.pmFrequencyDays ? `${asset.pmFrequencyDays} days` : 'Not set'}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm text-foreground-muted">Last PM</p>
-                            <p className="text-foreground">{asset.lastPmDate ? new Date((asset.lastPmDate as { toDate: () => Date }).toDate()).toLocaleDateString() : 'Never'}</p>
+                            <p className="text-foreground">
+                                {asset.lastPmDate
+                                    ? new Date(
+                                          (asset.lastPmDate as { toDate: () => Date }).toDate(),
+                                      ).toLocaleDateString()
+                                    : 'Never'}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm text-foreground-muted">Next PM</p>
-                            <p className="text-foreground">{asset.nextPmDate ? new Date((asset.nextPmDate as { toDate: () => Date }).toDate()).toLocaleDateString() : 'Not scheduled'}</p>
+                            <p className="text-foreground">
+                                {asset.nextPmDate
+                                    ? new Date(
+                                          (asset.nextPmDate as { toDate: () => Date }).toDate(),
+                                      ).toLocaleDateString()
+                                    : 'Not scheduled'}
+                            </p>
                         </div>
                     </div>
                 )}
@@ -172,14 +225,14 @@ export default function AssetDetailPage() {
             <div className="glass-card p-4 mb-4">
                 <h3 className="text-sm font-medium text-foreground-secondary mb-3">Quick Actions</h3>
                 <div className="flex flex-wrap gap-2">
-                    <button
-                        onClick={() => navigate(`/maintenance/new?assetId=${id}`)}
-                        className="btn-primary text-sm"
-                    >
-                        Create Work Order
+                    <button onClick={() => navigate(`/maintenance/new?assetId=${id}`)} className="btn-primary text-sm">
+                        Create Maintenance Task
                     </button>
                     {asset.status === 'OPERATIONAL' && (
-                        <button onClick={() => handleStatusChange('UNDER_MAINTENANCE')} className="btn-secondary text-sm">
+                        <button
+                            onClick={() => handleStatusChange('UNDER_MAINTENANCE')}
+                            className="btn-secondary text-sm"
+                        >
                             Mark Under Maintenance
                         </button>
                     )}
@@ -189,7 +242,10 @@ export default function AssetDetailPage() {
                         </button>
                     )}
                     {asset.status !== 'DECOMMISSIONED' && (
-                        <button onClick={() => handleStatusChange('DECOMMISSIONED')} className="btn-secondary text-sm text-red-400">
+                        <button
+                            onClick={() => handleStatusChange('DECOMMISSIONED')}
+                            className="btn-secondary text-sm text-red-400"
+                        >
                             Decommission
                         </button>
                     )}
@@ -200,13 +256,15 @@ export default function AssetDetailPage() {
             <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground">
-                        Work Orders ({jobs.length})
-                        {activeJobs.length > 0 && <span className="text-sm text-yellow-400 ml-2">{activeJobs.length} active</span>}
+                        Maintenance Tasks ({jobs.length})
+                        {activeJobs.length > 0 && (
+                            <span className="text-sm text-yellow-400 ml-2">{activeJobs.length} active</span>
+                        )}
                     </h2>
                 </div>
 
                 {jobs.length === 0 ? (
-                    <p className="text-foreground-muted text-center py-4">No work orders for this asset</p>
+                    <p className="text-foreground-muted text-center py-4">No maintenance tasks for this asset</p>
                 ) : (
                     <div className="space-y-2">
                         {jobs.map((job) => {
@@ -222,12 +280,18 @@ export default function AssetDetailPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className="text-foreground font-mono text-sm">{job.jobNumber}</span>
-                                            <span className={`px-2 py-0.5 rounded-full text-xs ${jType.color}`}>{jType.label}</span>
+                                            <span className={`px-2 py-0.5 rounded-full text-xs ${jType.color}`}>
+                                                {jType.label}
+                                            </span>
                                         </div>
                                         <p className="text-sm text-foreground-muted truncate">{job.description}</p>
                                     </div>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs ${jPriority.color}`}>{jPriority.label}</span>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs ${jStatus.color}`}>{jStatus.label}</span>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs ${jPriority.color}`}>
+                                        {jPriority.label}
+                                    </span>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs ${jStatus.color}`}>
+                                        {jStatus.label}
+                                    </span>
                                 </div>
                             );
                         })}

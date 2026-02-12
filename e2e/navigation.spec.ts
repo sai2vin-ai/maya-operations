@@ -45,7 +45,7 @@ test.describe('Navigation', () => {
                 !error.includes('ERR_NAME_NOT_RESOLVED') &&
                 !error.includes('FIRESTORE') &&
                 !error.includes('WebChannel') &&
-                !error.includes('googleapis')
+                !error.includes('googleapis'),
         );
 
         expect(unexpectedErrors).toHaveLength(0);
@@ -63,7 +63,7 @@ test.describe('Navigation', () => {
         await expect(sidebarNav.locator('text=Reactor Dashboard').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Inventory').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Asset Register').first()).toBeVisible();
-        await expect(sidebarNav.locator('text=Work Orders').first()).toBeVisible();
+        await expect(sidebarNav.locator('text=Maintenance').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Quality Control').first()).toBeVisible();
         await expect(sidebarNav.locator('text=Shift Management').first()).toBeVisible();
     });
@@ -83,8 +83,8 @@ test.describe('Navigation', () => {
         await nav.getByRole('button', { name: 'Inventory', exact: true }).click();
         await expect(page).toHaveURL(/\/inventory/);
 
-        // Click Work Orders in sidebar
-        await nav.locator('text=Work Orders').click();
+        // Click Maintenance in sidebar (use exact match to avoid "Assets & Maintenance" group label)
+        await nav.getByRole('button', { name: 'Maintenance', exact: true }).click();
         await expect(page).toHaveURL(/\/maintenance/);
     });
 

@@ -81,7 +81,7 @@ const AssetListPage = lazy(() => import('./features/asset-register/pages/AssetLi
 const AssetCreatePage = lazy(() => import('./features/asset-register/pages/AssetCreatePage'));
 const AssetDetailPage = lazy(() => import('./features/asset-register/pages/AssetDetailPage'));
 
-// Maintenance (Work Orders)
+// Maintenance
 const MaintenanceDashboardPage = lazy(() => import('./features/maintenance/pages/MaintenanceDashboardPage'));
 const JobCreatePage = lazy(() => import('./features/maintenance/pages/JobCreatePage'));
 const JobDetailPage = lazy(() => import('./features/maintenance/pages/JobDetailPage'));
@@ -447,7 +447,7 @@ function App() {
                                                     }
                                                 />
 
-                                                {/* Work Orders (Maintenance) */}
+                                                {/* Maintenance */}
                                                 <Route
                                                     path="/maintenance"
                                                     element={

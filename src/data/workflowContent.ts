@@ -223,12 +223,12 @@ export const workflowSections: WorkflowSection[] = [
         id: 'spare-parts',
         title: 'Spare Parts Management',
         description:
-            'Separate inventory for machine parts and consumables. Track receipts, issue parts to work orders with automatic stock deduction, and monitor low-stock levels.',
+            'Separate inventory for machine parts and consumables. Track receipts, issue parts to maintenance tasks with automatic stock deduction, and monitor low-stock levels.',
         icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
         gradient: 'from-indigo-500 to-violet-600',
         modules: [
             { label: 'Spare Parts', color: 'bg-indigo-500/20 text-indigo-400' },
-            { label: 'Work Orders', color: 'bg-yellow-500/20 text-yellow-400' },
+            { label: 'Maintenance', color: 'bg-yellow-500/20 text-yellow-400' },
         ],
         statusFlow: [
             { label: 'RECEIPT', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
@@ -242,7 +242,7 @@ export const workflowSections: WorkflowSection[] = [
             { actor: 'Stores Keeper', action: 'Records RECEIPT when new parts arrive. Updates currentStock.' },
             {
                 actor: 'Maintenance Tech',
-                action: 'Opens parts picker on a work order (IN_PROGRESS or PENDING_PARTS). Searches by name or category and selects quantities.',
+                action: 'Opens parts picker on a maintenance task (IN_PROGRESS or PENDING_PARTS). Searches by name or category and selects quantities.',
             },
             {
                 actor: 'System',
@@ -260,12 +260,12 @@ export const workflowSections: WorkflowSection[] = [
         id: 'asset-register',
         title: 'Asset Register',
         description:
-            'Register and track all plant assets (reactors, pumps, conveyors, etc.) through their lifecycle. Monitor operational status, schedule preventive maintenance, and link assets to work orders.',
+            'Register and track all plant assets (reactors, pumps, conveyors, etc.) through their lifecycle. Monitor operational status, schedule preventive maintenance, and link assets to maintenance tasks.',
         icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
         gradient: 'from-emerald-500 to-teal-600',
         modules: [
             { label: 'Asset Register', color: 'bg-emerald-500/20 text-emerald-400' },
-            { label: 'Work Orders', color: 'bg-yellow-500/20 text-yellow-400' },
+            { label: 'Maintenance', color: 'bg-yellow-500/20 text-yellow-400' },
         ],
         statusFlow: [
             { label: 'OPERATIONAL', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
@@ -288,30 +288,30 @@ export const workflowSections: WorkflowSection[] = [
             },
             {
                 actor: 'Maintenance Tech',
-                action: 'Creates a work order from the asset detail page. If job type is BREAKDOWN, asset status automatically changes to BREAKDOWN.',
+                action: 'Creates a maintenance task from the asset detail page. If job type is BREAKDOWN, asset status automatically changes to BREAKDOWN.',
             },
             {
                 actor: 'Maintenance Tech',
-                action: 'When the linked work order is completed, asset status reverts to OPERATIONAL and lastPmDate is updated.',
+                action: 'When the linked maintenance task is completed, asset status reverts to OPERATIONAL and lastPmDate is updated.',
             },
             { actor: 'Plant Manager', action: 'Can manually set status to UNDER_MAINTENANCE or DECOMMISSIONED.' },
         ],
         dataEffects: [
             { type: 'create', description: 'Asset document with auto-generated assetCode' },
-            { type: 'update', description: 'Asset.status transitions driven by work order lifecycle' },
+            { type: 'update', description: 'Asset.status transitions driven by maintenance task lifecycle' },
             { type: 'update', description: 'Asset.nextPmDate recalculated when PM frequency changes' },
             { type: 'event', description: 'Dashboard alerts for breakdowns and PM due assets' },
         ],
     },
     {
         id: 'work-order-lifecycle',
-        title: 'Work Order Lifecycle',
+        title: 'Maintenance Task Lifecycle',
         description:
-            'Full maintenance job workflow from reporting a fault through assignment, parts issuance, and completion. Supports breakdown, preventive, and corrective job types with priority levels.',
+            'Full maintenance task workflow from reporting a fault through assignment, parts issuance, and completion. Supports breakdown, preventive, and corrective job types with priority levels.',
         icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
         gradient: 'from-yellow-500 to-amber-600',
         modules: [
-            { label: 'Work Orders', color: 'bg-yellow-500/20 text-yellow-400' },
+            { label: 'Maintenance', color: 'bg-yellow-500/20 text-yellow-400' },
             { label: 'Asset Register', color: 'bg-emerald-500/20 text-emerald-400' },
             { label: 'Spare Parts', color: 'bg-indigo-500/20 text-indigo-400' },
         ],
@@ -324,7 +324,7 @@ export const workflowSections: WorkflowSection[] = [
         steps: [
             {
                 actor: 'Maintenance Tech',
-                action: 'Creates work order: selects asset, job type (BREAKDOWN, PREVENTIVE, CORRECTIVE), priority (CRITICAL, HIGH, MEDIUM, LOW), and description.',
+                action: 'Creates maintenance task: selects asset, job type (BREAKDOWN, PREVENTIVE, CORRECTIVE), priority (CRITICAL, HIGH, MEDIUM, LOW), and description.',
             },
             {
                 actor: 'System',
@@ -348,7 +348,7 @@ export const workflowSections: WorkflowSection[] = [
             },
             {
                 actor: 'Maintenance Tech',
-                action: 'Completes work order with resolution notes. Asset status reverts to OPERATIONAL. Job status moves to COMPLETED, then CLOSED.',
+                action: 'Completes maintenance task with resolution notes. Asset status reverts to OPERATIONAL. Job status moves to COMPLETED, then CLOSED.',
             },
         ],
         dataEffects: [

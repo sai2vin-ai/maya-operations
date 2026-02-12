@@ -1,40 +1,48 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useJobs, useJobStats } from '../hooks/useMaintenance';
-import {
-    JOB_STATUS_CONFIG,
-    JOB_PRIORITY_CONFIG,
-    JOB_TYPE_CONFIG,
-} from '../services/maintenanceService';
+import { JOB_STATUS_CONFIG, JOB_PRIORITY_CONFIG, JOB_TYPE_CONFIG } from '../services/maintenanceService';
 import { PageHeader, LoadingSpinner, ErrorAlert, EmptyState } from '../../../components/ui';
-import type { JobStatus } from '../../../types';
+import type { MaintenanceJob } from '../../../types';
+
+type Tab = 'open' | 'completed';
+
+const OPEN_STATUSES = new Set(['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_PARTS']);
+const COMPLETED_STATUSES = new Set(['COMPLETED', 'CLOSED']);
 
 export default function MaintenanceDashboardPage() {
     const navigate = useNavigate();
-    const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all');
+    const [activeTab, setActiveTab] = useState<Tab>('open');
     const [searchQuery, setSearchQuery] = useState('');
 
     const { data: stats, isLoading: statsLoading } = useJobStats();
     const { data: jobs = [], isLoading: jobsLoading, error } = useJobs();
 
-    const filteredJobs = jobs.filter(j => {
-        if (statusFilter !== 'all' && j.status !== statusFilter) return false;
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            return j.jobNumber.toLowerCase().includes(q) || j.description.toLowerCase().includes(q);
-        }
-        return true;
-    });
+    const filterByTab = (job: MaintenanceJob) => {
+        if (activeTab === 'open') return OPEN_STATUSES.has(job.status);
+        return COMPLETED_STATUSES.has(job.status);
+    };
+
+    const filterBySearch = (job: MaintenanceJob) => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return job.jobNumber.toLowerCase().includes(q) || job.description.toLowerCase().includes(q);
+    };
+
+    const filteredJobs = jobs.filter((j) => filterByTab(j) && filterBySearch(j));
+
+    const openCount = jobs.filter((j) => OPEN_STATUSES.has(j.status)).length;
+    const completedCount = jobs.filter((j) => COMPLETED_STATUSES.has(j.status)).length;
 
     return (
         <div>
             <PageHeader
-                title="Work Orders"
-                subtitle="Maintenance job tracking & management"
+                title="Maintenance"
+                subtitle="Task tracking & management"
                 backTo="/dashboard"
                 actions={
                     <button onClick={() => navigate('/maintenance/new')} className="btn-primary">
-                        + Work Order
+                        + New Task
                     </button>
                 }
             />
@@ -44,7 +52,7 @@ export default function MaintenanceDashboardPage() {
                 {!statsLoading && stats && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                         <div className="glass-card p-4">
-                            <p className="text-sm text-foreground-muted">Active Jobs</p>
+                            <p className="text-sm text-foreground-muted">Active Tasks</p>
                             <p className="text-2xl font-bold text-foreground">{stats.activeJobs}</p>
                             <p className="text-xs text-foreground-faint">in progress</p>
                         </div>
@@ -66,30 +74,52 @@ export default function MaintenanceDashboardPage() {
                     </div>
                 )}
 
-                {/* Search + Filter */}
-                <div className="glass-card p-4 mb-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input-field"
-                            placeholder="Search by job number or description..."
-                        />
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as JobStatus | 'all')}
-                            className="input-field"
-                        >
-                            <option value="all">All Statuses</option>
-                            {Object.entries(JOB_STATUS_CONFIG).map(([key, val]) => (
-                                <option key={key} value={key}>{val.label}</option>
-                            ))}
-                        </select>
-                    </div>
+                {/* Tabs */}
+                <div className="flex gap-1 mb-4 bg-surface-secondary/50 rounded-lg p-1 w-fit">
+                    <button
+                        onClick={() => setActiveTab('open')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                            activeTab === 'open'
+                                ? 'bg-surface-tertiary text-foreground shadow-sm'
+                                : 'text-foreground-muted hover:text-foreground'
+                        }`}
+                    >
+                        Open Tasks
+                        {openCount > 0 && (
+                            <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs bg-blue-500/20 text-blue-400">
+                                {openCount}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('completed')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                            activeTab === 'completed'
+                                ? 'bg-surface-tertiary text-foreground shadow-sm'
+                                : 'text-foreground-muted hover:text-foreground'
+                        }`}
+                    >
+                        Completed
+                        {completedCount > 0 && (
+                            <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs bg-green-500/20 text-green-400">
+                                {completedCount}
+                            </span>
+                        )}
+                    </button>
                 </div>
 
-                {error && <ErrorAlert message="Failed to load work orders" />}
+                {/* Search */}
+                <div className="glass-card p-4 mb-4">
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="input-field w-full"
+                        placeholder="Search by job number or description..."
+                    />
+                </div>
+
+                {error && <ErrorAlert message="Failed to load maintenance tasks" />}
                 {jobsLoading && <LoadingSpinner />}
 
                 {/* Jobs Table */}
@@ -101,9 +131,15 @@ export default function MaintenanceDashboardPage() {
                                     <tr>
                                         <th className="text-left p-4 text-foreground-secondary font-medium">Job #</th>
                                         <th className="text-left p-4 text-foreground-secondary font-medium">Type</th>
-                                        <th className="text-left p-4 text-foreground-secondary font-medium">Description</th>
-                                        <th className="text-center p-4 text-foreground-secondary font-medium">Priority</th>
-                                        <th className="text-center p-4 text-foreground-secondary font-medium">Status</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">
+                                            Description
+                                        </th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium">
+                                            Priority
+                                        </th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium">
+                                            Status
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-700">
@@ -121,18 +157,26 @@ export default function MaintenanceDashboardPage() {
                                                     <span className="text-foreground font-mono">{job.jobNumber}</span>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs ${typeConfig.color}`}>
+                                                    <span
+                                                        className={`px-2 py-1 rounded-full text-xs ${typeConfig.color}`}
+                                                    >
                                                         {typeConfig.label}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-foreground-secondary max-w-xs truncate">{job.description}</td>
+                                                <td className="p-4 text-foreground-secondary max-w-xs truncate">
+                                                    {job.description}
+                                                </td>
                                                 <td className="p-4 text-center">
-                                                    <span className={`px-2 py-1 rounded-full text-xs ${priorityConfig.color}`}>
+                                                    <span
+                                                        className={`px-2 py-1 rounded-full text-xs ${priorityConfig.color}`}
+                                                    >
                                                         {priorityConfig.label}
                                                     </span>
                                                 </td>
                                                 <td className="p-4 text-center">
-                                                    <span className={`px-2 py-1 rounded-full text-xs ${statusConfig.color}`}>
+                                                    <span
+                                                        className={`px-2 py-1 rounded-full text-xs ${statusConfig.color}`}
+                                                    >
                                                         {statusConfig.label}
                                                     </span>
                                                 </td>
@@ -144,9 +188,26 @@ export default function MaintenanceDashboardPage() {
                         </div>
                         {filteredJobs.length === 0 && (
                             <EmptyState
-                                title="No work orders found"
-                                description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your filters' : 'Create your first work order'}
-                                action={!searchQuery && statusFilter === 'all' ? { label: 'Create Work Order', onClick: () => navigate('/maintenance/new') } : undefined}
+                                title={
+                                    activeTab === 'open'
+                                        ? 'No open maintenance tasks'
+                                        : 'No completed maintenance tasks'
+                                }
+                                description={
+                                    searchQuery
+                                        ? 'Try adjusting your search'
+                                        : activeTab === 'open'
+                                          ? 'All caught up!'
+                                          : 'No tasks completed yet'
+                                }
+                                action={
+                                    activeTab === 'open' && !searchQuery
+                                        ? {
+                                              label: 'Create Maintenance Task',
+                                              onClick: () => navigate('/maintenance/new'),
+                                          }
+                                        : undefined
+                                }
                             />
                         )}
                     </div>

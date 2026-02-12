@@ -32,18 +32,22 @@ export default function JobCreatePage() {
             setSaving(true);
             setError(null);
 
-            const jobId = await createJob({
-                assetId,
-                jobType,
-                priority,
-                description,
-            }, userData.id, userData.role);
+            const jobId = await createJob(
+                {
+                    assetId,
+                    jobType,
+                    priority,
+                    description,
+                },
+                userData.id,
+                userData.role,
+            );
 
-            toast.success('Work order created successfully');
+            toast.success('Maintenance task created successfully');
             navigate(`/maintenance/${jobId}`);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to create work order');
-            toast.error('Failed to create work order');
+            setError(err instanceof Error ? err.message : 'Failed to create maintenance task');
+            toast.error('Failed to create maintenance task');
         } finally {
             setSaving(false);
         }
@@ -52,10 +56,13 @@ export default function JobCreatePage() {
     return (
         <div className="p-6 max-w-2xl mx-auto">
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/maintenance')} className="text-foreground-muted hover:text-foreground">
+                <button
+                    onClick={() => navigate('/maintenance')}
+                    className="text-foreground-muted hover:text-foreground"
+                >
                     ← Back
                 </button>
-                <h1 className="text-2xl font-bold text-foreground">Create Work Order</h1>
+                <h1 className="text-2xl font-bold text-foreground">Create Maintenance Task</h1>
             </div>
 
             {error && (
@@ -67,10 +74,17 @@ export default function JobCreatePage() {
             <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-foreground-secondary mb-1">Asset *</label>
-                    <select value={assetId} onChange={(e) => setAssetId(e.target.value)} className="input-field w-full" required>
+                    <select
+                        value={assetId}
+                        onChange={(e) => setAssetId(e.target.value)}
+                        className="input-field w-full"
+                        required
+                    >
                         <option value="">Select asset...</option>
-                        {assets.map(a => (
-                            <option key={a.id} value={a.id}>{a.assetCode} - {a.name}</option>
+                        {assets.map((a) => (
+                            <option key={a.id} value={a.id}>
+                                {a.assetCode} - {a.name}
+                            </option>
                         ))}
                     </select>
                 </div>
@@ -78,7 +92,11 @@ export default function JobCreatePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-foreground-secondary mb-1">Job Type *</label>
-                        <select value={jobType} onChange={(e) => setJobType(e.target.value as JobType)} className="input-field w-full">
+                        <select
+                            value={jobType}
+                            onChange={(e) => setJobType(e.target.value as JobType)}
+                            className="input-field w-full"
+                        >
                             <option value="BREAKDOWN">Breakdown</option>
                             <option value="PREVENTIVE">Preventive Maintenance</option>
                             <option value="CORRECTIVE">Corrective</option>
@@ -86,7 +104,11 @@ export default function JobCreatePage() {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-foreground-secondary mb-1">Priority *</label>
-                        <select value={priority} onChange={(e) => setPriority(e.target.value as JobPriority)} className="input-field w-full">
+                        <select
+                            value={priority}
+                            onChange={(e) => setPriority(e.target.value as JobPriority)}
+                            className="input-field w-full"
+                        >
                             <option value="CRITICAL">Critical</option>
                             <option value="HIGH">High</option>
                             <option value="MEDIUM">Medium</option>
@@ -113,14 +135,14 @@ export default function JobCreatePage() {
                         disabled={saving || !assetId || !description}
                         className="btn-primary w-full flex items-center justify-center gap-2"
                     >
-                        {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
-                        Create Work Order
+                        {saving && (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        )}
+                        Create Maintenance Task
                     </button>
                 </div>
 
-                <p className="text-xs text-foreground-faint text-center">
-                    Job number will be auto-generated
-                </p>
+                <p className="text-xs text-foreground-faint text-center">Job number will be auto-generated</p>
             </form>
         </div>
     );

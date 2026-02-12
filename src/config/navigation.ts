@@ -112,7 +112,7 @@ export const NAV_ITEMS: NavItem[] = [
     },
     {
         id: 'maintenance',
-        label: 'Work Orders',
+        label: 'Maintenance',
         path: '/maintenance',
         icon: 'maintenance',
         roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'],

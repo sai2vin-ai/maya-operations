@@ -26,20 +26,20 @@ test.describe('Asset Register', () => {
     });
 });
 
-test.describe('Work Orders', () => {
-    test('should render work orders dashboard', async ({ page }) => {
+test.describe('Maintenance', () => {
+    test('should render maintenance dashboard', async ({ page }) => {
         await page.goto('/maintenance');
-        await expect(page.locator('text=/Work Orders/i').first()).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('text=/Maintenance/i').first()).toBeVisible({ timeout: 10000 });
     });
 
-    test('should have create work order button', async ({ page }) => {
+    test('should have create task button', async ({ page }) => {
         await page.goto('/maintenance');
-        await expect(page.locator('text=/Work Orders/i').first()).toBeVisible({ timeout: 10000 });
-        await expect(page.locator('text=/Work Order/i').first()).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('text=/Maintenance/i').first()).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('text=/New Task/i').first()).toBeVisible({ timeout: 10000 });
     });
 
     test('should navigate to job create form', async ({ page }) => {
         await page.goto('/maintenance/new');
-        await expect(page.locator('text=/Create Work Order/i').first()).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('text=/Create Maintenance Task/i').first()).toBeVisible({ timeout: 10000 });
     });
 });
