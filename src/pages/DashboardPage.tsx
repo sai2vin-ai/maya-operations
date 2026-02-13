@@ -2,7 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getReactors } from '../features/reactor/services/reactorService';
+import { getReactorAssets } from '../features/asset-register/services/assetService';
 import { getBatches } from '../features/reactor/services/batchService';
 import { getTodaysEntries } from '../features/gate/services/gateEntryService';
 import { getLowStockItems } from '../features/inventory/services/inventoryService';
@@ -44,8 +44,8 @@ export default function DashboardPage() {
 
     // Live dashboard stats
     const { data: reactors, isError: reactorsError } = useQuery({
-        queryKey: ['reactors'],
-        queryFn: getReactors,
+        queryKey: ['assets', 'reactors'],
+        queryFn: getReactorAssets,
         staleTime: 30_000,
     });
     const { data: todayBatches, isError: batchesError } = useQuery({
@@ -77,7 +77,7 @@ export default function DashboardPage() {
     const { data: jobStats } = useJobStats();
     const statsError = reactorsError || batchesError || gateError || inventoryError;
 
-    const activeReactorCount = reactors?.filter((r) => r.status === 'IN_BATCH').length ?? 0;
+    const activeReactorCount = reactors?.filter((r) => r.reactorStatus === 'IN_BATCH').length ?? 0;
     const totalReactorCount = reactors?.length ?? 0;
     const todayBatchCount = todayBatches?.length ?? 0;
     const inProgressBatchCount =

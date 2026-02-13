@@ -135,18 +135,34 @@ export const weighbridgeEntrySchema = auditFieldsSchema.extend({
 });
 
 // ============================================
-// REACTOR & BATCH
+// ASSET
 // ============================================
 
-export const reactorSchema = auditFieldsSchema.extend({
+export const assetSchema = auditFieldsSchema.extend({
     id: z.string(),
-    reactorNumber: z.string(),
+    assetCode: z.string(),
     name: z.string(),
-    status: z.enum(['IDLE', 'IN_BATCH', 'MAINTENANCE', 'OFFLINE']),
+    category: z.string(),
+    location: z.string(),
+    criticality: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+    status: z.enum(['OPERATIONAL', 'BREAKDOWN', 'UNDER_MAINTENANCE', 'DECOMMISSIONED']),
+    installationDate: optionalTimestamp,
+    lastPmDate: optionalTimestamp,
+    nextPmDate: optionalTimestamp,
+    pmFrequencyDays: z.number().optional(),
+    parentAssetIds: z.array(z.string()).optional(),
+    reactorNumber: z.string().optional(),
+    reactorStatus: z.enum(['IDLE', 'IN_BATCH', 'MAINTENANCE', 'OFFLINE']).optional(),
     currentBatchId: z.string().optional(),
-    lastMaintenanceDate: optionalTimestamp,
     totalBatches: z.number().optional(),
+    lastMaintenanceDate: optionalTimestamp,
+    inputItemIds: z.array(z.string()).optional(),
+    outputItemIds: z.array(z.string()).optional(),
 });
+
+// ============================================
+// BATCH
+// ============================================
 
 export const batchSchema = auditFieldsSchema.extend({
     id: z.string(),

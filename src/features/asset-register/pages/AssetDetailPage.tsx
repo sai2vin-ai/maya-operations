@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast, LoadingSpinner } from '../../../components/ui';
-import { useAsset, useUpdateAsset } from '../hooks/useAssets';
-import { useJobsByAsset } from '../../maintenance/hooks/useMaintenance';
-import { ASSET_STATUS_CONFIG, ASSET_CATEGORIES, ASSET_LOCATIONS } from '../services/assetService';
+import { useAsset, useUpdateAsset, useChildAssets, useAssetsByIds } from '../hooks/useAssets';
+import { useActiveBatch } from '../../reactor/hooks/useBatches';
+import { useJobsByAssetWithChildren } from '../../maintenance/hooks/useMaintenance';
+import { useSparePartsByAsset } from '../../spare-parts/hooks/useSpareParts';
+import { ASSET_STATUS_CONFIG, ASSET_CATEGORIES, ASSET_LOCATIONS, REACTOR_STATUSES } from '../services/assetService';
 import { JOB_STATUS_CONFIG, JOB_PRIORITY_CONFIG, JOB_TYPE_CONFIG } from '../../maintenance/services/maintenanceService';
 import type { AssetStatus, AssetCriticality } from '../../../types';
 
@@ -15,7 +17,12 @@ export default function AssetDetailPage() {
     const toast = useToast();
 
     const { data: asset, isLoading } = useAsset(id);
-    const { data: jobs = [] } = useJobsByAsset(id);
+    const { data: jobsData } = useJobsByAssetWithChildren(id);
+    const jobs = jobsData?.jobs || [];
+    const { data: childAssets = [] } = useChildAssets(id);
+    const { data: parentAssets = [] } = useAssetsByIds(asset?.parentAssetIds);
+    const { data: linkedSpareParts = [] } = useSparePartsByAsset(id);
+    const { data: activeBatch } = useActiveBatch(asset?.category === 'REACTOR' ? id : undefined);
     const updateAsset = useUpdateAsset();
 
     const [editing, setEditing] = useState(false);
@@ -76,7 +83,13 @@ export default function AssetDetailPage() {
     if (!asset) return <div className="p-6 text-center text-foreground-muted">Asset not found</div>;
 
     const statusConfig = ASSET_STATUS_CONFIG[asset.status];
+    const directJobs = jobs.filter((j) => j.assetId === id);
+    const subAssetJobs = jobs.filter((j) => j.assetId !== id);
     const activeJobs = jobs.filter((j) => !['COMPLETED', 'CLOSED'].includes(j.status));
+    const isReactor = asset.category === 'REACTOR';
+    const reactorStatusInfo = isReactor
+        ? REACTOR_STATUSES.find((s) => s.value === asset.reactorStatus) || REACTOR_STATUSES[0]
+        : null;
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
@@ -85,11 +98,79 @@ export default function AssetDetailPage() {
                     ← Back
                 </button>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-foreground">{asset.name}</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-foreground">{asset.name}</h1>
+                        {isReactor && asset.reactorNumber && (
+                            <span className="text-lg text-foreground-muted font-mono">({asset.reactorNumber})</span>
+                        )}
+                    </div>
                     <p className="text-sm text-foreground-muted font-mono">{asset.assetCode}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm ${statusConfig.color}`}>{statusConfig.label}</span>
+                <div className="flex items-center gap-2">
+                    {isReactor && reactorStatusInfo && (
+                        <span className={`px-3 py-1 rounded-full text-sm ${reactorStatusInfo.color}`}>
+                            {reactorStatusInfo.label}
+                        </span>
+                    )}
+                    <span className={`px-3 py-1 rounded-full text-sm ${statusConfig.color}`}>{statusConfig.label}</span>
+                </div>
             </div>
+
+            {/* Reactor Controls (only for reactor-category assets) */}
+            {isReactor && (
+                <div className="glass-card p-6 mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">Reactor Controls</h2>
+                    {activeBatch ? (
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div>
+                                    <span className="text-foreground-muted text-sm">Active Batch</span>
+                                    <p className="text-foreground font-semibold">{activeBatch.batchNumber}</p>
+                                </div>
+                                <button
+                                    onClick={() => navigate(`/batch/${activeBatch.id}`)}
+                                    className="btn-primary text-sm"
+                                >
+                                    View Batch
+                                </button>
+                            </div>
+                            <div className="mt-2">
+                                <div className="flex justify-between text-xs text-foreground-muted mb-1">
+                                    <span>
+                                        Step {activeBatch.currentStep} of {activeBatch.totalSteps}
+                                    </span>
+                                    <span>{Math.round((activeBatch.currentStep / activeBatch.totalSteps) * 100)}%</span>
+                                </div>
+                                <div className="h-2 bg-surface-tertiary rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
+                                        style={{
+                                            width: `${(activeBatch.currentStep / activeBatch.totalSteps) * 100}%`,
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-between">
+                            <p className="text-foreground-faint text-sm">No active batch</p>
+                            {asset.reactorStatus === 'IDLE' && (
+                                <button
+                                    onClick={() => navigate(`/reactor/${id}/new-batch`)}
+                                    className="btn-primary text-sm"
+                                >
+                                    Start New Batch
+                                </button>
+                            )}
+                        </div>
+                    )}
+                    {asset.totalBatches !== undefined && (
+                        <p className="text-xs text-foreground-faint mt-3">
+                            Total batches completed: {asset.totalBatches}
+                        </p>
+                    )}
+                </div>
+            )}
 
             {/* Asset Details */}
             <div className="glass-card p-6 mb-4">
@@ -252,7 +333,119 @@ export default function AssetDetailPage() {
                 </div>
             </div>
 
-            {/* Linked Jobs */}
+            {/* Parent Assets */}
+            {parentAssets.length > 0 && (
+                <div className="glass-card p-6 mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                        Parent Assets ({parentAssets.length})
+                    </h2>
+                    <div className="space-y-2">
+                        {parentAssets.map((parent) => (
+                            <div
+                                key={parent.id}
+                                onClick={() => navigate(`/assets/${parent.id}`)}
+                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+                            >
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-foreground font-medium">{parent.name}</span>
+                                    <span className="text-foreground-muted text-sm ml-2">({parent.assetCode})</span>
+                                </div>
+                                <span className="text-xs text-foreground-faint">{parent.category}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Sub-Assets */}
+            {childAssets.length > 0 && (
+                <div className="glass-card p-6 mb-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-foreground">Sub-Assets ({childAssets.length})</h2>
+                        <button
+                            onClick={() => navigate(`/assets/new?parentId=${id}`)}
+                            className="btn-secondary text-sm"
+                        >
+                            Add Sub-Asset
+                        </button>
+                    </div>
+                    <div className="space-y-2">
+                        {childAssets.map((child) => {
+                            const childStatus = ASSET_STATUS_CONFIG[child.status];
+                            return (
+                                <div
+                                    key={child.id}
+                                    onClick={() => navigate(`/assets/${child.id}`)}
+                                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+                                >
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-foreground font-medium">{child.name}</span>
+                                        <span className="text-foreground-muted text-sm ml-2">({child.assetCode})</span>
+                                    </div>
+                                    <span className="text-xs text-foreground-faint">{child.category}</span>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs ${childStatus.color}`}>
+                                        {childStatus.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Show "Add Sub-Asset" even when no children yet */}
+            {childAssets.length === 0 && (
+                <div className="glass-card p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-foreground">Sub-Assets</h2>
+                        <button
+                            onClick={() => navigate(`/assets/new?parentId=${id}`)}
+                            className="btn-secondary text-sm"
+                        >
+                            Add Sub-Asset
+                        </button>
+                    </div>
+                    <p className="text-foreground-faint text-sm mt-2">No sub-assets registered</p>
+                </div>
+            )}
+
+            {/* Linked Spare Parts */}
+            <div className="glass-card p-6 mb-4">
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                    Linked Spare Parts ({linkedSpareParts.length})
+                </h2>
+                {linkedSpareParts.length > 0 ? (
+                    <div className="space-y-2">
+                        {linkedSpareParts.map((part) => (
+                            <div
+                                key={part.id}
+                                onClick={() => navigate(`/spare-parts/${part.id}`)}
+                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+                            >
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-foreground font-mono text-sm">{part.partNumber}</span>
+                                        <span className="text-foreground-secondary">{part.name}</span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span
+                                        className={`text-sm font-medium ${
+                                            part.currentStock <= part.minimumStock ? 'text-red-400' : 'text-foreground'
+                                        }`}
+                                    >
+                                        {part.currentStock} {part.unit}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-foreground-muted text-center py-4">No spare parts linked to this asset</p>
+                )}
+            </div>
+
+            {/* Maintenance Tasks */}
             <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground">
@@ -266,35 +459,100 @@ export default function AssetDetailPage() {
                 {jobs.length === 0 ? (
                     <p className="text-foreground-muted text-center py-4">No maintenance tasks for this asset</p>
                 ) : (
-                    <div className="space-y-2">
-                        {jobs.map((job) => {
-                            const jStatus = JOB_STATUS_CONFIG[job.status];
-                            const jPriority = JOB_PRIORITY_CONFIG[job.priority];
-                            const jType = JOB_TYPE_CONFIG[job.jobType];
-                            return (
-                                <div
-                                    key={job.id}
-                                    onClick={() => navigate(`/maintenance/${job.id}`)}
-                                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
-                                >
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-foreground font-mono text-sm">{job.jobNumber}</span>
-                                            <span className={`px-2 py-0.5 rounded-full text-xs ${jType.color}`}>
-                                                {jType.label}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-foreground-muted truncate">{job.description}</p>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs ${jPriority.color}`}>
-                                        {jPriority.label}
-                                    </span>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs ${jStatus.color}`}>
-                                        {jStatus.label}
-                                    </span>
+                    <div className="space-y-4">
+                        {/* Direct tasks */}
+                        {directJobs.length > 0 && (
+                            <div>
+                                {subAssetJobs.length > 0 && (
+                                    <h3 className="text-sm font-medium text-foreground-secondary mb-2">Direct Tasks</h3>
+                                )}
+                                <div className="space-y-2">
+                                    {directJobs.map((job) => {
+                                        const jStatus = JOB_STATUS_CONFIG[job.status];
+                                        const jPriority = JOB_PRIORITY_CONFIG[job.priority];
+                                        const jType = JOB_TYPE_CONFIG[job.jobType];
+                                        return (
+                                            <div
+                                                key={job.id}
+                                                onClick={() => navigate(`/maintenance/${job.id}`)}
+                                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-foreground font-mono text-sm">
+                                                            {job.jobNumber}
+                                                        </span>
+                                                        <span
+                                                            className={`px-2 py-0.5 rounded-full text-xs ${jType.color}`}
+                                                        >
+                                                            {jType.label}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-foreground-muted truncate">
+                                                        {job.description}
+                                                    </p>
+                                                </div>
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${jPriority.color}`}>
+                                                    {jPriority.label}
+                                                </span>
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${jStatus.color}`}>
+                                                    {jStatus.label}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            );
-                        })}
+                            </div>
+                        )}
+
+                        {/* Sub-asset tasks */}
+                        {subAssetJobs.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-medium text-foreground-secondary mb-2">Sub-Asset Tasks</h3>
+                                <div className="space-y-2">
+                                    {subAssetJobs.map((job) => {
+                                        const jStatus = JOB_STATUS_CONFIG[job.status];
+                                        const jPriority = JOB_PRIORITY_CONFIG[job.priority];
+                                        const jType = JOB_TYPE_CONFIG[job.jobType];
+                                        const subAsset = childAssets.find((c) => c.id === job.assetId);
+                                        return (
+                                            <div
+                                                key={job.id}
+                                                onClick={() => navigate(`/maintenance/${job.id}`)}
+                                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-foreground font-mono text-sm">
+                                                            {job.jobNumber}
+                                                        </span>
+                                                        <span
+                                                            className={`px-2 py-0.5 rounded-full text-xs ${jType.color}`}
+                                                        >
+                                                            {jType.label}
+                                                        </span>
+                                                        {subAsset && (
+                                                            <span className="text-xs text-foreground-faint">
+                                                                on {subAsset.name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-foreground-muted truncate">
+                                                        {job.description}
+                                                    </p>
+                                                </div>
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${jPriority.color}`}>
+                                                    {jPriority.label}
+                                                </span>
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${jStatus.color}`}>
+                                                    {jStatus.label}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

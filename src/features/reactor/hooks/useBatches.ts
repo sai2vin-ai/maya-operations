@@ -12,10 +12,8 @@ import {
     type CompleteStepData,
     type RecordOutputData,
 } from '../services/batchService';
-import {
-    getReactors,
-    getReactorById,
-} from '../services/reactorService';
+import { getReactorAssets, getReactorAssetById } from '../../asset-register/services/assetService';
+import { assetKeys } from '../../asset-register/hooks/useAssets';
 
 // Query keys
 export const batchKeys = {
@@ -26,13 +24,6 @@ export const batchKeys = {
     detail: (id: string) => [...batchKeys.details(), id] as const,
     byReactor: (reactorId: string) => [...batchKeys.all, 'reactor', reactorId] as const,
     active: (reactorId: string) => [...batchKeys.all, 'active', reactorId] as const,
-};
-
-export const reactorKeys = {
-    all: ['reactors'] as const,
-    lists: () => [...reactorKeys.all, 'list'] as const,
-    details: () => [...reactorKeys.all, 'detail'] as const,
-    detail: (id: string) => [...reactorKeys.details(), id] as const,
 };
 
 // Filter types
@@ -76,19 +67,19 @@ export function useActiveBatch(reactorId: string | undefined) {
     });
 }
 
-// Hook to fetch all reactors
+// Hook to fetch all reactors (delegates to asset service)
 export function useReactors() {
     return useQuery({
-        queryKey: reactorKeys.lists(),
-        queryFn: getReactors,
+        queryKey: assetKeys.reactors(),
+        queryFn: getReactorAssets,
     });
 }
 
-// Hook to fetch a single reactor by ID
+// Hook to fetch a single reactor by ID (delegates to asset service)
 export function useReactor(id: string | undefined) {
     return useQuery({
-        queryKey: reactorKeys.detail(id || ''),
-        queryFn: () => getReactorById(id!),
+        queryKey: assetKeys.reactor(id || ''),
+        queryFn: () => getReactorAssetById(id!),
         enabled: !!id,
     });
 }
@@ -98,12 +89,11 @@ export function useCreateBatch() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ data, createdBy }: { data: CreateBatchData; createdBy: string }) =>
-            createBatch(data, createdBy),
+        mutationFn: ({ data, createdBy }: { data: CreateBatchData; createdBy: string }) => createBatch(data, createdBy),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: batchKeys.all });
-            queryClient.invalidateQueries({ queryKey: reactorKeys.detail(variables.data.reactorId) });
-            queryClient.invalidateQueries({ queryKey: reactorKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: assetKeys.reactor(variables.data.reactorId) });
+            queryClient.invalidateQueries({ queryKey: assetKeys.reactors() });
         },
     });
 }
@@ -155,18 +145,11 @@ export function useCancelBatch() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            batchId,
-            reason,
-            cancelledBy,
-        }: {
-            batchId: string;
-            reason: string;
-            cancelledBy: string;
-        }) => cancelBatch(batchId, reason, cancelledBy),
+        mutationFn: ({ batchId, reason, cancelledBy }: { batchId: string; reason: string; cancelledBy: string }) =>
+            cancelBatch(batchId, reason, cancelledBy),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: batchKeys.all });
-            queryClient.invalidateQueries({ queryKey: reactorKeys.all });
+            queryClient.invalidateQueries({ queryKey: assetKeys.reactors() });
         },
     });
 }

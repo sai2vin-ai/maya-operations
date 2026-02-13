@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../components/ui';
-import { getReactorById } from '../services/reactorService';
+import { getReactorAssetById } from '../../asset-register/services/assetService';
 import { createBatch } from '../services/batchService';
-import type { Reactor } from '../types';
+import type { Asset } from '../../../types';
 
 export default function BatchCreatePage() {
     const { reactorId } = useParams<{ reactorId: string }>();
@@ -12,7 +12,7 @@ export default function BatchCreatePage() {
     const { userData } = useAuth();
     const toast = useToast();
 
-    const [reactor, setReactor] = useState<Reactor | null>(null);
+    const [reactor, setReactor] = useState<Asset | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -32,11 +32,11 @@ export default function BatchCreatePage() {
     const loadReactor = async (id: string) => {
         try {
             setLoading(true);
-            const fetchedReactor = await getReactorById(id);
+            const fetchedReactor = await getReactorAssetById(id);
             if (fetchedReactor) {
                 setReactor(fetchedReactor);
-                if (fetchedReactor.status !== 'IDLE') {
-                    setError(`Reactor is currently ${fetchedReactor.status}. Cannot start a new batch.`);
+                if (fetchedReactor.reactorStatus !== 'IDLE') {
+                    setError(`Reactor is currently ${fetchedReactor.reactorStatus}. Cannot start a new batch.`);
                 }
             } else {
                 setError('Reactor not found');
@@ -50,7 +50,7 @@ export default function BatchCreatePage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -62,13 +62,16 @@ export default function BatchCreatePage() {
             setSaving(true);
             setError(null);
 
-            const batchId = await createBatch({
-                reactorId: reactor.id,
-                reactorNumber: reactor.reactorNumber,
-                inputWeight: formData.inputWeight ? parseFloat(formData.inputWeight) : undefined,
-                shiftId: formData.shiftId || undefined,
-                notes: formData.notes || undefined,
-            }, userData.id);
+            const batchId = await createBatch(
+                {
+                    reactorId: reactor.id,
+                    reactorNumber: reactor.reactorNumber || '',
+                    inputWeight: formData.inputWeight ? parseFloat(formData.inputWeight) : undefined,
+                    shiftId: formData.shiftId || undefined,
+                    notes: formData.notes || undefined,
+                },
+                userData.id,
+            );
 
             toast.success('Batch created successfully');
             navigate(`/batch/${batchId}`);
@@ -97,13 +100,20 @@ export default function BatchCreatePage() {
                         onClick={() => navigate('/reactor')}
                         className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg
+                            className="w-5 h-5 text-foreground-muted"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <div>
                         <h1 className="text-xl font-bold text-foreground">Start New Batch</h1>
-                        <p className="text-sm text-foreground-muted">{reactor?.name} ({reactor?.reactorNumber})</p>
+                        <p className="text-sm text-foreground-muted">
+                            {reactor?.name} ({reactor?.reactorNumber})
+                        </p>
                     </div>
                 </div>
             </header>
@@ -115,7 +125,7 @@ export default function BatchCreatePage() {
                     </div>
                 )}
 
-                {reactor?.status === 'IDLE' ? (
+                {reactor?.reactorStatus === 'IDLE' ? (
                     <form onSubmit={handleSubmit}>
                         {/* Reactor Info */}
                         <div className="glass-card p-6 mb-4">
@@ -143,7 +153,7 @@ export default function BatchCreatePage() {
                                         {new Date().toLocaleDateString('en-IN', {
                                             day: '2-digit',
                                             month: '2-digit',
-                                            year: 'numeric'
+                                            year: 'numeric',
                                         })}
                                     </div>
                                     <p className="text-xs text-foreground-faint mt-1">Auto-filled from device</p>
@@ -153,9 +163,12 @@ export default function BatchCreatePage() {
                                         Batch Number
                                     </label>
                                     <div className="input-field w-full bg-surface-tertiary/50 text-foreground cursor-not-allowed">
-                                        {reactor.reactorNumber}-{new Date().toISOString().split('T')[0].replace(/-/g, '')}-XXX
+                                        {reactor.reactorNumber}-
+                                        {new Date().toISOString().split('T')[0].replace(/-/g, '')}-XXX
                                     </div>
-                                    <p className="text-xs text-foreground-faint mt-1">Serial # auto-generated (e.g., M1-20260128-001)</p>
+                                    <p className="text-xs text-foreground-faint mt-1">
+                                        Serial # auto-generated (e.g., M1-20260128-001)
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -212,7 +225,9 @@ export default function BatchCreatePage() {
                         {/* Workflow Preview */}
                         <div className="glass-card p-6 mb-4">
                             <h3 className="text-lg font-semibold text-foreground mb-4">14-Step Workflow</h3>
-                            <p className="text-foreground-muted mb-4">This batch will follow the standard 14-step pyrolysis workflow:</p>
+                            <p className="text-foreground-muted mb-4">
+                                This batch will follow the standard 14-step pyrolysis workflow:
+                            </p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                                 {[
                                     '1. Tyre Loading',
@@ -230,7 +245,10 @@ export default function BatchCreatePage() {
                                     '13. Extract Outputs',
                                     '14. Clean & Inspect',
                                 ].map((step, idx) => (
-                                    <div key={idx} className="bg-surface-tertiary/50 px-3 py-2 rounded-lg text-foreground-secondary">
+                                    <div
+                                        key={idx}
+                                        className="bg-surface-tertiary/50 px-3 py-2 rounded-lg text-foreground-secondary"
+                                    >
                                         {step}
                                     </div>
                                 ))}
@@ -239,30 +257,21 @@ export default function BatchCreatePage() {
 
                         {/* Submit */}
                         <div className="flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/reactor')}
-                                className="btn-secondary"
-                            >
+                            <button type="button" onClick={() => navigate('/reactor')} className="btn-secondary">
                                 Cancel
                             </button>
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="btn-primary flex items-center gap-2"
-                            >
-                                {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
-                                🔥 Start Batch
+                            <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
+                                {saving && (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                )}
+                                Start Batch
                             </button>
                         </div>
                     </form>
                 ) : (
                     <div className="glass-card p-8 text-center">
                         <p className="text-foreground-muted">Cannot start batch - reactor is not idle</p>
-                        <button
-                            onClick={() => navigate('/reactor')}
-                            className="btn-primary mt-4"
-                        >
+                        <button onClick={() => navigate('/reactor')} className="btn-primary mt-4">
                             Back to Dashboard
                         </button>
                     </div>

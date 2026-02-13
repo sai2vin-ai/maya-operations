@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     getSpareParts,
     getSparePartById,
+    getSparePartsByAsset,
     createSparePart,
     updateSparePart,
     receiptSparePart,
@@ -19,6 +20,7 @@ export const sparePartKeys = {
     list: (filters: SparePartFilters) => [...sparePartKeys.lists(), filters] as const,
     details: () => [...sparePartKeys.all, 'detail'] as const,
     detail: (id: string) => [...sparePartKeys.details(), id] as const,
+    byAsset: (assetId: string) => [...sparePartKeys.all, 'byAsset', assetId] as const,
 };
 
 // Filter types
@@ -71,6 +73,15 @@ export function useSparePart(id: string | undefined) {
         queryKey: sparePartKeys.detail(id || ''),
         queryFn: () => getSparePartById(id!),
         enabled: !!id,
+    });
+}
+
+// Hook to fetch spare parts linked to a specific asset
+export function useSparePartsByAsset(assetId: string | undefined) {
+    return useQuery({
+        queryKey: sparePartKeys.byAsset(assetId || ''),
+        queryFn: () => getSparePartsByAsset(assetId!),
+        enabled: !!assetId,
     });
 }
 

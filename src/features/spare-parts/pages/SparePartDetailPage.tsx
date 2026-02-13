@@ -14,6 +14,7 @@ import {
     SPARE_PART_UNITS,
 } from '../services/sparePartsService';
 import { useToast } from '../../../components/ui';
+import { useAssets, useAssetsByIds } from '../../asset-register/hooks/useAssets';
 import type { SparePart, SparePartTransaction, SparePartCategory } from '../types';
 
 export default function SparePartDetailPage() {
@@ -29,6 +30,10 @@ export default function SparePartDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
+    // Linked assets
+    const { data: allAssets = [] } = useAssets();
+    const { data: linkedAssets = [] } = useAssetsByIds(part?.machineIds);
+
     // Edit mode
     const [editing, setEditing] = useState(false);
     const [editName, setEditName] = useState('');
@@ -39,6 +44,7 @@ export default function SparePartDetailPage() {
     const [editMinStock, setEditMinStock] = useState('');
     const [editUnit, setEditUnit] = useState('');
     const [editUnitPrice, setEditUnitPrice] = useState('');
+    const [editMachineIds, setEditMachineIds] = useState<string[]>([]);
 
     // Transaction forms
     const [showReceiptForm, setShowReceiptForm] = useState(false);
@@ -73,6 +79,7 @@ export default function SparePartDetailPage() {
                 setEditMinStock(String(fetchedPart.minimumStock));
                 setEditUnit(fetchedPart.unit);
                 setEditUnitPrice(fetchedPart.unitPrice ? String(fetchedPart.unitPrice) : '');
+                setEditMachineIds(fetchedPart.machineIds || []);
             } else {
                 setError('Spare part not found');
             }
@@ -102,6 +109,7 @@ export default function SparePartDetailPage() {
                     minimumStock: parseInt(editMinStock),
                     unit: editUnit,
                     unitPrice: editUnitPrice ? parseFloat(editUnitPrice) : undefined,
+                    machineIds: editMachineIds,
                 },
                 userData.id,
                 userData.role,
@@ -498,10 +506,61 @@ export default function SparePartDetailPage() {
                                 />
                             </div>
                         </div>
+                        <div>
+                            <label className="block text-sm text-foreground-muted mb-2">Linked Assets</label>
+                            <div className="bg-surface-tertiary/50 p-3 rounded-lg max-h-40 overflow-y-auto space-y-1">
+                                {allAssets.map((a) => (
+                                    <label
+                                        key={a.id}
+                                        className="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-surface-hover"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={editMachineIds.includes(a.id)}
+                                            onChange={() =>
+                                                setEditMachineIds((prev) =>
+                                                    prev.includes(a.id)
+                                                        ? prev.filter((id) => id !== a.id)
+                                                        : [...prev, a.id],
+                                                )
+                                            }
+                                            className="w-4 h-4 rounded bg-surface-tertiary border-border-secondary"
+                                        />
+                                        <span className="text-sm text-foreground-secondary">
+                                            {a.name} <span className="text-foreground-faint">({a.assetCode})</span>
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
                         <button onClick={handleSaveEdit} disabled={saving} className="btn-primary">
                             Save Changes
                         </button>
                     </div>
+                )}
+            </div>
+
+            {/* Linked Assets */}
+            <div className="glass-card p-6 mb-4">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Linked Assets ({linkedAssets.length})</h3>
+                {linkedAssets.length > 0 ? (
+                    <div className="space-y-2">
+                        {linkedAssets.map((asset) => (
+                            <div
+                                key={asset.id}
+                                onClick={() => navigate(`/assets/${asset.id}`)}
+                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+                            >
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-foreground font-medium">{asset.name}</span>
+                                    <span className="text-foreground-muted text-sm ml-2">({asset.assetCode})</span>
+                                </div>
+                                <span className="text-xs text-foreground-faint">{asset.category}</span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-foreground-muted text-center py-2">No assets linked</p>
                 )}
             </div>
 

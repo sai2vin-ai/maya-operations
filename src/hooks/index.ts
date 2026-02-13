@@ -47,7 +47,6 @@ export {
     useRecordOutput,
     useCancelBatch,
     batchKeys,
-    reactorKeys,
     type BatchFilters,
 } from '../features/reactor/hooks/useBatches';
 
@@ -66,6 +65,7 @@ export {
 export {
     useSpareParts,
     useSparePart,
+    useSparePartsByAsset,
     useCreateSparePart,
     useUpdateSparePart,
     useReceiptSparePart,

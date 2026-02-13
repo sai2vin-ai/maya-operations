@@ -83,15 +83,15 @@ export interface Device {
 export type EntryType = 'IN' | 'OUT';
 
 export type MaterialCategory =
-    | 'TW-WHOLE'       // Whole waste tyres
-    | 'TW-SHRED'       // Pre-shredded tyre chips
-    | 'CB-STD'         // Carbon Black (Standard)
-    | 'CB-HG'          // Carbon Black (High Grade)
-    | 'PO-CRD'         // Pyrolysis Oil (Crude)
-    | 'SW-MIX'         // Steel Wire (Mixed)
-    | 'PYROLYSIS_OIL'  // Pyrolysis Oil (Reactor Output)
-    | 'CARBON_BLACK'   // Carbon Black (Reactor Output)
-    | 'SCRAP_STEEL';   // Scrap Steel (Reactor Output)
+    | 'TW-WHOLE' // Whole waste tyres
+    | 'TW-SHRED' // Pre-shredded tyre chips
+    | 'CB-STD' // Carbon Black (Standard)
+    | 'CB-HG' // Carbon Black (High Grade)
+    | 'PO-CRD' // Pyrolysis Oil (Crude)
+    | 'SW-MIX' // Steel Wire (Mixed)
+    | 'PYROLYSIS_OIL' // Pyrolysis Oil (Reactor Output)
+    | 'CARBON_BLACK' // Carbon Black (Reactor Output)
+    | 'SCRAP_STEEL'; // Scrap Steel (Reactor Output)
 
 export type GateEntryStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 
@@ -122,22 +122,22 @@ export interface GateEntry extends AuditFields {
 // WEIGHBRIDGE TYPES
 // ============================================
 
-export type WeighbridgeEntryType = 'RM_IN' | 'FG_OUT';  // Raw Material IN, Finished Goods OUT
+export type WeighbridgeEntryType = 'RM_IN' | 'FG_OUT'; // Raw Material IN, Finished Goods OUT
 export type WeighbridgeEntryStatus = 'PENDING' | 'FIRST_WEIGHT' | 'COMPLETED' | 'CANCELLED';
 
 export interface WeighbridgeEntry extends AuditFields {
     id: string;
-    entryNumber: string;           // WB-2026-00001
+    entryNumber: string; // WB-2026-00001
     entryType: WeighbridgeEntryType;
     vehicleNumber: string;
     driverName?: string;
     driverPhone?: string;
-    partyName?: string;            // Supplier for RM_IN, Customer for FG_OUT
-    inventoryItemId?: string;      // Link to inventory item
-    materialName?: string;         // Material description
-    grossWeight?: number;          // Total weight with load (KG)
-    tareWeight?: number;           // Empty vehicle weight (KG)
-    netWeight?: number;            // Calculated: gross - tare (KG)
+    partyName?: string; // Supplier for RM_IN, Customer for FG_OUT
+    inventoryItemId?: string; // Link to inventory item
+    materialName?: string; // Material description
+    grossWeight?: number; // Total weight with load (KG)
+    tareWeight?: number; // Empty vehicle weight (KG)
+    netWeight?: number; // Calculated: gross - tare (KG)
     unit: 'KG' | 'TONS' | 'KL';
     firstWeightTime?: Timestamp;
     secondWeightTime?: Timestamp;
@@ -151,35 +151,20 @@ export interface WeighbridgeEntry extends AuditFields {
 
 export type ReactorStatus = 'IDLE' | 'IN_BATCH' | 'MAINTENANCE' | 'OFFLINE';
 
-export interface Reactor extends AuditFields {
-    id: string;
-    reactorNumber: string;
-    name: string;
-    status: ReactorStatus;
-    currentBatchId?: string;
-    lastMaintenanceDate?: Timestamp;
-    totalBatches?: number;
-}
-
-export type BatchStatus =
-    | 'CREATED'
-    | 'IN_PROGRESS'
-    | 'COOLING'
-    | 'COMPLETED'
-    | 'CANCELLED';
+export type BatchStatus = 'CREATED' | 'IN_PROGRESS' | 'COOLING' | 'COMPLETED' | 'CANCELLED';
 
 export interface BatchStep {
     stepNumber: number;
     stepName: string;
     completedAt?: Timestamp;
     completedBy?: string;
-    photoUrls?: string[];           // Changed: multiple photos support
+    photoUrls?: string[]; // Changed: multiple photos support
     notes?: string;
     temperature?: number;
     pressure?: number;
-    inputWeight?: number;           // For LOADING step
-    nitrogenPurged?: boolean;       // For VENTING/CARBON_DISCHARGE steps
-    pyrolysisReadings?: PyrolysisReading[];  // For PYROLYSIS step
+    inputWeight?: number; // For LOADING step
+    nitrogenPurged?: boolean; // For VENTING/CARBON_DISCHARGE steps
+    pyrolysisReadings?: PyrolysisReading[]; // For PYROLYSIS step
 }
 
 // Multi-point readings for PYROLYSIS step
@@ -219,7 +204,7 @@ export interface Batch extends AuditFields {
     inputWeight?: number;
     shiftId?: string;
     notes?: string;
-    linkedGateEntryIds?: string[];  // Gate entries used for this batch
+    linkedGateEntryIds?: string[]; // Gate entries used for this batch
 }
 
 // ============================================
@@ -258,21 +243,31 @@ export interface InventoryTransaction extends AuditFields {
 // SPARE PARTS TYPES
 // ============================================
 
-export type SparePartCategory = 'MOTOR' | 'PUMP' | 'VALVE' | 'BEARING' | 'BELT' | 'SEAL' | 'ELECTRICAL' | 'HYDRAULIC' | 'PNEUMATIC' | 'GENERAL';
+export type SparePartCategory =
+    | 'MOTOR'
+    | 'PUMP'
+    | 'VALVE'
+    | 'BEARING'
+    | 'BELT'
+    | 'SEAL'
+    | 'ELECTRICAL'
+    | 'HYDRAULIC'
+    | 'PNEUMATIC'
+    | 'GENERAL';
 
 export interface SparePart extends AuditFields {
     id: string;
-    partNumber: string;       // Unique part identifier (e.g., SP-001)
-    fileNumber?: string;      // File/catalog number
+    partNumber: string; // Unique part identifier (e.g., SP-001)
+    fileNumber?: string; // File/catalog number
     name: string;
     description?: string;
     category: SparePartCategory;
-    unit: string;             // PCS, SET, MTR, etc.
+    unit: string; // PCS, SET, MTR, etc.
     currentStock: number;
     minimumStock: number;
-    usedFor?: string;         // Purpose/machine type description
-    machineIds?: string[];    // Linked machine/asset IDs
-    location?: string;        // Storage location (e.g., Rack A-1)
+    usedFor?: string; // Purpose/machine type description
+    machineIds?: string[]; // Linked machine/asset IDs
+    location?: string; // Storage location (e.g., Rack A-1)
     unitPrice?: number;
 }
 
@@ -284,10 +279,10 @@ export interface SparePartTransaction extends AuditFields {
     type: SparePartTransactionType;
     quantity: number;
     balanceAfter: number;
-    machineId?: string;       // If issued to specific machine
-    machineName?: string;     // Machine name for display
+    machineId?: string; // If issued to specific machine
+    machineName?: string; // Machine name for display
     reason?: string;
-    issuedTo?: string;        // Person who drew the part
+    issuedTo?: string; // Person who drew the part
 }
 
 // ============================================
@@ -309,6 +304,17 @@ export interface Asset extends AuditFields {
     lastPmDate?: Timestamp;
     nextPmDate?: Timestamp;
     pmFrequencyDays?: number;
+    // Hierarchy
+    parentAssetIds?: string[];
+    // Reactor-specific (only when category === 'REACTOR')
+    reactorNumber?: string;
+    reactorStatus?: ReactorStatus;
+    currentBatchId?: string;
+    totalBatches?: number;
+    lastMaintenanceDate?: Timestamp;
+    // I/O materials (only for reactors)
+    inputItemIds?: string[];
+    outputItemIds?: string[];
 }
 
 export type JobType = 'BREAKDOWN' | 'PREVENTIVE' | 'CORRECTIVE';
@@ -316,11 +322,11 @@ export type JobStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'PENDING_PARTS' | 
 export type JobPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
 export interface JobPartUsed {
-    partId: string;       // Firestore doc ID in spareParts collection
-    partNumber: string;   // Denormalized for display
-    partName: string;     // Denormalized for display
+    partId: string; // Firestore doc ID in spareParts collection
+    partNumber: string; // Denormalized for display
+    partName: string; // Denormalized for display
     quantity: number;
-    unitPrice?: number;   // Snapshot at time of issue
+    unitPrice?: number; // Snapshot at time of issue
 }
 
 export interface MaintenanceJob extends AuditFields {
@@ -369,7 +375,12 @@ export type FirestoreDocData = Record<string, unknown>;
 
 // Helper to safely get timestamp millis
 export function getTimestampMillis(ts: unknown): number {
-    if (ts && typeof ts === 'object' && 'toMillis' in ts && typeof (ts as { toMillis: () => number }).toMillis === 'function') {
+    if (
+        ts &&
+        typeof ts === 'object' &&
+        'toMillis' in ts &&
+        typeof (ts as { toMillis: () => number }).toMillis === 'function'
+    ) {
         return (ts as { toMillis: () => number }).toMillis();
     }
     return 0;
@@ -387,8 +398,8 @@ export interface AppNotification {
     title: string;
     message: string;
     targetRoles: UserRole[];
-    entityType?: string;      // 'gateEntry', 'batch', 'reactor', etc.
-    entityId?: string;        // Document ID for navigation
+    entityType?: string; // 'gateEntry', 'batch', 'reactor', etc.
+    entityId?: string; // Document ID for navigation
     createdAt: Timestamp;
     expiresAt?: Timestamp;
 }

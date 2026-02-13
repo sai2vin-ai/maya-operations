@@ -100,6 +100,20 @@ export async function getSparePartById(partId: string): Promise<SparePart | null
     return { id: snapshot.id, ...snapshot.data() } as SparePart;
 }
 
+// Get spare parts linked to a specific asset
+export async function getSparePartsByAsset(assetId: string): Promise<SparePart[]> {
+    const partsRef = collection(db, SPARE_PARTS_COLLECTION);
+    const q = query(partsRef, where('machineIds', 'array-contains', assetId));
+    const snapshot = await getDocs(q);
+
+    const parts = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+    })) as SparePart[];
+
+    return parts.sort((a, b) => a.partNumber.localeCompare(b.partNumber));
+}
+
 // Get low stock parts
 export async function getLowStockParts(): Promise<SparePart[]> {
     const parts = await getSpareParts();

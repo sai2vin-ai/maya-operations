@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getBatches } from '../services/batchService';
-import { getReactors } from '../services/reactorService';
+import { getReactorAssets } from '../../asset-register/services/assetService';
 import { PageHeader, LoadingSpinner } from '../../../components/ui';
 
 export default function BatchAnalyticsPage() {
@@ -13,8 +13,8 @@ export default function BatchAnalyticsPage() {
     });
 
     const { data: reactors = [] } = useQuery({
-        queryKey: ['reactors'],
-        queryFn: getReactors,
+        queryKey: ['assets', 'reactors'],
+        queryFn: getReactorAssets,
     });
 
     const analytics = useMemo(() => {
@@ -24,19 +24,19 @@ export default function BatchAnalyticsPage() {
         else if (period === 'month') cutoff.setMonth(now.getMonth() - 1);
         else cutoff.setMonth(now.getMonth() - 3);
 
-        const periodBatches = batches.filter(b => {
+        const periodBatches = batches.filter((b) => {
             const ts = b.startTime as { toDate?: () => Date };
             const d = ts?.toDate ? ts.toDate() : new Date(b.startTime as unknown as string);
             return d >= cutoff;
         });
 
-        const completed = periodBatches.filter(b => b.status === 'COMPLETED');
-        const cancelled = periodBatches.filter(b => b.status === 'CANCELLED');
+        const completed = periodBatches.filter((b) => b.status === 'COMPLETED');
+        const cancelled = periodBatches.filter((b) => b.status === 'CANCELLED');
 
         // Calculate average cycle time (start to completion)
         let totalCycleHours = 0;
         let cycleCount = 0;
-        completed.forEach(b => {
+        completed.forEach((b) => {
             const startTs = b.startTime as { toDate?: () => Date };
             const endTs = b.endTime as { toDate?: () => Date };
             const start = startTs?.toDate ? startTs.toDate() : null;
@@ -49,10 +49,12 @@ export default function BatchAnalyticsPage() {
         const avgCycleHours = cycleCount > 0 ? totalCycleHours / cycleCount : 0;
 
         // Output totals
-        let totalOil = 0, totalCarbon = 0, totalSteel = 0;
-        completed.forEach(b => {
+        let totalOil = 0,
+            totalCarbon = 0,
+            totalSteel = 0;
+        completed.forEach((b) => {
             if (b.outputs) {
-                b.outputs.forEach(o => {
+                b.outputs.forEach((o) => {
                     if (o.materialCategory === 'PYROLYSIS_OIL') totalOil += o.quantity || 0;
                     if (o.materialCategory === 'CARBON_BLACK') totalCarbon += o.quantity || 0;
                     if (o.materialCategory === 'SCRAP_STEEL') totalSteel += o.quantity || 0;
@@ -61,12 +63,14 @@ export default function BatchAnalyticsPage() {
         });
 
         // Per-reactor breakdown
-        const reactorStats = reactors.map(r => {
-            const rBatches = completed.filter(b => b.reactorId === r.id);
-            let rOil = 0, rCarbon = 0, rSteel = 0;
-            rBatches.forEach(b => {
+        const reactorStats = reactors.map((r) => {
+            const rBatches = completed.filter((b) => b.reactorId === r.id);
+            let rOil = 0,
+                rCarbon = 0,
+                rSteel = 0;
+            rBatches.forEach((b) => {
                 if (b.outputs) {
-                    b.outputs.forEach(o => {
+                    b.outputs.forEach((o) => {
                         if (o.materialCategory === 'PYROLYSIS_OIL') rOil += o.quantity || 0;
                         if (o.materialCategory === 'CARBON_BLACK') rCarbon += o.quantity || 0;
                         if (o.materialCategory === 'SCRAP_STEEL') rSteel += o.quantity || 0;
@@ -107,12 +111,14 @@ export default function BatchAnalyticsPage() {
             <main className="p-4 max-w-6xl mx-auto">
                 {/* Period Selector */}
                 <div className="glass-card p-1 mb-4 inline-flex gap-1">
-                    {(['week', 'month', 'quarter'] as const).map(p => (
+                    {(['week', 'month', 'quarter'] as const).map((p) => (
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                period === p ? 'bg-blue-600/20 text-blue-400' : 'text-foreground-muted hover:text-foreground'
+                                period === p
+                                    ? 'bg-blue-600/20 text-blue-400'
+                                    : 'text-foreground-muted hover:text-foreground'
                             }`}
                         >
                             {p === 'week' ? 'Last 7 Days' : p === 'month' ? 'Last 30 Days' : 'Last 90 Days'}
@@ -144,7 +150,9 @@ export default function BatchAnalyticsPage() {
                             <div className="glass-card p-4">
                                 <p className="text-sm text-foreground-muted">Batches/Day</p>
                                 <p className="text-2xl font-bold text-foreground">
-                                    {(analytics.completed / (period === 'week' ? 7 : period === 'month' ? 30 : 90)).toFixed(1)}
+                                    {(
+                                        analytics.completed / (period === 'week' ? 7 : period === 'month' ? 30 : 90)
+                                    ).toFixed(1)}
                                 </p>
                                 <p className="text-xs text-foreground-faint">avg daily output</p>
                             </div>
@@ -160,7 +168,9 @@ export default function BatchAnalyticsPage() {
                                     </div>
                                     <div>
                                         <p className="text-foreground-muted text-sm">Pyrolysis Oil</p>
-                                        <p className="text-xl font-bold text-foreground">{analytics.totalOil.toLocaleString()} L</p>
+                                        <p className="text-xl font-bold text-foreground">
+                                            {analytics.totalOil.toLocaleString()} L
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -171,7 +181,9 @@ export default function BatchAnalyticsPage() {
                                     </div>
                                     <div>
                                         <p className="text-foreground-muted text-sm">Carbon Black</p>
-                                        <p className="text-xl font-bold text-foreground">{analytics.totalCarbon.toLocaleString()} KG</p>
+                                        <p className="text-xl font-bold text-foreground">
+                                            {analytics.totalCarbon.toLocaleString()} KG
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -182,7 +194,9 @@ export default function BatchAnalyticsPage() {
                                     </div>
                                     <div>
                                         <p className="text-foreground-muted text-sm">Steel Wire</p>
-                                        <p className="text-xl font-bold text-foreground">{analytics.totalSteel.toLocaleString()} KG</p>
+                                        <p className="text-xl font-bold text-foreground">
+                                            {analytics.totalSteel.toLocaleString()} KG
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -195,21 +209,40 @@ export default function BatchAnalyticsPage() {
                                 <table className="w-full">
                                     <thead className="bg-surface-tertiary/50">
                                         <tr>
-                                            <th className="text-left p-4 text-foreground-secondary font-medium">Reactor</th>
-                                            <th className="text-right p-4 text-foreground-secondary font-medium">Batches</th>
-                                            <th className="text-right p-4 text-foreground-secondary font-medium">Oil (L)</th>
-                                            <th className="text-right p-4 text-foreground-secondary font-medium">Carbon (KG)</th>
-                                            <th className="text-right p-4 text-foreground-secondary font-medium">Steel (KG)</th>
+                                            <th className="text-left p-4 text-foreground-secondary font-medium">
+                                                Reactor
+                                            </th>
+                                            <th className="text-right p-4 text-foreground-secondary font-medium">
+                                                Batches
+                                            </th>
+                                            <th className="text-right p-4 text-foreground-secondary font-medium">
+                                                Oil (L)
+                                            </th>
+                                            <th className="text-right p-4 text-foreground-secondary font-medium">
+                                                Carbon (KG)
+                                            </th>
+                                            <th className="text-right p-4 text-foreground-secondary font-medium">
+                                                Steel (KG)
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-700">
-                                        {analytics.reactorStats.map(r => (
-                                            <tr key={r.reactorId} className="hover:bg-surface-tertiary/30 transition-colors">
+                                        {analytics.reactorStats.map((r) => (
+                                            <tr
+                                                key={r.reactorId}
+                                                className="hover:bg-surface-tertiary/30 transition-colors"
+                                            >
                                                 <td className="p-4 text-foreground font-medium">{r.reactorNumber}</td>
                                                 <td className="p-4 text-right text-foreground">{r.batchCount}</td>
-                                                <td className="p-4 text-right text-yellow-400">{r.oil.toLocaleString()}</td>
-                                                <td className="p-4 text-right text-foreground-secondary">{r.carbon.toLocaleString()}</td>
-                                                <td className="p-4 text-right text-blue-400">{r.steel.toLocaleString()}</td>
+                                                <td className="p-4 text-right text-yellow-400">
+                                                    {r.oil.toLocaleString()}
+                                                </td>
+                                                <td className="p-4 text-right text-foreground-secondary">
+                                                    {r.carbon.toLocaleString()}
+                                                </td>
+                                                <td className="p-4 text-right text-blue-400">
+                                                    {r.steel.toLocaleString()}
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>

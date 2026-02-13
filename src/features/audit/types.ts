@@ -25,7 +25,8 @@ export const AUDIT_COLLECTIONS = [
     { value: 'gateEntries', label: 'Gate Entries' },
     { value: 'batches', label: 'Batches' },
     { value: 'users', label: 'Users' },
-    { value: 'reactors', label: 'Reactors' },
+    { value: 'assets', label: 'Assets' },
+    { value: 'reactors', label: 'Reactors (legacy)' },
     { value: 'devices', label: 'Devices' },
 ] as const;
 
@@ -44,26 +45,31 @@ export const AUDIT_ACTIONS = [
 export function getActionLabel(action: string): string {
     const actionMap: Record<string, string> = {
         // Gate entries
-        'GATE_ENTRY_CREATED': 'Gate Entry Created',
-        'GATE_ENTRY_PENDING': 'Gate Entry Pending',
-        'GATE_ENTRY_COMPLETED': 'Gate Entry Completed',
-        'GATE_ENTRY_CANCELLED': 'Gate Entry Cancelled',
+        GATE_ENTRY_CREATED: 'Gate Entry Created',
+        GATE_ENTRY_PENDING: 'Gate Entry Pending',
+        GATE_ENTRY_COMPLETED: 'Gate Entry Completed',
+        GATE_ENTRY_CANCELLED: 'Gate Entry Cancelled',
         // Batches
-        'BATCH_CREATED': 'Batch Created',
-        'BATCH_IN_PROGRESS': 'Batch In Progress',
-        'BATCH_COMPLETED': 'Batch Completed',
-        'BATCH_STEP_COMPLETED': 'Batch Step Completed',
+        BATCH_CREATED: 'Batch Created',
+        BATCH_IN_PROGRESS: 'Batch In Progress',
+        BATCH_COMPLETED: 'Batch Completed',
+        BATCH_STEP_COMPLETED: 'Batch Step Completed',
         // Users
-        'USER_CREATED': 'User Created',
-        'USER_ACTIVE': 'User Activated',
-        'USER_INACTIVE': 'User Deactivated',
-        'USER_ROLE_CHANGED': 'User Role Changed',
-        // Reactors
-        'REACTOR_IDLE': 'Reactor Idle',
-        'REACTOR_RUNNING': 'Reactor Running',
-        'REACTOR_MAINTENANCE': 'Reactor Maintenance',
+        USER_CREATED: 'User Created',
+        USER_ACTIVE: 'User Activated',
+        USER_INACTIVE: 'User Deactivated',
+        USER_ROLE_CHANGED: 'User Role Changed',
+        // Reactors / Assets
+        REACTOR_IDLE: 'Reactor Idle',
+        REACTOR_IN_BATCH: 'Reactor In Batch',
+        REACTOR_MAINTENANCE: 'Reactor Maintenance',
+        REACTOR_OFFLINE: 'Reactor Offline',
+        ASSET_OPERATIONAL: 'Asset Operational',
+        ASSET_UNDER_MAINTENANCE: 'Asset Under Maintenance',
+        ASSET_BREAKDOWN: 'Asset Breakdown',
+        ASSET_DECOMMISSIONED: 'Asset Decommissioned',
         // Devices
-        'DEVICE_REVOKED': 'Device Revoked',
+        DEVICE_REVOKED: 'Device Revoked',
     };
 
     return actionMap[action] || action.replace(/_/g, ' ');
@@ -72,11 +78,12 @@ export function getActionLabel(action: string): string {
 // Helper to get collection label
 export function getCollectionLabel(collection: string): string {
     const collectionMap: Record<string, string> = {
-        'gateEntries': 'Gate Entries',
-        'batches': 'Batches',
-        'users': 'Users',
-        'reactors': 'Reactors',
-        'devices': 'Devices',
+        gateEntries: 'Gate Entries',
+        batches: 'Batches',
+        users: 'Users',
+        assets: 'Assets',
+        reactors: 'Reactors (legacy)',
+        devices: 'Devices',
     };
 
     return collectionMap[collection] || collection;

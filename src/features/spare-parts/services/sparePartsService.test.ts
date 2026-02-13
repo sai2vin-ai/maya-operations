@@ -372,6 +372,60 @@ describe('sparePartsService', () => {
         });
     });
 
+    describe('getSparePartsByAsset', () => {
+        it('should return parts linked to the given asset', async () => {
+            mockGetDocs.mockResolvedValue({
+                docs: [
+                    {
+                        id: 'part-1',
+                        data: () => ({ partNumber: 'SP-0001', name: 'Oil Seal', machineIds: ['reactor-M1'] }),
+                    },
+                    {
+                        id: 'part-2',
+                        data: () => ({ partNumber: 'SP-0002', name: 'Bearing', machineIds: ['reactor-M1'] }),
+                    },
+                ],
+            });
+
+            const { getSparePartsByAsset } = await import('./sparePartsService');
+            const parts = await getSparePartsByAsset('reactor-M1');
+
+            expect(parts).toHaveLength(2);
+            expect(parts[0].id).toBe('part-1');
+            expect(parts[1].id).toBe('part-2');
+        });
+
+        it('should return empty array when no parts linked', async () => {
+            mockGetDocs.mockResolvedValue({ docs: [] });
+
+            const { getSparePartsByAsset } = await import('./sparePartsService');
+            const parts = await getSparePartsByAsset('asset-with-no-parts');
+
+            expect(parts).toHaveLength(0);
+        });
+
+        it('should sort results by partNumber', async () => {
+            mockGetDocs.mockResolvedValue({
+                docs: [
+                    {
+                        id: 'part-2',
+                        data: () => ({ partNumber: 'SP-0005', name: 'Bearing', machineIds: ['reactor-M1'] }),
+                    },
+                    {
+                        id: 'part-1',
+                        data: () => ({ partNumber: 'SP-0002', name: 'Oil Seal', machineIds: ['reactor-M1'] }),
+                    },
+                ],
+            });
+
+            const { getSparePartsByAsset } = await import('./sparePartsService');
+            const parts = await getSparePartsByAsset('reactor-M1');
+
+            expect(parts[0].partNumber).toBe('SP-0002');
+            expect(parts[1].partNumber).toBe('SP-0005');
+        });
+    });
+
     describe('issueSparePart', () => {
         it('should call recordSparePartTransaction with ISSUE type', async () => {
             const mockTransactionSet = vi.fn();

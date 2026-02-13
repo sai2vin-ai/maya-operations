@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getReactors, getReactorStatusInfo, createReactor } from '../services/reactorService';
+import { getReactorAssets, getReactorStatusInfo, createReactorAsset } from '../../asset-register/services/assetService';
 import { getActiveBatch, getBatchStatusInfo } from '../services/batchService';
 import { useAuth } from '../../../contexts/AuthContext';
-import type { Reactor, Batch } from '../types';
+import type { Asset } from '../../../types';
+import type { Batch } from '../types';
 
-interface ReactorWithBatch extends Reactor {
+interface ReactorWithBatch extends Asset {
     activeBatch?: Batch | null;
 }
 
@@ -28,14 +29,14 @@ export default function ReactorDashboardPage() {
         try {
             setLoading(true);
             setError(null);
-            const fetchedReactors = await getReactors();
+            const fetchedReactors = await getReactorAssets();
 
             // Load active batch for each reactor
             const reactorsWithBatches = await Promise.all(
                 fetchedReactors.map(async (reactor) => {
                     const activeBatch = await getActiveBatch(reactor.id);
                     return { ...reactor, activeBatch };
-                })
+                }),
             );
 
             setReactors(reactorsWithBatches);
@@ -51,10 +52,13 @@ export default function ReactorDashboardPage() {
 
         try {
             setAdding(true);
-            await createReactor({
-                reactorNumber: newReactorNumber,
-                name: newReactorName,
-            }, userData?.id || '');
+            await createReactorAsset(
+                {
+                    reactorNumber: newReactorNumber,
+                    name: newReactorName,
+                },
+                userData?.id || '',
+            );
 
             setNewReactorNumber('');
             setNewReactorName('');
@@ -69,21 +73,31 @@ export default function ReactorDashboardPage() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'IDLE': return 'from-gray-500 to-gray-600';
-            case 'IN_BATCH': return 'from-green-500 to-green-600';
-            case 'MAINTENANCE': return 'from-yellow-500 to-yellow-600';
-            case 'OFFLINE': return 'from-red-500 to-red-600';
-            default: return 'from-gray-500 to-gray-600';
+            case 'IDLE':
+                return 'from-gray-500 to-gray-600';
+            case 'IN_BATCH':
+                return 'from-green-500 to-green-600';
+            case 'MAINTENANCE':
+                return 'from-yellow-500 to-yellow-600';
+            case 'OFFLINE':
+                return 'from-red-500 to-red-600';
+            default:
+                return 'from-gray-500 to-gray-600';
         }
     };
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'IDLE': return '⏸️';
-            case 'IN_BATCH': return '🔥';
-            case 'MAINTENANCE': return '🔧';
-            case 'OFFLINE': return '❌';
-            default: return '❓';
+            case 'IDLE':
+                return '⏸️';
+            case 'IN_BATCH':
+                return '🔥';
+            case 'MAINTENANCE':
+                return '🔧';
+            case 'OFFLINE':
+                return '❌';
+            default:
+                return '❓';
         }
     };
 
@@ -97,8 +111,18 @@ export default function ReactorDashboardPage() {
                             onClick={() => navigate('/dashboard')}
                             className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            <svg
+                                className="w-5 h-5 text-foreground-muted"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                />
                             </svg>
                         </button>
                         <div>
@@ -177,7 +201,8 @@ export default function ReactorDashboardPage() {
                             </div>
                         ) : (
                             reactors.map((reactor) => {
-                                const statusInfo = getReactorStatusInfo(reactor.status);
+                                const rStatus = reactor.reactorStatus || 'IDLE';
+                                const statusInfo = getReactorStatusInfo(rStatus);
                                 return (
                                     <div
                                         key={reactor.id}
@@ -189,12 +214,14 @@ export default function ReactorDashboardPage() {
                                         }}
                                     >
                                         {/* Status Header */}
-                                        <div className={`bg-gradient-to-r ${getStatusColor(reactor.status)} p-4`}>
+                                        <div className={`bg-gradient-to-r ${getStatusColor(rStatus)} p-4`}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-3xl">{getStatusIcon(reactor.status)}</span>
+                                                    <span className="text-3xl">{getStatusIcon(rStatus)}</span>
                                                     <div>
-                                                        <h3 className="text-foreground font-bold text-xl">{reactor.reactorNumber}</h3>
+                                                        <h3 className="text-foreground font-bold text-xl">
+                                                            {reactor.reactorNumber}
+                                                        </h3>
                                                         <p className="text-foreground/80 text-sm">{reactor.name}</p>
                                                     </div>
                                                 </div>
@@ -212,26 +239,47 @@ export default function ReactorDashboardPage() {
                                             {reactor.activeBatch ? (
                                                 <div className="mb-4">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-foreground-muted text-sm">Active Batch</span>
-                                                        <span className={`status-badge ${reactor.activeBatch.status === 'IN_PROGRESS' ? 'status-active' :
-                                                            reactor.activeBatch.status === 'COOLING' ? 'status-pending' :
-                                                                'status-inactive'
-                                                            }`}>
+                                                        <span className="text-foreground-muted text-sm">
+                                                            Active Batch
+                                                        </span>
+                                                        <span
+                                                            className={`status-badge ${
+                                                                reactor.activeBatch.status === 'IN_PROGRESS'
+                                                                    ? 'status-active'
+                                                                    : reactor.activeBatch.status === 'COOLING'
+                                                                      ? 'status-pending'
+                                                                      : 'status-inactive'
+                                                            }`}
+                                                        >
                                                             {getBatchStatusInfo(reactor.activeBatch.status).label}
                                                         </span>
                                                     </div>
-                                                    <p className="text-foreground font-semibold">{reactor.activeBatch.batchNumber}</p>
+                                                    <p className="text-foreground font-semibold">
+                                                        {reactor.activeBatch.batchNumber}
+                                                    </p>
 
                                                     {/* Progress Bar */}
                                                     <div className="mt-3">
                                                         <div className="flex justify-between text-xs text-foreground-muted mb-1">
-                                                            <span>Step {reactor.activeBatch.currentStep} of {reactor.activeBatch.totalSteps}</span>
-                                                            <span>{Math.round((reactor.activeBatch.currentStep / reactor.activeBatch.totalSteps) * 100)}%</span>
+                                                            <span>
+                                                                Step {reactor.activeBatch.currentStep} of{' '}
+                                                                {reactor.activeBatch.totalSteps}
+                                                            </span>
+                                                            <span>
+                                                                {Math.round(
+                                                                    (reactor.activeBatch.currentStep /
+                                                                        reactor.activeBatch.totalSteps) *
+                                                                        100,
+                                                                )}
+                                                                %
+                                                            </span>
                                                         </div>
                                                         <div className="h-2 bg-surface-tertiary rounded-full overflow-hidden">
                                                             <div
                                                                 className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
-                                                                style={{ width: `${(reactor.activeBatch.currentStep / reactor.activeBatch.totalSteps) * 100}%` }}
+                                                                style={{
+                                                                    width: `${(reactor.activeBatch.currentStep / reactor.activeBatch.totalSteps) * 100}%`,
+                                                                }}
                                                             />
                                                         </div>
                                                     </div>
@@ -239,7 +287,7 @@ export default function ReactorDashboardPage() {
                                             ) : (
                                                 <div className="mb-4">
                                                     <p className="text-foreground-faint text-sm">No active batch</p>
-                                                    {reactor.status === 'IDLE' && (
+                                                    {rStatus === 'IDLE' && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -257,12 +305,18 @@ export default function ReactorDashboardPage() {
                                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                                                 <div>
                                                     <span className="text-foreground-muted text-xs">Total Batches</span>
-                                                    <p className="text-foreground font-semibold">{reactor.totalBatches || 0}</p>
+                                                    <p className="text-foreground font-semibold">
+                                                        {reactor.totalBatches || 0}
+                                                    </p>
                                                 </div>
                                                 <div>
-                                                    <span className="text-foreground-muted text-xs">Last Maintenance</span>
+                                                    <span className="text-foreground-muted text-xs">
+                                                        Last Maintenance
+                                                    </span>
                                                     <p className="text-foreground font-semibold text-sm">
-                                                        {reactor.lastMaintenanceDate?.toDate?.()?.toLocaleDateString() || 'N/A'}
+                                                        {reactor.lastMaintenanceDate
+                                                            ?.toDate?.()
+                                                            ?.toLocaleDateString() || 'N/A'}
                                                     </p>
                                                 </div>
                                             </div>

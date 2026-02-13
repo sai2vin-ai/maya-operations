@@ -6,12 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../components/ui';
 import { createSparePart, SPARE_PART_CATEGORIES, SPARE_PART_UNITS } from '../services/sparePartsService';
+import { useAssets } from '../../asset-register/hooks/useAssets';
 import type { SparePartCategory } from '../types';
 
 export default function SparePartCreatePage() {
     const navigate = useNavigate();
     const { userData } = useAuth();
     const toast = useToast();
+    const { data: allAssets = [] } = useAssets();
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export default function SparePartCreatePage() {
     const [location, setLocation] = useState('');
     const [usedFor, setUsedFor] = useState('');
     const [unitPrice, setUnitPrice] = useState('');
+    const [machineIds, setMachineIds] = useState<string[]>([]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,6 +55,7 @@ export default function SparePartCreatePage() {
                     location: location || undefined,
                     usedFor: usedFor || undefined,
                     unitPrice: unitPrice ? parseFloat(unitPrice) : undefined,
+                    machineIds: machineIds.length > 0 ? machineIds : undefined,
                 },
                 userData.id,
                 userData.role,
@@ -210,6 +214,45 @@ export default function SparePartCreatePage() {
                             placeholder="e.g., Reactor 1, Reactor 2"
                         />
                     </div>
+                </div>
+
+                {/* Linked Assets */}
+                <div>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-2">
+                        Linked Assets (optional)
+                    </label>
+                    <div className="bg-surface-tertiary/50 p-3 rounded-lg max-h-48 overflow-y-auto space-y-1">
+                        {allAssets.length === 0 ? (
+                            <p className="text-foreground-faint text-sm">No assets available</p>
+                        ) : (
+                            allAssets.map((a) => (
+                                <label
+                                    key={a.id}
+                                    className="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-surface-hover"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={machineIds.includes(a.id)}
+                                        onChange={() =>
+                                            setMachineIds((prev) =>
+                                                prev.includes(a.id)
+                                                    ? prev.filter((id) => id !== a.id)
+                                                    : [...prev, a.id],
+                                            )
+                                        }
+                                        className="w-4 h-4 rounded bg-surface-tertiary border-border-secondary"
+                                    />
+                                    <span className="text-sm text-foreground-secondary">
+                                        {a.name}
+                                        <span className="text-foreground-faint ml-1">({a.assetCode})</span>
+                                    </span>
+                                </label>
+                            ))
+                        )}
+                    </div>
+                    <p className="text-xs text-foreground-faint mt-1">
+                        Select which machines/assets use this spare part
+                    </p>
                 </div>
 
                 {/* Unit Price */}

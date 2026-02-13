@@ -61,7 +61,7 @@ async function generateJobNumber(): Promise<string> {
         where('jobNumber', '>=', prefix + '-'),
         where('jobNumber', '<=', prefix + '-\uf8ff'),
         orderBy('jobNumber', 'desc'),
-        limit(1)
+        limit(1),
     );
     const snapshot = await getDocs(q);
 
@@ -80,7 +80,7 @@ export async function getJobs(limitCount = 100): Promise<MaintenanceJob[]> {
     const q = query(jobsRef, orderBy('reportedAt', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(d => ({
+    return snapshot.docs.map((d) => ({
         id: d.id,
         ...d.data(),
     })) as MaintenanceJob[];
@@ -91,12 +91,39 @@ export async function getJobsByAsset(assetId: string): Promise<MaintenanceJob[]>
     const q = query(jobsRef, where('assetId', '==', assetId));
     const snapshot = await getDocs(q);
 
-    const jobs = snapshot.docs.map(d => ({
+    const jobs = snapshot.docs.map((d) => ({
         id: d.id,
         ...d.data(),
     })) as MaintenanceJob[];
 
     return jobs.sort((a, b) => {
+        const aTime = a.reportedAt?.toMillis?.() || 0;
+        const bTime = b.reportedAt?.toMillis?.() || 0;
+        return bTime - aTime;
+    });
+}
+
+/** Fetches jobs for multiple asset IDs (for aggregating parent + children). */
+export async function getJobsByAssets(assetIds: string[]): Promise<MaintenanceJob[]> {
+    if (assetIds.length === 0) return [];
+
+    // Firestore 'in' queries support max 30 values
+    const batches: MaintenanceJob[][] = [];
+    for (let i = 0; i < assetIds.length; i += 30) {
+        const chunk = assetIds.slice(i, i + 30);
+        const jobsRef = collection(db, JOBS_COLLECTION);
+        const q = query(jobsRef, where('assetId', 'in', chunk));
+        const snapshot = await getDocs(q);
+        batches.push(
+            snapshot.docs.map((d) => ({
+                id: d.id,
+                ...d.data(),
+            })) as MaintenanceJob[],
+        );
+    }
+
+    const all = batches.flat();
+    return all.sort((a, b) => {
         const aTime = a.reportedAt?.toMillis?.() || 0;
         const bTime = b.reportedAt?.toMillis?.() || 0;
         return bTime - aTime;
@@ -118,11 +145,7 @@ export interface CreateJobData {
     assignedTo?: string;
 }
 
-export async function createJob(
-    data: CreateJobData,
-    reportedBy: string,
-    callerRole?: UserRole
-): Promise<string> {
+export async function createJob(data: CreateJobData, reportedBy: string, callerRole?: UserRole): Promise<string> {
     assertAuthorized(callerRole, 'maintenance:create');
     const jobNumber = await generateJobNumber();
 
@@ -171,7 +194,7 @@ export async function updateJob(
     jobId: string,
     data: UpdateJobData,
     updatedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'maintenance:update');
     const jobRef = doc(db, JOBS_COLLECTION, jobId);
@@ -223,7 +246,7 @@ export interface IssuePartsToJobData {
 export async function issuePartsToJob(
     data: IssuePartsToJobData,
     issuedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'maintenance:update');
 
@@ -236,7 +259,7 @@ export async function issuePartsToJob(
 
         // 2. Read all selected spare part docs
         const partSnaps = await Promise.all(
-            data.parts.map(p => transaction.get(doc(db, SPARE_PARTS_COLLECTION, p.partId)))
+            data.parts.map((p) => transaction.get(doc(db, SPARE_PARTS_COLLECTION, p.partId))),
         );
 
         // 3. Validate each part has sufficient stock
@@ -245,7 +268,9 @@ export async function issuePartsToJob(
             const partData = snap.data();
             const requested = data.parts[i].quantity;
             if ((partData.currentStock as number) < requested) {
-                throw new Error(`Insufficient stock for ${partData.name}: available ${partData.currentStock}, requested ${requested}`);
+                throw new Error(
+                    `Insufficient stock for ${partData.name}: available ${partData.currentStock}, requested ${requested}`,
+                );
             }
             return { ref: snap.ref, data: partData, requested };
         });
@@ -319,8 +344,8 @@ export async function issuePartsToJob(
 export async function getJobStats() {
     const jobs = await getJobs();
 
-    const activeJobs = jobs.filter(j => !['COMPLETED', 'CLOSED'].includes(j.status));
-    const completedThisMonth = jobs.filter(j => {
+    const activeJobs = jobs.filter((j) => !['COMPLETED', 'CLOSED'].includes(j.status));
+    const completedThisMonth = jobs.filter((j) => {
         if (j.status !== 'COMPLETED' || !j.completedAt) return false;
         const completed = j.completedAt.toDate ? j.completedAt.toDate() : new Date(j.completedAt as unknown as string);
         const now = new Date();
@@ -329,8 +354,8 @@ export async function getJobStats() {
 
     return {
         activeJobs: activeJobs.length,
-        criticalJobs: activeJobs.filter(j => j.priority === 'CRITICAL').length,
-        pendingParts: activeJobs.filter(j => j.status === 'PENDING_PARTS').length,
+        criticalJobs: activeJobs.filter((j) => j.priority === 'CRITICAL').length,
+        pendingParts: activeJobs.filter((j) => j.status === 'PENDING_PARTS').length,
         completedThisMonth: completedThisMonth.length,
     };
 }

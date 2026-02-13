@@ -2,24 +2,10 @@
 import { Timestamp } from 'firebase/firestore';
 import type { AuditFields } from '../../types';
 
-export type ReactorStatus = 'IDLE' | 'IN_BATCH' | 'MAINTENANCE' | 'OFFLINE';
+// Re-export ReactorStatus and Asset from main types for convenience
+export type { ReactorStatus, Asset } from '../../types';
 
-export interface Reactor extends AuditFields {
-    id: string;
-    reactorNumber: string;
-    name: string;
-    status: ReactorStatus;
-    currentBatchId?: string;
-    lastMaintenanceDate?: Timestamp;
-    totalBatches?: number;
-}
-
-export type BatchStatus =
-    | 'CREATED'
-    | 'IN_PROGRESS'
-    | 'COOLING'
-    | 'COMPLETED'
-    | 'CANCELLED';
+export type BatchStatus = 'CREATED' | 'IN_PROGRESS' | 'COOLING' | 'COMPLETED' | 'CANCELLED';
 
 export interface BatchStep {
     stepNumber: number;

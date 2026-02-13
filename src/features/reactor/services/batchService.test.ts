@@ -46,14 +46,14 @@ describe('batchService', () => {
         });
 
         it('should have step names for all steps', () => {
-            BATCH_STEPS.forEach(step => {
+            BATCH_STEPS.forEach((step) => {
                 expect(step.stepName).toBeTruthy();
                 expect(typeof step.stepName).toBe('string');
             });
         });
 
         it('should have descriptions for all steps', () => {
-            BATCH_STEPS.forEach(step => {
+            BATCH_STEPS.forEach((step) => {
                 expect(step.description).toBeTruthy();
                 expect(typeof step.description).toBe('string');
             });
@@ -82,45 +82,45 @@ describe('batchService', () => {
         });
 
         it('should require photos for appropriate steps', () => {
-            const photoRequiredSteps = BATCH_STEPS.filter(s => s.requiresPhoto);
-            expect(photoRequiredSteps.map(s => s.stepNumber)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13]);
+            const photoRequiredSteps = BATCH_STEPS.filter((s) => s.requiresPhoto);
+            expect(photoRequiredSteps.map((s) => s.stepNumber)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13]);
         });
 
         it('should not require photos for cooling and complete steps', () => {
-            const coolingStep = BATCH_STEPS.find(s => s.stepNumber === 9);
-            const completeStep = BATCH_STEPS.find(s => s.stepNumber === 14);
+            const coolingStep = BATCH_STEPS.find((s) => s.stepNumber === 9);
+            const completeStep = BATCH_STEPS.find((s) => s.stepNumber === 14);
             expect(coolingStep?.requiresPhoto).toBe(false);
             expect(completeStep?.requiresPhoto).toBe(false);
         });
 
         it('should have correct temperature thresholds for safety-critical steps', () => {
-            const ventingStep = BATCH_STEPS.find(s => s.stepNumber === 10) as { tempThreshold?: number };
-            const carbonStep = BATCH_STEPS.find(s => s.stepNumber === 11) as { tempThreshold?: number };
+            const ventingStep = BATCH_STEPS.find((s) => s.stepNumber === 10) as { tempThreshold?: number };
+            const carbonStep = BATCH_STEPS.find((s) => s.stepNumber === 11) as { tempThreshold?: number };
             expect(ventingStep?.tempThreshold).toBe(200);
             expect(carbonStep?.tempThreshold).toBe(70);
         });
 
         it('should allow abort for early steps (1-6)', () => {
-            BATCH_STEPS.slice(0, 6).forEach(step => {
+            BATCH_STEPS.slice(0, 6).forEach((step) => {
                 expect(step.canAbort).toBe(true);
             });
         });
 
         it('should only allow emergency abort for heating/pyrolysis steps (7-8)', () => {
-            const preHeatingStep = BATCH_STEPS.find(s => s.stepNumber === 7);
-            const pyrolysisStep = BATCH_STEPS.find(s => s.stepNumber === 8);
+            const preHeatingStep = BATCH_STEPS.find((s) => s.stepNumber === 7);
+            const pyrolysisStep = BATCH_STEPS.find((s) => s.stepNumber === 8);
             expect(preHeatingStep?.canAbort).toBe('emergency');
             expect(pyrolysisStep?.canAbort).toBe('emergency');
         });
 
         it('should not allow abort for post-pyrolysis steps (9-14)', () => {
-            BATCH_STEPS.slice(8).forEach(step => {
+            BATCH_STEPS.slice(8).forEach((step) => {
                 expect(step.canAbort).toBe(false);
             });
         });
 
         it('should have unique step names', () => {
-            const stepNames = BATCH_STEPS.map(s => s.stepName);
+            const stepNames = BATCH_STEPS.map((s) => s.stepName);
             const uniqueNames = new Set(stepNames);
             expect(uniqueNames.size).toBe(stepNames.length);
         });
@@ -128,7 +128,7 @@ describe('batchService', () => {
 
     describe('BATCH_STATUSES', () => {
         it('should have all required statuses', () => {
-            const statusValues = BATCH_STATUSES.map(s => s.value);
+            const statusValues = BATCH_STATUSES.map((s) => s.value);
             expect(statusValues).toContain('CREATED');
             expect(statusValues).toContain('IN_PROGRESS');
             expect(statusValues).toContain('COOLING');
@@ -141,7 +141,7 @@ describe('batchService', () => {
         });
 
         it('should have labels and colors for all statuses', () => {
-            BATCH_STATUSES.forEach(status => {
+            BATCH_STATUSES.forEach((status) => {
                 expect(status.label).toBeTruthy();
                 expect(status.color).toBeTruthy();
                 expect(typeof status.label).toBe('string');
@@ -150,24 +150,24 @@ describe('batchService', () => {
         });
 
         it('should have correct colors for each status', () => {
-            const created = BATCH_STATUSES.find(s => s.value === 'CREATED');
+            const created = BATCH_STATUSES.find((s) => s.value === 'CREATED');
             expect(created?.color).toBe('blue');
 
-            const inProgress = BATCH_STATUSES.find(s => s.value === 'IN_PROGRESS');
+            const inProgress = BATCH_STATUSES.find((s) => s.value === 'IN_PROGRESS');
             expect(inProgress?.color).toBe('green');
 
-            const cooling = BATCH_STATUSES.find(s => s.value === 'COOLING');
+            const cooling = BATCH_STATUSES.find((s) => s.value === 'COOLING');
             expect(cooling?.color).toBe('yellow');
 
-            const completed = BATCH_STATUSES.find(s => s.value === 'COMPLETED');
+            const completed = BATCH_STATUSES.find((s) => s.value === 'COMPLETED');
             expect(completed?.color).toBe('gray');
 
-            const cancelled = BATCH_STATUSES.find(s => s.value === 'CANCELLED');
+            const cancelled = BATCH_STATUSES.find((s) => s.value === 'CANCELLED');
             expect(cancelled?.color).toBe('red');
         });
 
         it('should have unique values', () => {
-            const values = BATCH_STATUSES.map(s => s.value);
+            const values = BATCH_STATUSES.map((s) => s.value);
             const uniqueValues = new Set(values);
             expect(uniqueValues.size).toBe(values.length);
         });
@@ -270,11 +270,7 @@ describe('batchService', () => {
             const { createBatch } = await import('./batchService');
 
             await expect(
-                createBatch(
-                    { reactorId: 'nonexistent-reactor', reactorNumber: 'M1' },
-                    'user-1',
-                    'SUPER_ADMIN'
-                )
+                createBatch({ reactorId: 'nonexistent-reactor', reactorNumber: 'M1' }, 'user-1', 'SUPER_ADMIN'),
             ).rejects.toThrow(/does not exist/);
         });
 
@@ -285,7 +281,7 @@ describe('batchService', () => {
                 const mockTransaction = {
                     get: vi.fn().mockResolvedValue({
                         exists: () => true,
-                        data: () => ({ status: 'IN_BATCH' }),
+                        data: () => ({ reactorStatus: 'IN_BATCH' }),
                     }),
                     set: vi.fn(),
                     update: vi.fn(),
@@ -296,11 +292,7 @@ describe('batchService', () => {
             const { createBatch } = await import('./batchService');
 
             await expect(
-                createBatch(
-                    { reactorId: 'reactor-1', reactorNumber: 'M1' },
-                    'user-1',
-                    'SUPER_ADMIN'
-                )
+                createBatch({ reactorId: 'reactor-1', reactorNumber: 'M1' }, 'user-1', 'SUPER_ADMIN'),
             ).rejects.toThrow('already has an active batch');
         });
 
@@ -313,21 +305,21 @@ describe('batchService', () => {
                 const mockTransaction = {
                     get: vi.fn().mockResolvedValue({
                         exists: () => true,
-                        data: () => ({ status: 'IDLE' }),
+                        data: () => ({ reactorStatus: 'IDLE' }),
                     }),
-                    set: vi.fn(() => { batchCreated = true; }),
-                    update: vi.fn(() => { reactorUpdated = true; }),
+                    set: vi.fn(() => {
+                        batchCreated = true;
+                    }),
+                    update: vi.fn(() => {
+                        reactorUpdated = true;
+                    }),
                 };
                 await callback(mockTransaction);
             });
 
             const { createBatch } = await import('./batchService');
 
-            const batchId = await createBatch(
-                { reactorId: 'reactor-1', reactorNumber: 'M1' },
-                'user-1',
-                'SUPER_ADMIN'
-            );
+            const batchId = await createBatch({ reactorId: 'reactor-1', reactorNumber: 'M1' }, 'user-1', 'SUPER_ADMIN');
 
             expect(batchId).toBeDefined();
             expect(batchCreated).toBe(true);
@@ -343,9 +335,9 @@ describe('batchService', () => {
 
             const { cancelBatch } = await import('./batchService');
 
-            await expect(
-                cancelBatch('nonexistent', 'Test reason', 'user-1', 'SUPER_ADMIN')
-            ).rejects.toThrow('Batch not found');
+            await expect(cancelBatch('nonexistent', 'Test reason', 'user-1', 'SUPER_ADMIN')).rejects.toThrow(
+                'Batch not found',
+            );
         });
 
         it('should throw when batch has no reactorId', async () => {
@@ -361,9 +353,9 @@ describe('batchService', () => {
 
             const { cancelBatch } = await import('./batchService');
 
-            await expect(
-                cancelBatch('batch-1', 'Test reason', 'user-1', 'SUPER_ADMIN')
-            ).rejects.toThrow('no associated reactor');
+            await expect(cancelBatch('batch-1', 'Test reason', 'user-1', 'SUPER_ADMIN')).rejects.toThrow(
+                'no associated reactor',
+            );
         });
 
         it('should atomically cancel batch and reset reactor', async () => {
@@ -400,7 +392,7 @@ describe('batchService', () => {
             expect(transactionUpdateCalls[0].notes).toContain('Original notes');
 
             // Second update: reactor reset
-            expect(transactionUpdateCalls[1].status).toBe('IDLE');
+            expect(transactionUpdateCalls[1].reactorStatus).toBe('IDLE');
             expect(transactionUpdateCalls[1].currentBatchId).toBeNull();
         });
     });
@@ -423,11 +415,16 @@ describe('batchService', () => {
 
             const { recordOutput } = await import('./batchService');
 
-            await recordOutput('batch_1', {
-                materialCategory: 'PO-CRD',
-                quantity: 500,
-                unit: 'KG',
-            }, 'user-1', 'SUPER_ADMIN');
+            await recordOutput(
+                'batch_1',
+                {
+                    materialCategory: 'PO-CRD',
+                    quantity: 500,
+                    unit: 'KG',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
 
             const updateArgs = mockUpdateDoc.mock.calls[0][1];
             const outputs = updateArgs.outputs as { id: string }[];
@@ -450,11 +447,16 @@ describe('batchService', () => {
 
             const { recordOutput } = await import('./batchService');
 
-            await recordOutput('batch_1', {
-                materialCategory: 'CB-STD',
-                quantity: 100,
-                unit: 'KG',
-            }, 'user-1', 'SUPER_ADMIN');
+            await recordOutput(
+                'batch_1',
+                {
+                    materialCategory: 'CB-STD',
+                    quantity: 100,
+                    unit: 'KG',
+                },
+                'user-1',
+                'SUPER_ADMIN',
+            );
 
             const updateArgs = mockUpdateDoc.mock.calls[0][1];
             const outputs = updateArgs.outputs as { id: string }[];

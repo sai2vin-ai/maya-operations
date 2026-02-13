@@ -438,6 +438,62 @@ describe('maintenanceService', () => {
         });
     });
 
+    describe('getJobsByAssets', () => {
+        it('should return jobs for multiple asset IDs', async () => {
+            mockGetDocs.mockResolvedValue({
+                docs: [
+                    {
+                        id: 'job-1',
+                        data: () => ({
+                            jobNumber: 'JOB-0001',
+                            assetId: 'asset-1',
+                            reportedAt: { toMillis: () => 2000 },
+                        }),
+                    },
+                    {
+                        id: 'job-2',
+                        data: () => ({
+                            jobNumber: 'JOB-0002',
+                            assetId: 'asset-2',
+                            reportedAt: { toMillis: () => 1000 },
+                        }),
+                    },
+                ],
+            });
+
+            const { getJobsByAssets } = await import('./maintenanceService');
+            const jobs = await getJobsByAssets(['asset-1', 'asset-2']);
+
+            expect(jobs).toHaveLength(2);
+            // Should be sorted by reportedAt descending
+            expect(jobs[0].id).toBe('job-1');
+            expect(jobs[1].id).toBe('job-2');
+        });
+
+        it('should return empty array for empty input', async () => {
+            const { getJobsByAssets } = await import('./maintenanceService');
+            const jobs = await getJobsByAssets([]);
+
+            expect(jobs).toHaveLength(0);
+            expect(mockGetDocs).not.toHaveBeenCalled();
+        });
+
+        it('should chunk requests for more than 30 IDs', async () => {
+            // Create 35 asset IDs
+            const assetIds = Array.from({ length: 35 }, (_, i) => `asset-${i}`);
+
+            mockGetDocs.mockResolvedValue({
+                docs: [],
+            });
+
+            const { getJobsByAssets } = await import('./maintenanceService');
+            await getJobsByAssets(assetIds);
+
+            // Should make 2 queries: chunk of 30 + chunk of 5
+            expect(mockGetDocs).toHaveBeenCalledTimes(2);
+        });
+    });
+
     describe('getJobStats', () => {
         it('should compute stats from jobs', async () => {
             const now = new Date();

@@ -12,11 +12,10 @@ import {
     useRecordOutput,
     useCancelBatch,
     batchKeys,
-    reactorKeys,
 } from './useBatches';
 import { createWrapper, mockBatch, mockReactor } from '../../../test/test-utils';
 import * as batchService from '../services/batchService';
-import * as reactorService from '../services/reactorService';
+import * as assetService from '../../asset-register/services/assetService';
 
 // Mock the batch service
 vi.mock('../services/batchService', () => ({
@@ -38,10 +37,10 @@ vi.mock('../services/batchService', () => ({
     ],
 }));
 
-// Mock the reactor service
-vi.mock('../services/reactorService', () => ({
-    getReactors: vi.fn(),
-    getReactorById: vi.fn(),
+// Mock the asset service (reactor functions)
+vi.mock('../../asset-register/services/assetService', () => ({
+    getReactorAssets: vi.fn(),
+    getReactorAssetById: vi.fn(),
 }));
 
 describe('useBatches hooks integration', () => {
@@ -182,7 +181,7 @@ describe('useBatches hooks integration', () => {
                 mockReactor({ id: '2', reactorNumber: 'M2' }),
             ];
 
-            vi.mocked(reactorService.getReactors).mockResolvedValue(mockReactors);
+            vi.mocked(assetService.getReactorAssets).mockResolvedValue(mockReactors);
 
             const { result } = renderHook(() => useReactors(), {
                 wrapper: createWrapper(),
@@ -193,14 +192,14 @@ describe('useBatches hooks integration', () => {
             });
 
             expect(result.current.data).toHaveLength(2);
-            expect(reactorService.getReactors).toHaveBeenCalledTimes(1);
+            expect(assetService.getReactorAssets).toHaveBeenCalledTimes(1);
         });
     });
 
     describe('useReactor', () => {
         it('should fetch a single reactor by ID', async () => {
             const reactor = mockReactor({ id: 'reactor-123', reactorNumber: 'M1' });
-            vi.mocked(reactorService.getReactorById).mockResolvedValue(reactor);
+            vi.mocked(assetService.getReactorAssetById).mockResolvedValue(reactor);
 
             const { result } = renderHook(() => useReactor('reactor-123'), {
                 wrapper: createWrapper(),
@@ -211,7 +210,7 @@ describe('useBatches hooks integration', () => {
             });
 
             expect(result.current.data?.reactorNumber).toBe('M1');
-            expect(reactorService.getReactorById).toHaveBeenCalledWith('reactor-123');
+            expect(assetService.getReactorAssetById).toHaveBeenCalledWith('reactor-123');
         });
     });
 
@@ -235,10 +234,7 @@ describe('useBatches hooks integration', () => {
 
             await result.current.mutateAsync(createData);
 
-            expect(batchService.createBatch).toHaveBeenCalledWith(
-                createData.data,
-                createData.createdBy
-            );
+            expect(batchService.createBatch).toHaveBeenCalledWith(createData.data, createData.createdBy);
         });
     });
 
@@ -262,11 +258,7 @@ describe('useBatches hooks integration', () => {
 
             await result.current.mutateAsync(stepData);
 
-            expect(batchService.completeStep).toHaveBeenCalledWith(
-                'batch-123',
-                stepData.stepData,
-                'admin'
-            );
+            expect(batchService.completeStep).toHaveBeenCalledWith('batch-123', stepData.stepData, 'admin');
         });
     });
 
@@ -291,11 +283,7 @@ describe('useBatches hooks integration', () => {
 
             await result.current.mutateAsync(outputData);
 
-            expect(batchService.recordOutput).toHaveBeenCalledWith(
-                'batch-123',
-                outputData.outputData,
-                'admin'
-            );
+            expect(batchService.recordOutput).toHaveBeenCalledWith('batch-123', outputData.outputData, 'admin');
         });
     });
 
@@ -313,11 +301,7 @@ describe('useBatches hooks integration', () => {
                 cancelledBy: 'admin',
             });
 
-            expect(batchService.cancelBatch).toHaveBeenCalledWith(
-                'batch-123',
-                'Equipment malfunction',
-                'admin'
-            );
+            expect(batchService.cancelBatch).toHaveBeenCalledWith('batch-123', 'Equipment malfunction', 'admin');
         });
     });
 
@@ -325,24 +309,11 @@ describe('useBatches hooks integration', () => {
         it('should generate correct query keys', () => {
             expect(batchKeys.all).toEqual(['batches']);
             expect(batchKeys.lists()).toEqual(['batches', 'list']);
-            expect(batchKeys.list({ status: 'IN_PROGRESS' })).toEqual([
-                'batches',
-                'list',
-                { status: 'IN_PROGRESS' },
-            ]);
+            expect(batchKeys.list({ status: 'IN_PROGRESS' })).toEqual(['batches', 'list', { status: 'IN_PROGRESS' }]);
             expect(batchKeys.details()).toEqual(['batches', 'detail']);
             expect(batchKeys.detail('123')).toEqual(['batches', 'detail', '123']);
             expect(batchKeys.byReactor('reactor-1')).toEqual(['batches', 'reactor', 'reactor-1']);
             expect(batchKeys.active('reactor-1')).toEqual(['batches', 'active', 'reactor-1']);
-        });
-    });
-
-    describe('reactorKeys', () => {
-        it('should generate correct query keys', () => {
-            expect(reactorKeys.all).toEqual(['reactors']);
-            expect(reactorKeys.lists()).toEqual(['reactors', 'list']);
-            expect(reactorKeys.details()).toEqual(['reactors', 'detail']);
-            expect(reactorKeys.detail('123')).toEqual(['reactors', 'detail', '123']);
         });
     });
 });

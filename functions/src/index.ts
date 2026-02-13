@@ -122,10 +122,18 @@ export const onBatchCreate = onDocumentCreated('batches/{batchId}', async (event
         },
     });
 
+    // Resolve reactor name from assets collection
+    let reactorName = data?.reactorId || 'unknown';
+    if (data?.reactorId) {
+        const reactorDoc = await db.collection('assets').doc(data.reactorId).get();
+        const reactorData = reactorDoc.data();
+        reactorName = reactorData?.reactorNumber || reactorData?.name || data.reactorId;
+    }
+
     await createNotification({
         type: 'info',
         title: 'New Batch Created',
-        message: `Batch ${data?.batchNumber} started on reactor ${data?.reactorId}`,
+        message: `Batch ${data?.batchNumber} started on reactor ${reactorName}`,
         targetRoles: ['REACTOR_OPERATOR', 'SHIFT_SUPERVISOR', 'PLANT_MANAGER', 'SUPER_ADMIN'],
         entityType: 'batch',
         entityId: event.params.batchId,
@@ -255,38 +263,57 @@ export const onUserUpdate = onDocumentUpdated('users/{userId}', async (event) =>
 });
 
 // ============================================
-// REACTOR TRIGGERS
+// ASSET / REACTOR TRIGGERS
 // ============================================
 
-// Log reactor status changes
-export const onReactorUpdate = onDocumentUpdated('reactors/{reactorId}', async (event) => {
+// Log asset updates — reactor status changes are tracked via reactorStatus field
+export const onAssetUpdate = onDocumentUpdated('assets/{assetId}', async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
+    if (!before || !after) return;
 
-    if (before?.status !== after?.status) {
+    // Reactor-specific: track reactorStatus changes (only for reactor-category assets)
+    if (after.category === 'REACTOR' && before.reactorStatus !== after.reactorStatus) {
+        const reactorName = after.reactorNumber || after.name || event.params.assetId;
+
         await createAuditLog({
-            action: `REACTOR_${after?.status}`,
-            collection: 'reactors',
-            documentId: event.params.reactorId,
-            userId: after?.updatedBy,
+            action: `REACTOR_${after.reactorStatus}`,
+            collection: 'assets',
+            documentId: event.params.assetId,
+            userId: after.updatedBy,
             data: {
-                reactorNumber: after?.reactorNumber,
-                previousStatus: before?.status,
-                newStatus: after?.status,
-                currentBatchId: after?.currentBatchId,
+                reactorNumber: after.reactorNumber,
+                previousStatus: before.reactorStatus,
+                newStatus: after.reactorStatus,
+                currentBatchId: after.currentBatchId,
             },
         });
 
-        if (after?.status === 'MAINTENANCE' || after?.status === 'OFFLINE') {
+        if (after.reactorStatus === 'MAINTENANCE' || after.reactorStatus === 'OFFLINE') {
             await createNotification({
                 type: 'alert',
-                title: `Reactor ${after?.status === 'MAINTENANCE' ? 'Under Maintenance' : 'Offline'}`,
-                message: `Reactor ${after?.reactorNumber} is now ${after?.status}`,
+                title: `Reactor ${after.reactorStatus === 'MAINTENANCE' ? 'Under Maintenance' : 'Offline'}`,
+                message: `Reactor ${reactorName} is now ${after.reactorStatus}`,
                 targetRoles: ['PLANT_MANAGER', 'MAINTENANCE_TECH', 'SUPER_ADMIN'],
-                entityType: 'reactor',
-                entityId: event.params.reactorId,
+                entityType: 'asset',
+                entityId: event.params.assetId,
             });
         }
+    }
+
+    // General asset status changes (OPERATIONAL / BREAKDOWN / etc.)
+    if (before.status !== after.status) {
+        await createAuditLog({
+            action: `ASSET_${after.status}`,
+            collection: 'assets',
+            documentId: event.params.assetId,
+            userId: after.updatedBy,
+            data: {
+                name: after.name,
+                previousStatus: before.status,
+                newStatus: after.status,
+            },
+        });
     }
 });
 
@@ -334,10 +361,7 @@ export const cleanupOldAuditLogs = onSchedule('every day 02:00', async () => {
 
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
 
-    const oldLogs = await db.collection('auditLogs')
-        .where('timestamp', '<', cutoffTimestamp)
-        .limit(500)
-        .get();
+    const oldLogs = await db.collection('auditLogs').where('timestamp', '<', cutoffTimestamp).limit(500).get();
 
     const batch = db.batch();
     oldLogs.docs.forEach((doc) => {
@@ -419,7 +443,8 @@ export const cleanupOldNotifications = onSchedule('every day 02:30', async () =>
 
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
 
-    const oldNotifications = await db.collection('notifications')
+    const oldNotifications = await db
+        .collection('notifications')
         .where('createdAt', '<', cutoffTimestamp)
         .limit(500)
         .get();
@@ -450,14 +475,16 @@ export const dailyStatsAggregation = onSchedule('every day 00:05', async () => {
     const todayTs = admin.firestore.Timestamp.fromDate(today);
 
     // Count gate entries
-    const gateEntries = await db.collection('gateEntries')
+    const gateEntries = await db
+        .collection('gateEntries')
         .where('entryTime', '>=', yesterdayTs)
         .where('entryTime', '<', todayTs)
         .count()
         .get();
 
     // Count completed batches
-    const completedBatches = await db.collection('batches')
+    const completedBatches = await db
+        .collection('batches')
         .where('endTime', '>=', yesterdayTs)
         .where('endTime', '<', todayTs)
         .where('status', '==', 'COMPLETED')
