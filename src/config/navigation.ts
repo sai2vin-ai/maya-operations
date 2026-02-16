@@ -1,4 +1,5 @@
 import type { UserRole } from '../types';
+import { getRolesForModule } from './roles';
 
 export interface NavItem {
     id: string;
@@ -17,6 +18,7 @@ export interface NavGroup {
 
 /**
  * All navigation items with role-based access.
+ * Roles are derived from the module permission matrix in roles.ts.
  * Flat list used by DashboardPage module cards and anywhere grouping isn't needed.
  */
 export const NAV_ITEMS: NavItem[] = [
@@ -25,17 +27,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Dashboard',
         path: '/dashboard',
         icon: 'dashboard',
-        roles: [
-            'SUPER_ADMIN',
-            'PLANT_MANAGER',
-            'SHIFT_SUPERVISOR',
-            'GATE_OPERATOR',
-            'WEIGHBRIDGE_OPERATOR',
-            'REACTOR_OPERATOR',
-            'STORES_KEEPER',
-            'MAINTENANCE_TECH',
-            'VIEWER',
-        ],
+        roles: getRolesForModule('DASHBOARD'),
         gradient: 'from-blue-500 to-indigo-600',
     },
     {
@@ -43,7 +35,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Gate Operations',
         path: '/gate',
         icon: 'gate',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'GATE_OPERATOR'],
+        roles: getRolesForModule('GATE'),
         gradient: 'from-green-500 to-green-600',
     },
     {
@@ -51,7 +43,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Weighbridge',
         path: '/weighbridge',
         icon: 'weighbridge',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'WEIGHBRIDGE_OPERATOR', 'GATE_OPERATOR'],
+        roles: getRolesForModule('WEIGHBRIDGE'),
         gradient: 'from-teal-500 to-teal-600',
     },
     {
@@ -59,7 +51,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Reactor Dashboard',
         path: '/reactor',
         icon: 'reactor',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'],
+        roles: getRolesForModule('REACTOR'),
         gradient: 'from-orange-500 to-orange-600',
     },
     {
@@ -67,7 +59,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Reactor Output',
         path: '/reactor/output',
         icon: 'output',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'],
+        roles: getRolesForModule('REACTOR'),
         gradient: 'from-amber-500 to-amber-600',
     },
     {
@@ -75,7 +67,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Batch Analytics',
         path: '/reactor/analytics',
         icon: 'analytics',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'],
+        roles: getRolesForModule('REACTOR'),
         gradient: 'from-pink-500 to-pink-600',
     },
     {
@@ -83,7 +75,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Quality Control',
         path: '/quality',
         icon: 'quality',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR', 'REACTOR_OPERATOR'],
+        roles: getRolesForModule('QUALITY'),
         gradient: 'from-lime-500 to-lime-600',
     },
     {
@@ -91,7 +83,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Inventory',
         path: '/inventory',
         icon: 'inventory',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER'],
+        roles: getRolesForModule('INVENTORY'),
         gradient: 'from-cyan-500 to-cyan-600',
     },
     {
@@ -99,7 +91,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Store',
         path: '/spare-parts',
         icon: 'store',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER', 'MAINTENANCE_TECH'],
+        roles: getRolesForModule('SPARE_PARTS'),
         gradient: 'from-indigo-500 to-indigo-600',
     },
     {
@@ -107,7 +99,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Asset Register',
         path: '/assets',
         icon: 'asset',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'],
+        roles: getRolesForModule('ASSETS'),
         gradient: 'from-emerald-500 to-teal-600',
     },
     {
@@ -115,7 +107,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Maintenance',
         path: '/maintenance',
         icon: 'maintenance',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'MAINTENANCE_TECH'],
+        roles: getRolesForModule('MAINTENANCE'),
         gradient: 'from-yellow-500 to-yellow-600',
     },
     {
@@ -123,7 +115,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Shift Management',
         path: '/shifts',
         icon: 'shifts',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER', 'SHIFT_SUPERVISOR'],
+        roles: getRolesForModule('SHIFTS'),
         gradient: 'from-emerald-500 to-emerald-600',
     },
     {
@@ -131,7 +123,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'User Management',
         path: '/users',
         icon: 'users',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER'],
+        roles: getRolesForModule('USERS'),
         gradient: 'from-blue-500 to-blue-600',
     },
     {
@@ -139,7 +131,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Device Management',
         path: '/devices',
         icon: 'devices',
-        roles: ['SUPER_ADMIN'],
+        roles: getRolesForModule('DEVICES'),
         gradient: 'from-purple-500 to-purple-600',
     },
     {
@@ -147,7 +139,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Audit Logs',
         path: '/audit',
         icon: 'audit',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER'],
+        roles: getRolesForModule('AUDIT'),
         gradient: 'from-slate-500 to-slate-600',
     },
     {
@@ -155,7 +147,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'User Activity',
         path: '/activity',
         icon: 'activity',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER'],
+        roles: getRolesForModule('AUDIT'),
         gradient: 'from-sky-500 to-sky-600',
     },
     {
@@ -163,7 +155,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Reports',
         path: '/reports',
         icon: 'reports',
-        roles: ['SUPER_ADMIN'],
+        roles: getRolesForModule('REPORTS'),
         gradient: 'from-red-500 to-red-600',
     },
     {
@@ -171,17 +163,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Workflows',
         path: '/workflows',
         icon: 'workflows',
-        roles: [
-            'SUPER_ADMIN',
-            'PLANT_MANAGER',
-            'SHIFT_SUPERVISOR',
-            'GATE_OPERATOR',
-            'WEIGHBRIDGE_OPERATOR',
-            'REACTOR_OPERATOR',
-            'STORES_KEEPER',
-            'MAINTENANCE_TECH',
-            'VIEWER',
-        ],
+        roles: getRolesForModule('DASHBOARD'),
         gradient: 'from-violet-500 to-purple-600',
     },
     {
@@ -189,7 +171,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Bug Reports',
         path: '/bug-reports',
         icon: 'bug',
-        roles: ['SUPER_ADMIN', 'PLANT_MANAGER'],
+        roles: getRolesForModule('BUG_REPORTS'),
         gradient: 'from-rose-500 to-rose-600',
     },
     {
@@ -197,7 +179,7 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Settings',
         path: '/settings',
         icon: 'settings',
-        roles: ['SUPER_ADMIN'],
+        roles: getRolesForModule('ROLES'),
         gradient: 'from-slate-500 to-gray-600',
     },
 ];

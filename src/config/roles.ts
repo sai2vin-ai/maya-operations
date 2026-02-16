@@ -13,7 +13,14 @@ export const MODULES = {
     INVENTORY: 'Inventory Management',
     SPARE_PARTS: 'Spare Parts',
     WEIGHBRIDGE: 'Weighbridge',
+    ASSETS: 'Asset Register',
     MAINTENANCE: 'Maintenance',
+    SHIFTS: 'Shift Management',
+    QUALITY: 'Quality Control',
+    AUDIT: 'Audit & Logs',
+    REPORTS: 'Reports',
+    WEBHOOKS: 'Webhooks',
+    BUG_REPORTS: 'Bug Reports',
     ROLES: 'Roles & Permissions',
 } as const;
 
@@ -48,14 +55,22 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: ['view', 'create', 'edit', 'delete'],
             SPARE_PARTS: ['view', 'create', 'edit', 'delete'],
             WEIGHBRIDGE: ['view', 'create', 'edit', 'delete'],
+            ASSETS: ['view', 'create', 'edit', 'delete'],
             MAINTENANCE: ['view', 'create', 'edit', 'delete'],
+            SHIFTS: ['view', 'create', 'edit', 'delete'],
+            QUALITY: ['view', 'create', 'edit', 'delete'],
+            AUDIT: ['view'],
+            REPORTS: ['view'],
+            WEBHOOKS: ['view', 'create', 'edit', 'delete'],
+            BUG_REPORTS: ['view'],
             ROLES: ['view'],
         },
     },
     {
         value: 'PLANT_MANAGER',
         label: 'Plant Manager',
-        description: 'Manages plant operations, users, and has access to all operational modules. Cannot delete records.',
+        description:
+            'Manages plant operations, users, and has access to all operational modules. Cannot delete records.',
         color: 'purple',
         permissions: {
             DASHBOARD: ['view'],
@@ -66,7 +81,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: ['view', 'create', 'edit'],
             SPARE_PARTS: ['view', 'create', 'edit'],
             WEIGHBRIDGE: ['view', 'create', 'edit'],
+            ASSETS: ['view', 'create', 'edit'],
             MAINTENANCE: ['view', 'create', 'edit'],
+            SHIFTS: ['view', 'create', 'edit'],
+            QUALITY: ['view', 'create', 'edit'],
+            AUDIT: ['view'],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: ['view'],
             ROLES: [],
         },
     },
@@ -84,7 +106,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: ['view', 'edit'],
             SPARE_PARTS: ['view'],
             WEIGHBRIDGE: ['view'],
+            ASSETS: [],
             MAINTENANCE: ['view'],
+            SHIFTS: ['view'],
+            QUALITY: ['view', 'create', 'edit'],
+            AUDIT: [],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: [],
             ROLES: [],
         },
     },
@@ -102,7 +131,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: [],
             SPARE_PARTS: [],
             WEIGHBRIDGE: ['view', 'create', 'edit'],
+            ASSETS: [],
             MAINTENANCE: [],
+            SHIFTS: [],
+            QUALITY: [],
+            AUDIT: [],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: [],
             ROLES: [],
         },
     },
@@ -120,7 +156,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: [],
             SPARE_PARTS: [],
             WEIGHBRIDGE: ['view', 'create', 'edit'],
+            ASSETS: [],
             MAINTENANCE: [],
+            SHIFTS: [],
+            QUALITY: [],
+            AUDIT: [],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: [],
             ROLES: [],
         },
     },
@@ -138,7 +181,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: ['view'],
             SPARE_PARTS: ['view'],
             WEIGHBRIDGE: [],
+            ASSETS: [],
             MAINTENANCE: [],
+            SHIFTS: [],
+            QUALITY: ['view', 'create', 'edit'],
+            AUDIT: [],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: [],
             ROLES: [],
         },
     },
@@ -156,7 +206,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: ['view', 'create', 'edit'],
             SPARE_PARTS: ['view', 'create', 'edit'],
             WEIGHBRIDGE: [],
+            ASSETS: [],
             MAINTENANCE: [],
+            SHIFTS: [],
+            QUALITY: [],
+            AUDIT: [],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: [],
             ROLES: [],
         },
     },
@@ -174,7 +231,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: [],
             SPARE_PARTS: ['view'],
             WEIGHBRIDGE: [],
+            ASSETS: ['view', 'create', 'edit'],
             MAINTENANCE: ['view', 'create', 'edit'],
+            SHIFTS: [],
+            QUALITY: [],
+            AUDIT: [],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: [],
             ROLES: [],
         },
     },
@@ -192,7 +256,14 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
             INVENTORY: [],
             SPARE_PARTS: [],
             WEIGHBRIDGE: [],
+            ASSETS: [],
             MAINTENANCE: [],
+            SHIFTS: [],
+            QUALITY: [],
+            AUDIT: [],
+            REPORTS: [],
+            WEBHOOKS: [],
+            BUG_REPORTS: [],
             ROLES: [],
         },
     },
@@ -200,7 +271,7 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
 
 // Helper function to get role definition
 export function getRoleDefinition(role: UserRole): RoleDefinition | undefined {
-    return ROLE_DEFINITIONS.find(r => r.value === role);
+    return ROLE_DEFINITIONS.find((r) => r.value === role);
 }
 
 // Helper function to check if a role has permission for a module
@@ -212,9 +283,12 @@ export function hasPermission(role: UserRole, module: ModuleKey, permission: Per
 
 // Helper function to get all roles that have access to a module
 export function getRolesForModule(module: ModuleKey): UserRole[] {
-    return ROLE_DEFINITIONS
-        .filter(r => r.permissions[module]?.length > 0)
-        .map(r => r.value);
+    return ROLE_DEFINITIONS.filter((r) => r.permissions[module]?.length > 0).map((r) => r.value);
+}
+
+// Helper function to get all roles that have a specific permission for a module
+export function getRolesWithPermission(module: ModuleKey, permission: Permission): UserRole[] {
+    return ROLE_DEFINITIONS.filter((r) => r.permissions[module]?.includes(permission)).map((r) => r.value);
 }
 
 // Color mapping for badges
