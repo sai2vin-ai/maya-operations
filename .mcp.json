@@ -1,0 +1,9 @@
+{
+    "mcpServers": {
+        "maya-feedback": {
+            "type": "stdio",
+            "command": "npx",
+            "args": ["tsx", "src/mcp/feedback-server.ts"]
+        }
+    }
+}

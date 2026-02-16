@@ -34,6 +34,11 @@ export const SPARE_PART_CATEGORIES: { value: SparePartCategory; label: string }[
     { value: 'ELECTRICAL', label: 'Electrical' },
     { value: 'HYDRAULIC', label: 'Hydraulic' },
     { value: 'PNEUMATIC', label: 'Pneumatic' },
+    { value: 'MECHANICAL', label: 'Mechanical' },
+    { value: 'OIL_LUBRICANT', label: 'Oil & Lubricant' },
+    { value: 'JCB', label: 'JCB Spares' },
+    { value: 'FILTER', label: 'Filter' },
+    { value: 'FASTENER', label: 'Fastener' },
     { value: 'GENERAL', label: 'General' },
 ];
 

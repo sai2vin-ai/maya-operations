@@ -51,12 +51,17 @@ describe('sparePartsService', () => {
             expect(categoryValues).toContain('ELECTRICAL');
             expect(categoryValues).toContain('HYDRAULIC');
             expect(categoryValues).toContain('PNEUMATIC');
+            expect(categoryValues).toContain('MECHANICAL');
+            expect(categoryValues).toContain('OIL_LUBRICANT');
+            expect(categoryValues).toContain('JCB');
+            expect(categoryValues).toContain('FILTER');
+            expect(categoryValues).toContain('FASTENER');
             expect(categoryValues).toContain('GENERAL');
         });
 
-        it('should have exactly 10 categories', async () => {
+        it('should have exactly 15 categories', async () => {
             const { SPARE_PART_CATEGORIES } = await import('./sparePartsService');
-            expect(SPARE_PART_CATEGORIES).toHaveLength(10);
+            expect(SPARE_PART_CATEGORIES).toHaveLength(15);
         });
 
         it('should have labels for all categories', async () => {
