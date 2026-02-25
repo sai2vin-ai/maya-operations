@@ -267,6 +267,198 @@ export const sparePartSchema = auditFieldsSchema.extend({
 });
 
 // ============================================
+// QUALITY CHECK
+// ============================================
+
+export const qualityCheckSchema = z.object({
+    id: z.string(),
+    checkNumber: z.string(),
+    batchId: z.string(),
+    batchNumber: z.string(),
+    checkType: z.enum(['VISUAL', 'MEASUREMENT', 'CHEMICAL', 'PHYSICAL']),
+    status: z.enum(['PENDING', 'PASSED', 'FAILED', 'ON_HOLD']),
+    parameters: z.array(
+        z.object({
+            name: z.string(),
+            expected: z.string(),
+            actual: z.string(),
+            passed: z.boolean(),
+        }),
+    ),
+    inspector: z.string(),
+    inspectedAt: timestampSchema,
+    notes: z.string().optional().nullable(),
+    createdAt: timestampSchema,
+    createdBy: z.string(),
+    updatedAt: timestampSchema,
+    updatedBy: z.string(),
+});
+
+// ============================================
+// MAINTENANCE JOB
+// ============================================
+
+export const maintenanceJobSchema = auditFieldsSchema.extend({
+    id: z.string(),
+    jobNumber: z.string(),
+    assetId: z.string(),
+    jobType: z.enum(['BREAKDOWN', 'PREVENTIVE', 'CORRECTIVE']),
+    priority: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']),
+    status: z.enum(['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_PARTS', 'COMPLETED', 'CLOSED']),
+    description: z.string(),
+    reportedBy: z.string(),
+    reportedAt: timestampSchema,
+    assignedTo: z.string().optional(),
+    startedAt: optionalTimestamp,
+    completedAt: optionalTimestamp,
+    rootCause: z.string().optional(),
+    actionTaken: z.string().optional(),
+    partsUsed: z
+        .array(
+            z.object({
+                partId: z.string(),
+                partNumber: z.string(),
+                partName: z.string(),
+                quantity: z.number(),
+                unitPrice: z.number().optional(),
+            }),
+        )
+        .optional(),
+});
+
+// ============================================
+// SHIFT
+// ============================================
+
+export const shiftSchema = auditFieldsSchema.extend({
+    id: z.string(),
+    shiftType: z.enum(['A', 'B', 'C']),
+    date: timestampSchema,
+    supervisorId: z.string(),
+    startTime: timestampSchema,
+    endTime: optionalTimestamp.nullable(),
+    handoverNotes: z.string().optional().nullable(),
+    incomingSupervisorId: z.string().optional().nullable(),
+    handoverAcknowledged: z.boolean().optional(),
+    handoverAcknowledgedAt: optionalTimestamp,
+});
+
+// ============================================
+// AUDIT LOG
+// ============================================
+
+export const auditLogSchema = z.object({
+    id: z.string(),
+    action: z.string(),
+    collection: z.string(),
+    documentId: z.string(),
+    userId: z.string().optional(),
+    data: z.record(z.string(), z.unknown()).optional(),
+    timestamp: timestampSchema,
+});
+
+// ============================================
+// BUG REPORT
+// ============================================
+
+export const bugReportSchema = z.object({
+    id: z.string(),
+    reportNumber: z.string(),
+    title: z.string(),
+    description: z.string(),
+    priority: z.enum(['low', 'medium', 'high', 'critical']),
+    status: z.enum(['open', 'in_progress', 'resolved', 'closed']),
+    screenshotUrl: z.string().optional(),
+    pageUrl: z.string(),
+    browserInfo: z.string(),
+    createdBy: z.object({
+        userId: z.string(),
+        displayName: z.string(),
+        role: z.string(),
+    }),
+    createdAt: timestampSchema,
+    updatedAt: timestampSchema,
+    resolvedAt: optionalTimestamp,
+    adminNotes: z.string().optional(),
+});
+
+// ============================================
+// WEBHOOK
+// ============================================
+
+const webhookEventSchema = z.enum([
+    'gate_entry.created',
+    'gate_entry.completed',
+    'gate_entry.cancelled',
+    'batch.started',
+    'batch.completed',
+    'batch.cancelled',
+    'weighbridge.completed',
+    'inventory.low_stock',
+    'user.created',
+    'user.status_changed',
+]);
+
+export const webhookSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    url: z.string(),
+    method: z.enum(['POST', 'PUT']),
+    events: z.array(webhookEventSchema),
+    headers: z.record(z.string(), z.string()).optional(),
+    secret: z.string().optional(),
+    status: z.enum(['ACTIVE', 'INACTIVE', 'FAILED']),
+    retryCount: z.number(),
+    maxRetries: z.number(),
+    lastTriggeredAt: optionalTimestamp,
+    lastSuccessAt: optionalTimestamp,
+    lastFailureAt: optionalTimestamp,
+    lastError: z.string().optional(),
+    successCount: z.number(),
+    failureCount: z.number(),
+    createdAt: timestampSchema,
+    createdBy: z.string(),
+    updatedAt: timestampSchema,
+    updatedBy: z.string(),
+});
+
+export const webhookDeliverySchema = z.object({
+    id: z.string(),
+    webhookId: z.string(),
+    webhookName: z.string(),
+    event: webhookEventSchema,
+    payload: z.record(z.string(), z.unknown()),
+    url: z.string(),
+    method: z.enum(['POST', 'PUT']),
+    headers: z.record(z.string(), z.string()),
+    status: z.enum(['PENDING', 'SUCCESS', 'FAILED']),
+    responseCode: z.number().optional(),
+    responseBody: z.string().optional(),
+    error: z.string().optional(),
+    duration: z.number().optional(),
+    attemptNumber: z.number(),
+    triggeredAt: timestampSchema,
+    completedAt: optionalTimestamp,
+});
+
+// ============================================
+// APP NOTIFICATION
+// ============================================
+
+export const appNotificationSchema = z.object({
+    id: z.string(),
+    type: z.enum(['info', 'success', 'warning', 'alert']),
+    title: z.string(),
+    message: z.string(),
+    targetRoles: z.array(userRoleSchema),
+    entityType: z.string().optional(),
+    entityId: z.string().optional(),
+    createdAt: timestampSchema,
+    expiresAt: optionalTimestamp,
+});
+
+// ============================================
 // PARSE HELPERS
 // ============================================
 

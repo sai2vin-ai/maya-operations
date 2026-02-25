@@ -12,8 +12,10 @@ import {
     Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import { assertAuthorized } from '../../../lib/authorization';
 import type { Shift, ShiftType } from '../../../types';
-import { type FirestoreDocData } from '../../../types';
+import { type FirestoreDocData, type UserRole } from '../../../types';
+import { parseDoc, parseDocs, shiftSchema } from '../../../lib/schemas';
 
 const SHIFTS_COLLECTION = 'shifts';
 
@@ -28,30 +30,23 @@ export async function getShifts(limitCount = 50): Promise<Shift[]> {
     const q = query(shiftsRef, orderBy('date', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-    })) as Shift[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(shiftSchema, raw, 'getShifts') as Shift[];
 }
 
 export async function getShiftById(shiftId: string): Promise<Shift | null> {
     const shiftRef = doc(db, SHIFTS_COLLECTION, shiftId);
     const snapshot = await getDoc(shiftRef);
     if (!snapshot.exists()) return null;
-    return { id: snapshot.id, ...snapshot.data() } as Shift;
+    return parseDoc(shiftSchema, { id: snapshot.id, ...snapshot.data() }, 'getShiftById') as Shift;
 }
 
 export async function getActiveShift(): Promise<Shift | null> {
     const shiftsRef = collection(db, SHIFTS_COLLECTION);
-    const q = query(
-        shiftsRef,
-        where('endTime', '==', null),
-        orderBy('date', 'desc'),
-        limit(1)
-    );
+    const q = query(shiftsRef, where('endTime', '==', null), orderBy('date', 'desc'), limit(1));
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
-    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Shift;
+    return parseDoc(shiftSchema, { id: snapshot.docs[0].id, ...snapshot.docs[0].data() }, 'getActiveShift') as Shift;
 }
 
 export interface StartShiftData {
@@ -59,7 +54,8 @@ export interface StartShiftData {
     supervisorId: string;
 }
 
-export async function startShift(data: StartShiftData, createdBy: string): Promise<string> {
+export async function startShift(data: StartShiftData, createdBy: string, callerRole?: UserRole): Promise<string> {
+    assertAuthorized(callerRole, 'shifts:create');
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
 
@@ -88,7 +84,13 @@ export interface EndShiftData {
     incomingSupervisorId?: string;
 }
 
-export async function endShift(shiftId: string, data: EndShiftData, updatedBy: string): Promise<void> {
+export async function endShift(
+    shiftId: string,
+    data: EndShiftData,
+    updatedBy: string,
+    callerRole?: UserRole,
+): Promise<void> {
+    assertAuthorized(callerRole, 'shifts:update');
     const shiftRef = doc(db, SHIFTS_COLLECTION, shiftId);
 
     const updateData: FirestoreDocData = {
@@ -105,7 +107,8 @@ export async function endShift(shiftId: string, data: EndShiftData, updatedBy: s
     await updateDoc(shiftRef, updateData as Record<string, unknown>);
 }
 
-export async function acknowledgeHandover(shiftId: string, userId: string): Promise<void> {
+export async function acknowledgeHandover(shiftId: string, userId: string, callerRole?: UserRole): Promise<void> {
+    assertAuthorized(callerRole, 'shifts:update');
     const shiftRef = doc(db, SHIFTS_COLLECTION, shiftId);
     await updateDoc(shiftRef, {
         handoverAcknowledged: true,

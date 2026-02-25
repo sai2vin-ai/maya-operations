@@ -272,9 +272,21 @@ describe('maintenanceService', () => {
             expect(jobData.status).toBe('OPEN');
         });
 
-        it('should update asset to BREAKDOWN for breakdown jobs', async () => {
+        it('should update asset to BREAKDOWN for breakdown jobs atomically', async () => {
             mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
-            mockUpdateDoc.mockResolvedValue(undefined);
+            mockRunTransaction.mockImplementation(async (_db: unknown, fn: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    update: vi.fn(),
+                    set: vi.fn(),
+                };
+                await fn(mockTransaction);
+                // Verify transaction.update was called for asset with BREAKDOWN
+                expect(mockTransaction.update).toHaveBeenCalledTimes(1);
+                const assetUpdate = mockTransaction.update.mock.calls[0][1];
+                expect(assetUpdate.status).toBe('BREAKDOWN');
+                // Verify transaction.set was called for the job
+                expect(mockTransaction.set).toHaveBeenCalledTimes(1);
+            });
 
             const { createJob } = await import('./maintenanceService');
 
@@ -289,10 +301,7 @@ describe('maintenanceService', () => {
                 'SUPER_ADMIN',
             );
 
-            // updateDoc should be called once for the asset status update
-            expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
-            const assetUpdate = mockUpdateDoc.mock.calls[0][1];
-            expect(assetUpdate.status).toBe('BREAKDOWN');
+            expect(mockRunTransaction).toHaveBeenCalledTimes(1);
         });
 
         it('should check authorization', async () => {
@@ -331,50 +340,50 @@ describe('maintenanceService', () => {
             expect(updateArgs.updatedBy).toBe('user-1');
         });
 
-        it('should set completedAt for COMPLETED status', async () => {
-            mockUpdateDoc.mockResolvedValue(undefined);
-            // After updateDoc, updateJob calls getJobById to fetch job for asset update
-            mockGetDoc.mockResolvedValue({
-                exists: () => true,
-                id: 'job-1',
-                data: () => ({
-                    assetId: 'asset-1',
-                    jobType: 'BREAKDOWN',
-                    status: 'COMPLETED',
-                }),
+        it('should set completedAt for COMPLETED status (atomic transaction)', async () => {
+            let capturedJobUpdate: Record<string, unknown> = {};
+            mockRunTransaction.mockImplementation(async (_db: unknown, fn: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => true,
+                        data: () => ({ assetId: 'asset-1' }),
+                    }),
+                    update: vi.fn(),
+                };
+                await fn(mockTransaction);
+                // First update call is for the job
+                capturedJobUpdate = mockTransaction.update.mock.calls[0][1] as Record<string, unknown>;
             });
 
             const { updateJob } = await import('./maintenanceService');
 
             await updateJob('job-1', { status: 'COMPLETED' }, 'user-1', 'SUPER_ADMIN');
 
-            // First call: update the job, second call: update the asset to OPERATIONAL
-            expect(mockUpdateDoc).toHaveBeenCalledTimes(2);
-            const jobUpdate = mockUpdateDoc.mock.calls[0][1];
-            expect(jobUpdate.status).toBe('COMPLETED');
-            expect(jobUpdate.completedAt).toBeDefined();
+            expect(mockRunTransaction).toHaveBeenCalledTimes(1);
+            expect(capturedJobUpdate.status).toBe('COMPLETED');
+            expect(capturedJobUpdate.completedAt).toBeDefined();
         });
 
-        it('should update asset to OPERATIONAL when COMPLETED', async () => {
-            mockUpdateDoc.mockResolvedValue(undefined);
-            mockGetDoc.mockResolvedValue({
-                exists: () => true,
-                id: 'job-1',
-                data: () => ({
-                    assetId: 'asset-1',
-                    jobType: 'BREAKDOWN',
-                    status: 'COMPLETED',
-                }),
+        it('should update asset to OPERATIONAL when COMPLETED (atomic transaction)', async () => {
+            let capturedAssetUpdate: Record<string, unknown> = {};
+            mockRunTransaction.mockImplementation(async (_db: unknown, fn: (t: unknown) => Promise<void>) => {
+                const mockTransaction = {
+                    get: vi.fn().mockResolvedValue({
+                        exists: () => true,
+                        data: () => ({ assetId: 'asset-1' }),
+                    }),
+                    update: vi.fn(),
+                };
+                await fn(mockTransaction);
+                // Second update call is for the asset
+                capturedAssetUpdate = mockTransaction.update.mock.calls[1][1] as Record<string, unknown>;
             });
 
             const { updateJob } = await import('./maintenanceService');
 
             await updateJob('job-1', { status: 'COMPLETED' }, 'user-1', 'SUPER_ADMIN');
 
-            // Second updateDoc call should be for the asset
-            expect(mockUpdateDoc).toHaveBeenCalledTimes(2);
-            const assetUpdate = mockUpdateDoc.mock.calls[1][1];
-            expect(assetUpdate.status).toBe('OPERATIONAL');
+            expect(capturedAssetUpdate.status).toBe('OPERATIONAL');
         });
 
         it('should check authorization', async () => {

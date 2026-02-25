@@ -10,6 +10,7 @@ import {
     type QCStatus,
     type QCParameter,
 } from '../services/qualityService';
+import type { UserRole } from '../../../types';
 
 export const qualityKeys = {
     all: ['quality'] as const,
@@ -45,8 +46,15 @@ export function useQualityCheck(id: string | undefined) {
 export function useCreateQualityCheck() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ data, inspector }: { data: CreateQualityCheckData; inspector: string }) =>
-            createQualityCheck(data, inspector),
+        mutationFn: ({
+            data,
+            inspector,
+            callerRole,
+        }: {
+            data: CreateQualityCheckData;
+            inspector: string;
+            callerRole?: UserRole;
+        }) => createQualityCheck(data, inspector, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: qualityKeys.all });
         },
@@ -56,11 +64,17 @@ export function useCreateQualityCheck() {
 export function useUpdateQualityCheck() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ checkId, data, updatedBy }: {
+        mutationFn: ({
+            checkId,
+            data,
+            updatedBy,
+            callerRole,
+        }: {
             checkId: string;
             data: { status?: QCStatus; parameters?: QCParameter[]; notes?: string };
             updatedBy: string;
-        }) => updateQualityCheck(checkId, data, updatedBy),
+            callerRole?: UserRole;
+        }) => updateQualityCheck(checkId, data, updatedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: qualityKeys.all });
             queryClient.invalidateQueries({ queryKey: qualityKeys.detail(variables.checkId) });

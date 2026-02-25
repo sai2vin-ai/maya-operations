@@ -198,7 +198,7 @@ describe('useShifts hooks integration', () => {
             const resultId = await result.current.mutateAsync(startData);
 
             expect(resultId).toBe('new-shift-id');
-            expect(shiftService.startShift).toHaveBeenCalledWith(startData.data, startData.createdBy);
+            expect(shiftService.startShift).toHaveBeenCalledWith(startData.data, startData.createdBy, undefined);
         });
 
         it('should handle start shift failure', async () => {
@@ -237,6 +237,7 @@ describe('useShifts hooks integration', () => {
             expect(shiftService.startShift).toHaveBeenCalledWith(
                 { shiftType: 'C', supervisorId: 'supervisor-3' },
                 'admin',
+                undefined,
             );
         });
     });
@@ -261,6 +262,7 @@ describe('useShifts hooks integration', () => {
                 'shift-123',
                 { handoverNotes: 'All reactors running smoothly. Batch M1-001 at step 8.' },
                 'supervisor-1',
+                undefined,
             );
         });
 
@@ -287,6 +289,7 @@ describe('useShifts hooks integration', () => {
                     incomingSupervisorId: 'supervisor-2',
                 },
                 'supervisor-1',
+                undefined,
             );
         });
 
@@ -320,7 +323,7 @@ describe('useShifts hooks integration', () => {
                 userId: 'supervisor-2',
             });
 
-            expect(shiftService.acknowledgeHandover).toHaveBeenCalledWith('shift-123', 'supervisor-2');
+            expect(shiftService.acknowledgeHandover).toHaveBeenCalledWith('shift-123', 'supervisor-2', undefined);
         });
 
         it('should handle acknowledge failure', async () => {

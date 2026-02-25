@@ -7,8 +7,11 @@ import { getBatches } from '../features/reactor/services/batchService';
 import { getTodaysEntries } from '../features/gate/services/gateEntryService';
 import { getLowStockItems } from '../features/inventory/services/inventoryService';
 import { useActiveShift } from '../features/shifts/hooks/useShifts';
-import { useAssetStats } from '../features/asset-register/hooks/useAssets';
+import { assetKeys, useAssetStats } from '../features/asset-register/hooks/useAssets';
 import { useJobStats } from '../features/maintenance/hooks/useMaintenance';
+import { batchKeys } from '../features/reactor/hooks/useBatches';
+import { gateEntryKeys } from '../features/gate/hooks/useGateEntries';
+import { inventoryKeys } from '../features/inventory/hooks/useInventory';
 import { SHIFT_TYPES } from '../features/shifts/services/shiftService';
 
 // Key for storing recent modules in localStorage
@@ -42,14 +45,14 @@ export default function DashboardPage() {
     // Use lazy initializer to load recent modules from localStorage
     const [recentModules] = useState<string[]>(getRecentModules);
 
-    // Live dashboard stats
+    // Live dashboard stats — use feature key factories so mutations invalidate correctly
     const { data: reactors, isError: reactorsError } = useQuery({
-        queryKey: ['assets', 'reactors'],
+        queryKey: assetKeys.reactors(),
         queryFn: getReactorAssets,
         staleTime: 30_000,
     });
     const { data: todayBatches, isError: batchesError } = useQuery({
-        queryKey: ['batches', 'today'],
+        queryKey: [...batchKeys.all, 'today'] as const,
         queryFn: () => getBatches(100),
         staleTime: 30_000,
         select: (batches) => {
@@ -63,12 +66,12 @@ export default function DashboardPage() {
         },
     });
     const { data: todayGateEntries, isError: gateError } = useQuery({
-        queryKey: ['gateEntries', 'today'],
+        queryKey: [...gateEntryKeys.all, 'today'] as const,
         queryFn: getTodaysEntries,
         staleTime: 30_000,
     });
     const { data: lowStockItems, isError: inventoryError } = useQuery({
-        queryKey: ['inventory', 'lowStock'],
+        queryKey: [...inventoryKeys.all, 'lowStock'] as const,
         queryFn: getLowStockItems,
         staleTime: 60_000,
     });

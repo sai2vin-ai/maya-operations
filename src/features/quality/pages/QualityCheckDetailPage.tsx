@@ -20,6 +20,7 @@ export default function QualityCheckDetailPage() {
                 checkId: id,
                 data: { status: newStatus },
                 updatedBy: userData.id,
+                callerRole: userData.role,
             });
             toast.success(`Status updated to ${QC_STATUS_CONFIG[newStatus].label}`);
         } catch (err) {
@@ -31,7 +32,7 @@ export default function QualityCheckDetailPage() {
     if (!check) return <div className="p-6 text-center text-foreground-muted">Quality check not found</div>;
 
     const statusConfig = QC_STATUS_CONFIG[check.status];
-    const typeLabel = QC_CHECK_TYPES.find(t => t.value === check.checkType)?.label || check.checkType;
+    const typeLabel = QC_CHECK_TYPES.find((t) => t.value === check.checkType)?.label || check.checkType;
 
     const formatDate = (ts: unknown) => {
         if (!ts) return '-';
@@ -92,16 +93,38 @@ export default function QualityCheckDetailPage() {
                 <div className="space-y-3">
                     {check.parameters.map((param, i) => (
                         <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-surface-tertiary/30">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                param.passed ? 'bg-green-500/20' : 'bg-red-500/20'
-                            }`}>
+                            <div
+                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    param.passed ? 'bg-green-500/20' : 'bg-red-500/20'
+                                }`}
+                            >
                                 {param.passed ? (
-                                    <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    <svg
+                                        className="w-4 h-4 text-green-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M5 13l4 4L19 7"
+                                        />
                                     </svg>
                                 ) : (
-                                    <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    <svg
+                                        className="w-4 h-4 text-red-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
                                     </svg>
                                 )}
                             </div>
@@ -110,7 +133,9 @@ export default function QualityCheckDetailPage() {
                                 <p className="text-foreground-faint text-xs">Expected: {param.expected}</p>
                             </div>
                             <div className="text-right">
-                                <p className={`font-medium text-sm ${param.passed ? 'text-green-400' : 'text-red-400'}`}>
+                                <p
+                                    className={`font-medium text-sm ${param.passed ? 'text-green-400' : 'text-red-400'}`}
+                                >
                                     {param.actual || 'N/A'}
                                 </p>
                                 <p className="text-xs text-foreground-faint">{param.passed ? 'Passed' : 'Failed'}</p>
@@ -125,13 +150,22 @@ export default function QualityCheckDetailPage() {
                 <div className="glass-card p-4">
                     <h3 className="text-sm font-medium text-foreground-secondary mb-3">Update Status</h3>
                     <div className="flex flex-wrap gap-2">
-                        <button onClick={() => handleStatusChange('PASSED')} className="px-4 py-2 rounded-lg text-sm bg-green-500/20 text-green-400 hover:bg-green-500/30">
+                        <button
+                            onClick={() => handleStatusChange('PASSED')}
+                            className="px-4 py-2 rounded-lg text-sm bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                        >
                             Mark Passed
                         </button>
-                        <button onClick={() => handleStatusChange('FAILED')} className="px-4 py-2 rounded-lg text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30">
+                        <button
+                            onClick={() => handleStatusChange('FAILED')}
+                            className="px-4 py-2 rounded-lg text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                        >
                             Mark Failed
                         </button>
-                        <button onClick={() => handleStatusChange('ON_HOLD')} className="px-4 py-2 rounded-lg text-sm bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
+                        <button
+                            onClick={() => handleStatusChange('ON_HOLD')}
+                            className="px-4 py-2 rounded-lg text-sm bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
+                        >
                             Put On Hold
                         </button>
                     </div>

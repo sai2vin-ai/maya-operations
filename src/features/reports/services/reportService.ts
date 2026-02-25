@@ -51,10 +51,10 @@ export async function getOperationsSummary(filters: ReportFilters): Promise<Repo
 
     batches.forEach((batch) => {
         if (batch.status === 'COMPLETED' && batch.outputs) {
-            batch.outputs.forEach((output: { type: string; quantity: number }) => {
-                if (output.type === 'OIL') totalOil += output.quantity || 0;
-                if (output.type === 'CARBON') totalCarbon += output.quantity || 0;
-                if (output.type === 'STEEL') totalSteel += output.quantity || 0;
+            batch.outputs.forEach((output: { materialCategory: string; quantity: number }) => {
+                if (output.materialCategory === 'PYROLYSIS_OIL') totalOil += output.quantity || 0;
+                if (output.materialCategory === 'CARBON_BLACK') totalCarbon += output.quantity || 0;
+                if (output.materialCategory === 'SCRAP_STEEL') totalSteel += output.quantity || 0;
             });
         }
     });
@@ -117,10 +117,10 @@ export async function getProductionReport(filters: ReportFilters): Promise<Produ
             steel = 0;
 
         if (data.outputs) {
-            data.outputs.forEach((output: { type: string; quantity: number }) => {
-                if (output.type === 'OIL') oil = output.quantity || 0;
-                if (output.type === 'CARBON') carbon = output.quantity || 0;
-                if (output.type === 'STEEL') steel = output.quantity || 0;
+            data.outputs.forEach((output: { materialCategory: string; quantity: number }) => {
+                if (output.materialCategory === 'PYROLYSIS_OIL') oil = output.quantity || 0;
+                if (output.materialCategory === 'CARBON_BLACK') carbon = output.quantity || 0;
+                if (output.materialCategory === 'SCRAP_STEEL') steel = output.quantity || 0;
             });
         }
 

@@ -153,15 +153,30 @@ service cloud.firestore {
       allow delete: if isManager();
     }
 
+    // Inventory Transactions collection
+    match /inventoryTransactions/{txId} {
+      allow read: if isActiveUser();
+      allow create: if isActiveUser() &&
+                      getUserRole() in
+                      ['SUPER_ADMIN', 'PLANT_MANAGER', 'STORES_KEEPER'];
+      allow update, delete: if isAdmin();
+    }
+
     // Shifts collection
     match /shifts/{shiftId} {
       allow read: if isActiveUser();
-      allow create, update, delete: if isManager();
+      allow create, update, delete: if isSupervisor();
     }
 
     // Webhooks collection
     match /webhooks/{webhookId} {
       allow read, create, update, delete: if isAdmin();
+    }
+
+    // Webhook Deliveries collection
+    match /webhookDeliveries/{deliveryId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only Cloud Functions can write
     }
 
     // Bug Reports collection

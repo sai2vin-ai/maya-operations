@@ -12,7 +12,9 @@ import {
     Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import { type FirestoreDocData } from '../../../types';
+import { assertAuthorized } from '../../../lib/authorization';
+import { type FirestoreDocData, type UserRole } from '../../../types';
+import { parseDoc, parseDocs, qualityCheckSchema } from '../../../lib/schemas';
 
 const QC_CHECKS_COLLECTION = 'qualityChecks';
 
@@ -84,7 +86,7 @@ async function generateCheckNumber(): Promise<string> {
         where('checkNumber', '>=', prefix + '-'),
         where('checkNumber', '<=', prefix + '-\uf8ff'),
         orderBy('checkNumber', 'desc'),
-        limit(1)
+        limit(1),
     );
     const snapshot = await getDocs(q);
 
@@ -103,10 +105,8 @@ export async function getQualityChecks(limitCount = 100): Promise<QualityCheck[]
     const q = query(checksRef, orderBy('inspectedAt', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-    })) as QualityCheck[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(qualityCheckSchema, raw, 'getQualityChecks') as QualityCheck[];
 }
 
 export async function getQualityChecksByBatch(batchId: string): Promise<QualityCheck[]> {
@@ -114,17 +114,15 @@ export async function getQualityChecksByBatch(batchId: string): Promise<QualityC
     const q = query(checksRef, where('batchId', '==', batchId));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-    })) as QualityCheck[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(qualityCheckSchema, raw, 'getQualityChecksByBatch') as QualityCheck[];
 }
 
 export async function getQualityCheckById(checkId: string): Promise<QualityCheck | null> {
     const checkRef = doc(db, QC_CHECKS_COLLECTION, checkId);
     const snapshot = await getDoc(checkRef);
     if (!snapshot.exists()) return null;
-    return { id: snapshot.id, ...snapshot.data() } as QualityCheck;
+    return parseDoc(qualityCheckSchema, { id: snapshot.id, ...snapshot.data() }, 'getQualityCheckById') as QualityCheck;
 }
 
 export interface CreateQualityCheckData {
@@ -138,10 +136,12 @@ export interface CreateQualityCheckData {
 export async function createQualityCheck(
     data: CreateQualityCheckData,
     inspector: string,
+    callerRole?: UserRole,
 ): Promise<string> {
+    assertAuthorized(callerRole, 'quality:create');
     const checkNumber = await generateCheckNumber();
-    const allPassed = data.parameters.every(p => p.passed);
-    const anyFailed = data.parameters.some(p => !p.passed && p.actual);
+    const allPassed = data.parameters.every((p) => p.passed);
+    const anyFailed = data.parameters.some((p) => !p.passed && p.actual);
 
     const checkData: FirestoreDocData = {
         checkNumber,
@@ -168,7 +168,9 @@ export async function updateQualityCheck(
     checkId: string,
     data: { status?: QCStatus; parameters?: QCParameter[]; notes?: string },
     updatedBy: string,
+    callerRole?: UserRole,
 ): Promise<void> {
+    assertAuthorized(callerRole, 'quality:update');
     const checkRef = doc(db, QC_CHECKS_COLLECTION, checkId);
     const updateData: FirestoreDocData = {
         updatedAt: Timestamp.now(),
@@ -183,23 +185,26 @@ export async function updateQualityCheck(
 }
 
 export async function getQCStats() {
-    const checks = await getQualityChecks(500);
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const recentChecks = checks.filter(c => {
-        const ts = c.inspectedAt as { toDate?: () => Date };
-        const d = ts?.toDate ? ts.toDate() : new Date();
-        return d >= thirtyDaysAgo;
-    });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const checksRef = collection(db, QC_CHECKS_COLLECTION);
+    const q = query(
+        checksRef,
+        where('inspectedAt', '>=', Timestamp.fromDate(thirtyDaysAgo)),
+        orderBy('inspectedAt', 'desc'),
+        limit(500),
+    );
+    const snapshot = await getDocs(q);
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const recentChecks = parseDocs(qualityCheckSchema, raw, 'getQCStats') as QualityCheck[];
 
     return {
         totalChecks: recentChecks.length,
-        passed: recentChecks.filter(c => c.status === 'PASSED').length,
-        failed: recentChecks.filter(c => c.status === 'FAILED').length,
-        pending: recentChecks.filter(c => c.status === 'PENDING').length,
-        passRate: recentChecks.length > 0
-            ? Math.round((recentChecks.filter(c => c.status === 'PASSED').length / recentChecks.length) * 100)
-            : 0,
+        passed: recentChecks.filter((c) => c.status === 'PASSED').length,
+        failed: recentChecks.filter((c) => c.status === 'FAILED').length,
+        pending: recentChecks.filter((c) => c.status === 'PENDING').length,
+        passRate:
+            recentChecks.length > 0
+                ? Math.round((recentChecks.filter((c) => c.status === 'PASSED').length / recentChecks.length) * 100)
+                : 0,
     };
 }

@@ -34,7 +34,11 @@ type PermissionAction =
     | 'maintenance:create'
     | 'maintenance:update'
     | 'asset_register:create'
-    | 'asset_register:update';
+    | 'asset_register:update'
+    | 'quality:create'
+    | 'quality:update'
+    | 'shifts:create'
+    | 'shifts:update';
 
 /** Static defaults — used as fallback when dynamic permissions are not loaded. */
 const STATIC_ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
@@ -64,6 +68,10 @@ const STATIC_ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'maintenance:update',
         'asset_register:create',
         'asset_register:update',
+        'quality:create',
+        'quality:update',
+        'shifts:create',
+        'shifts:update',
     ],
     PLANT_MANAGER: [
         'users:create',
@@ -88,6 +96,10 @@ const STATIC_ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'maintenance:update',
         'asset_register:create',
         'asset_register:update',
+        'quality:create',
+        'quality:update',
+        'shifts:create',
+        'shifts:update',
     ],
     SHIFT_SUPERVISOR: [
         'gate:create',
@@ -99,10 +111,14 @@ const STATIC_ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'weighbridge:create',
         'weighbridge:update',
         'bug_reports:create',
+        'quality:create',
+        'quality:update',
+        'shifts:create',
+        'shifts:update',
     ],
     GATE_OPERATOR: ['gate:create', 'gate:update', 'weighbridge:create', 'weighbridge:update', 'bug_reports:create'],
     WEIGHBRIDGE_OPERATOR: ['weighbridge:create', 'weighbridge:update', 'bug_reports:create'],
-    REACTOR_OPERATOR: ['batch:create', 'batch:complete_step', 'bug_reports:create'],
+    REACTOR_OPERATOR: ['batch:create', 'batch:complete_step', 'bug_reports:create', 'quality:create'],
     STORES_KEEPER: [
         'inventory:create',
         'inventory:update',

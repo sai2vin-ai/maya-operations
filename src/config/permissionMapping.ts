@@ -41,6 +41,14 @@ export const MODULE_ACTION_MAP: Record<string, Partial<Record<Permission, Permis
         create: ['maintenance:create', 'asset_register:create'],
         edit: ['maintenance:update', 'asset_register:update'],
     },
+    QUALITY: {
+        create: ['quality:create'],
+        edit: ['quality:update'],
+    },
+    SHIFTS: {
+        create: ['shifts:create'],
+        edit: ['shifts:update'],
+    },
 };
 
 /** Actions granted to every authenticated user regardless of the matrix. */

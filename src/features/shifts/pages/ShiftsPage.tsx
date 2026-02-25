@@ -26,6 +26,7 @@ export default function ShiftsPage() {
             await startShift.mutateAsync({
                 data: { shiftType, supervisorId: userData.id },
                 createdBy: userData.id,
+                callerRole: userData.role,
             });
             toast.success('Shift started successfully');
             setShowStart(false);
@@ -41,6 +42,7 @@ export default function ShiftsPage() {
                 shiftId: activeShift.id,
                 data: { handoverNotes },
                 updatedBy: userData.id,
+                callerRole: userData.role,
             });
             toast.success('Shift ended successfully');
             setShowEnd(false);
@@ -53,7 +55,7 @@ export default function ShiftsPage() {
     const handleAcknowledge = async (shiftId: string) => {
         if (!userData?.id) return;
         try {
-            await acknowledgeHandover.mutateAsync({ shiftId, userId: userData.id });
+            await acknowledgeHandover.mutateAsync({ shiftId, userId: userData.id, callerRole: userData.role });
             toast.success('Handover acknowledged');
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Failed to acknowledge');
@@ -67,7 +69,7 @@ export default function ShiftsPage() {
         return date.toLocaleString();
     };
 
-    const getShiftLabel = (type: ShiftType) => SHIFT_TYPES.find(s => s.value === type)?.label || type;
+    const getShiftLabel = (type: ShiftType) => SHIFT_TYPES.find((s) => s.value === type)?.label || type;
 
     return (
         <div>
@@ -94,7 +96,9 @@ export default function ShiftsPage() {
                     <div className="glass-card p-6 mb-4 border border-green-500/30">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-lg font-semibold text-foreground">Current Shift</h2>
-                            <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-400">Active</span>
+                            <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-400">
+                                Active
+                            </span>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div>
@@ -120,15 +124,27 @@ export default function ShiftsPage() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm text-foreground-secondary mb-1">Shift Type</label>
-                                <select value={shiftType} onChange={(e) => setShiftType(e.target.value as ShiftType)} className="input-field w-full">
-                                    {SHIFT_TYPES.map(s => (
-                                        <option key={s.value} value={s.value}>{s.label} ({s.time})</option>
+                                <select
+                                    value={shiftType}
+                                    onChange={(e) => setShiftType(e.target.value as ShiftType)}
+                                    className="input-field w-full"
+                                >
+                                    {SHIFT_TYPES.map((s) => (
+                                        <option key={s.value} value={s.value}>
+                                            {s.label} ({s.time})
+                                        </option>
                                     ))}
                                 </select>
                             </div>
                             <div className="flex gap-2">
-                                <button onClick={() => setShowStart(false)} className="btn-secondary">Cancel</button>
-                                <button onClick={handleStartShift} disabled={startShift.isPending} className="btn-primary">
+                                <button onClick={() => setShowStart(false)} className="btn-secondary">
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleStartShift}
+                                    disabled={startShift.isPending}
+                                    className="btn-primary"
+                                >
                                     {startShift.isPending ? 'Starting...' : 'Start Shift'}
                                 </button>
                             </div>
@@ -152,7 +168,9 @@ export default function ShiftsPage() {
                                 />
                             </div>
                             <div className="flex gap-2">
-                                <button onClick={() => setShowEnd(false)} className="btn-secondary">Cancel</button>
+                                <button onClick={() => setShowEnd(false)} className="btn-secondary">
+                                    Cancel
+                                </button>
                                 <button
                                     onClick={handleEndShift}
                                     disabled={endShift.isPending || !handoverNotes.trim()}
@@ -181,31 +199,48 @@ export default function ShiftsPage() {
                                         <th className="text-left p-4 text-foreground-secondary font-medium">Shift</th>
                                         <th className="text-left p-4 text-foreground-secondary font-medium">Start</th>
                                         <th className="text-left p-4 text-foreground-secondary font-medium">End</th>
-                                        <th className="text-left p-4 text-foreground-secondary font-medium">Handover</th>
-                                        <th className="text-center p-4 text-foreground-secondary font-medium">Status</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">
+                                            Handover
+                                        </th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium">
+                                            Status
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-700">
                                     {shifts.map((shift) => {
                                         const needsAcknowledge = shift.endTime && !shift.handoverAcknowledged;
                                         return (
-                                            <tr key={shift.id} className="hover:bg-surface-tertiary/30 transition-colors">
-                                                <td className="p-4 text-foreground text-sm">{formatTime(shift.date)}</td>
+                                            <tr
+                                                key={shift.id}
+                                                className="hover:bg-surface-tertiary/30 transition-colors"
+                                            >
+                                                <td className="p-4 text-foreground text-sm">
+                                                    {formatTime(shift.date)}
+                                                </td>
                                                 <td className="p-4">
                                                     <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-400">
                                                         {getShiftLabel(shift.shiftType)}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-foreground-muted text-sm">{formatTime(shift.startTime)}</td>
-                                                <td className="p-4 text-foreground-muted text-sm">{formatTime(shift.endTime)}</td>
+                                                <td className="p-4 text-foreground-muted text-sm">
+                                                    {formatTime(shift.startTime)}
+                                                </td>
+                                                <td className="p-4 text-foreground-muted text-sm">
+                                                    {formatTime(shift.endTime)}
+                                                </td>
                                                 <td className="p-4 text-foreground-secondary text-sm max-w-xs truncate">
                                                     {shift.handoverNotes || '-'}
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     {!shift.endTime ? (
-                                                        <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-400">Active</span>
+                                                        <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-400">
+                                                            Active
+                                                        </span>
                                                     ) : shift.handoverAcknowledged ? (
-                                                        <span className="px-2 py-1 rounded-full text-xs bg-slate-500/20 text-slate-400">Completed</span>
+                                                        <span className="px-2 py-1 rounded-full text-xs bg-slate-500/20 text-slate-400">
+                                                            Completed
+                                                        </span>
                                                     ) : needsAcknowledge ? (
                                                         <button
                                                             onClick={() => handleAcknowledge(shift.id)}
@@ -214,7 +249,9 @@ export default function ShiftsPage() {
                                                             Acknowledge
                                                         </button>
                                                     ) : (
-                                                        <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-400">Pending</span>
+                                                        <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-400">
+                                                            Pending
+                                                        </span>
                                                     )}
                                                 </td>
                                             </tr>

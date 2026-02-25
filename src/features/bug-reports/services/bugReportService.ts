@@ -15,6 +15,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import type { BugReport, BugReportStatus, CreateBugReportData } from '../types';
 import type { FirestoreDocData } from '../../../types';
+import { parseDoc, parseDocs, bugReportSchema } from '../../../lib/schemas';
 import { assertAuthorized } from '../../../lib/authorization';
 import type { UserRole } from '../../../types';
 import { generateSafeFilename, validateFile } from '../../../utils/validation';
@@ -28,7 +29,7 @@ async function getNextReportNumber(): Promise<string> {
         where('reportNumber', '>=', 'BR-'),
         where('reportNumber', '<=', 'BR-\uf8ff'),
         orderBy('reportNumber', 'desc'),
-        limit(1)
+        limit(1),
     );
     const snapshot = await getDocs(q);
 
@@ -94,10 +95,8 @@ export async function getBugReports(): Promise<BugReport[]> {
     const q = query(colRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as BugReport[];
+    const raw = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return parseDocs(bugReportSchema, raw, 'getBugReports') as BugReport[];
 }
 
 export async function getBugReport(id: string): Promise<BugReport | null> {
@@ -106,7 +105,7 @@ export async function getBugReport(id: string): Promise<BugReport | null> {
 
     if (!snapshot.exists()) return null;
 
-    return { id: snapshot.id, ...snapshot.data() } as BugReport;
+    return parseDoc(bugReportSchema, { id: snapshot.id, ...snapshot.data() }, 'getBugReport') as BugReport;
 }
 
 export async function updateBugReportStatus(

@@ -26,6 +26,9 @@ vi.mock('firebase/firestore', () => ({
     runTransaction: vi.fn(),
 }));
 vi.mock('../../../lib/firebase', () => ({ db: {} }));
+vi.mock('../../../lib/authorization', () => ({
+    assertAuthorized: vi.fn(),
+}));
 
 describe('shiftService', () => {
     beforeEach(() => {
@@ -56,6 +59,7 @@ describe('shiftService', () => {
                     supervisorId: 'supervisor-1',
                 },
                 'user-1',
+                'SUPER_ADMIN',
             );
 
             expect(result).toBe('new-shift-id');
@@ -77,6 +81,7 @@ describe('shiftService', () => {
                     supervisorId: 'supervisor-1',
                 },
                 'user-1',
+                'SUPER_ADMIN',
             );
 
             const shiftData = mockAddDoc.mock.calls[0][1] as unknown as Record<string, unknown>;
@@ -98,6 +103,7 @@ describe('shiftService', () => {
                     handoverNotes: 'All tasks completed',
                 },
                 'user-1',
+                'SUPER_ADMIN',
             );
 
             expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
@@ -119,6 +125,7 @@ describe('shiftService', () => {
                     incomingSupervisorId: 'supervisor-2',
                 },
                 'user-1',
+                'SUPER_ADMIN',
             );
 
             const updateData = mockUpdateDoc.mock.calls[0][1] as unknown as Record<string, unknown>;
@@ -132,7 +139,7 @@ describe('shiftService', () => {
 
             const { acknowledgeHandover } = await import('./shiftService');
 
-            await acknowledgeHandover('shift-1', 'user-2');
+            await acknowledgeHandover('shift-1', 'user-2', 'SUPER_ADMIN');
 
             expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
             const updateData = mockUpdateDoc.mock.calls[0][1] as unknown as Record<string, unknown>;

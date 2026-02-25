@@ -29,18 +29,22 @@ export default function QualityCheckCreatePage() {
     const [notes, setNotes] = useState('');
     const [parameters, setParameters] = useState<QCParameter[]>(DEFAULT_PARAMETERS['OIL']);
 
-    const selectedBatch = batches.find(b => b.id === batchId);
+    const selectedBatch = batches.find((b) => b.id === batchId);
 
     const handleBatchChange = (id: string) => {
         setBatchId(id);
         // Auto-select parameters based on batch output type
-        const batch = batches.find(b => b.id === id);
+        const batch = batches.find((b) => b.id === id);
         if (batch) {
             const mainOutput = batch.outputs?.[0]?.materialCategory;
-            const paramKey = mainOutput === 'PYROLYSIS_OIL' ? 'OIL'
-                : mainOutput === 'CARBON_BLACK' ? 'CARBON'
-                : mainOutput === 'SCRAP_STEEL' ? 'STEEL'
-                : 'OIL';
+            const paramKey =
+                mainOutput === 'PYROLYSIS_OIL'
+                    ? 'OIL'
+                    : mainOutput === 'CARBON_BLACK'
+                      ? 'CARBON'
+                      : mainOutput === 'SCRAP_STEEL'
+                        ? 'STEEL'
+                        : 'OIL';
             setParameters(DEFAULT_PARAMETERS[paramKey] || DEFAULT_PARAMETERS['OIL']);
         }
     };
@@ -62,13 +66,17 @@ export default function QualityCheckCreatePage() {
             setSaving(true);
             setError(null);
 
-            const checkId = await createQualityCheck({
-                batchId,
-                batchNumber: selectedBatch?.batchNumber || batchId,
-                checkType,
-                parameters,
-                notes: notes || undefined,
-            }, userData.id);
+            const checkId = await createQualityCheck(
+                {
+                    batchId,
+                    batchNumber: selectedBatch?.batchNumber || batchId,
+                    checkType,
+                    parameters,
+                    notes: notes || undefined,
+                },
+                userData.id,
+                userData.role,
+            );
 
             toast.success('Quality check recorded');
             navigate(`/quality/${checkId}`);
@@ -102,18 +110,31 @@ export default function QualityCheckCreatePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm text-foreground-secondary mb-1">Batch *</label>
-                            <select value={batchId} onChange={(e) => handleBatchChange(e.target.value)} className="input-field w-full" required>
+                            <select
+                                value={batchId}
+                                onChange={(e) => handleBatchChange(e.target.value)}
+                                className="input-field w-full"
+                                required
+                            >
                                 <option value="">Select batch...</option>
-                                {batches.map(b => (
-                                    <option key={b.id} value={b.id}>{b.batchNumber} ({b.status})</option>
+                                {batches.map((b) => (
+                                    <option key={b.id} value={b.id}>
+                                        {b.batchNumber} ({b.status})
+                                    </option>
                                 ))}
                             </select>
                         </div>
                         <div>
                             <label className="block text-sm text-foreground-secondary mb-1">Check Type</label>
-                            <select value={checkType} onChange={(e) => setCheckType(e.target.value as QCCheckType)} className="input-field w-full">
-                                {QC_CHECK_TYPES.map(t => (
-                                    <option key={t.value} value={t.value}>{t.label}</option>
+                            <select
+                                value={checkType}
+                                onChange={(e) => setCheckType(e.target.value as QCCheckType)}
+                                className="input-field w-full"
+                            >
+                                {QC_CHECK_TYPES.map((t) => (
+                                    <option key={t.value} value={t.value}>
+                                        {t.label}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -144,7 +165,9 @@ export default function QualityCheckCreatePage() {
                                         type="button"
                                         onClick={() => updateParameter(i, 'passed', true)}
                                         className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                                            param.passed ? 'bg-green-500/30 text-green-400 ring-1 ring-green-500' : 'bg-surface-tertiary text-foreground-muted hover:bg-green-500/10'
+                                            param.passed
+                                                ? 'bg-green-500/30 text-green-400 ring-1 ring-green-500'
+                                                : 'bg-surface-tertiary text-foreground-muted hover:bg-green-500/10'
                                         }`}
                                     >
                                         Pass
@@ -153,7 +176,9 @@ export default function QualityCheckCreatePage() {
                                         type="button"
                                         onClick={() => updateParameter(i, 'passed', false)}
                                         className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                                            !param.passed && param.actual ? 'bg-red-500/30 text-red-400 ring-1 ring-red-500' : 'bg-surface-tertiary text-foreground-muted hover:bg-red-500/10'
+                                            !param.passed && param.actual
+                                                ? 'bg-red-500/30 text-red-400 ring-1 ring-red-500'
+                                                : 'bg-surface-tertiary text-foreground-muted hover:bg-red-500/10'
                                         }`}
                                     >
                                         Fail
@@ -181,7 +206,9 @@ export default function QualityCheckCreatePage() {
                     disabled={saving || !batchId}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                    {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                    {saving && (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    )}
                     Record Quality Check
                 </button>
             </form>

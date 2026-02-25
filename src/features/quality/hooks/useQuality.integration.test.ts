@@ -213,7 +213,11 @@ describe('useQuality hooks integration', () => {
             const resultId = await result.current.mutateAsync(createData);
 
             expect(resultId).toBe('new-qc-id');
-            expect(qualityService.createQualityCheck).toHaveBeenCalledWith(createData.data, createData.inspector);
+            expect(qualityService.createQualityCheck).toHaveBeenCalledWith(
+                createData.data,
+                createData.inspector,
+                undefined,
+            );
         });
 
         it('should handle creation failure', async () => {
@@ -255,6 +259,7 @@ describe('useQuality hooks integration', () => {
                 'qc-123',
                 { status: 'PASSED' },
                 'inspector-1',
+                undefined,
             );
         });
 
@@ -280,6 +285,7 @@ describe('useQuality hooks integration', () => {
                 'qc-123',
                 { parameters: updatedParams },
                 'inspector-2',
+                undefined,
             );
         });
 
@@ -300,6 +306,7 @@ describe('useQuality hooks integration', () => {
                 'qc-123',
                 { notes: 'Updated notes after re-inspection' },
                 'inspector-1',
+                undefined,
             );
         });
 

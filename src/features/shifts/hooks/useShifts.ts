@@ -9,6 +9,7 @@ import {
     type StartShiftData,
     type EndShiftData,
 } from '../services/shiftService';
+import type { UserRole } from '../../../types';
 
 export const shiftKeys = {
     all: ['shifts'] as const,
@@ -43,8 +44,15 @@ export function useActiveShift() {
 export function useStartShift() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ data, createdBy }: { data: StartShiftData; createdBy: string }) =>
-            startShift(data, createdBy),
+        mutationFn: ({
+            data,
+            createdBy,
+            callerRole,
+        }: {
+            data: StartShiftData;
+            createdBy: string;
+            callerRole?: UserRole;
+        }) => startShift(data, createdBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: shiftKeys.all });
         },
@@ -54,8 +62,17 @@ export function useStartShift() {
 export function useEndShift() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ shiftId, data, updatedBy }: { shiftId: string; data: EndShiftData; updatedBy: string }) =>
-            endShift(shiftId, data, updatedBy),
+        mutationFn: ({
+            shiftId,
+            data,
+            updatedBy,
+            callerRole,
+        }: {
+            shiftId: string;
+            data: EndShiftData;
+            updatedBy: string;
+            callerRole?: UserRole;
+        }) => endShift(shiftId, data, updatedBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: shiftKeys.all });
         },
@@ -65,8 +82,8 @@ export function useEndShift() {
 export function useAcknowledgeHandover() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ shiftId, userId }: { shiftId: string; userId: string }) =>
-            acknowledgeHandover(shiftId, userId),
+        mutationFn: ({ shiftId, userId, callerRole }: { shiftId: string; userId: string; callerRole?: UserRole }) =>
+            acknowledgeHandover(shiftId, userId, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: shiftKeys.all });
         },

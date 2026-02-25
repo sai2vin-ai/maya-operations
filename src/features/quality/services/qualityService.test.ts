@@ -26,6 +26,9 @@ vi.mock('firebase/firestore', () => ({
     runTransaction: vi.fn(),
 }));
 vi.mock('../../../lib/firebase', () => ({ db: {} }));
+vi.mock('../../../lib/authorization', () => ({
+    assertAuthorized: vi.fn(),
+}));
 
 describe('qualityService', () => {
     beforeEach(() => {
@@ -84,6 +87,7 @@ describe('qualityService', () => {
                     ],
                 },
                 'inspector-1',
+                'SUPER_ADMIN',
             );
 
             expect(result).toBe('new-check-id');
@@ -111,6 +115,7 @@ describe('qualityService', () => {
                     ],
                 },
                 'inspector-1',
+                'SUPER_ADMIN',
             );
 
             const checkData = mockAddDoc.mock.calls[0][1] as unknown as Record<string, unknown>;
@@ -134,6 +139,7 @@ describe('qualityService', () => {
                     ],
                 },
                 'inspector-1',
+                'SUPER_ADMIN',
             );
 
             const checkData = mockAddDoc.mock.calls[0][1] as unknown as Record<string, unknown>;
@@ -147,7 +153,7 @@ describe('qualityService', () => {
 
             const { updateQualityCheck } = await import('./qualityService');
 
-            await updateQualityCheck('check-1', { status: 'ON_HOLD' }, 'user-1');
+            await updateQualityCheck('check-1', { status: 'ON_HOLD' }, 'user-1', 'SUPER_ADMIN');
 
             expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
             const updateData = mockUpdateDoc.mock.calls[0][1] as unknown as Record<string, unknown>;

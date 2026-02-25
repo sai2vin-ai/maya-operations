@@ -13,14 +13,9 @@ import {
     Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import type {
-    Webhook,
-    WebhookDelivery,
-    CreateWebhookData,
-    UpdateWebhookData,
-    WebhookStatus,
-} from '../types';
+import type { Webhook, WebhookDelivery, CreateWebhookData, UpdateWebhookData, WebhookStatus } from '../types';
 import type { FirestoreDocData } from '../../../types';
+import { parseDoc, parseDocs, webhookSchema, webhookDeliverySchema } from '../../../lib/schemas';
 import { validateUrl, validateWebhookHeaders, sanitizeString } from '../../../utils/validation';
 import { assertAuthorized } from '../../../lib/authorization';
 import type { UserRole } from '../../../types';
@@ -45,10 +40,8 @@ export async function getWebhooks(): Promise<Webhook[]> {
     const q = query(webhooksRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as Webhook[];
+    const raw = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return parseDocs(webhookSchema, raw, 'getWebhooks') as Webhook[];
 }
 
 /**
@@ -56,17 +49,11 @@ export async function getWebhooks(): Promise<Webhook[]> {
  */
 export async function getWebhooksByStatus(status: WebhookStatus): Promise<Webhook[]> {
     const webhooksRef = collection(db, WEBHOOKS_COLLECTION);
-    const q = query(
-        webhooksRef,
-        where('status', '==', status),
-        orderBy('createdAt', 'desc')
-    );
+    const q = query(webhooksRef, where('status', '==', status), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as Webhook[];
+    const raw = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return parseDocs(webhookSchema, raw, 'getWebhooksByStatus') as Webhook[];
 }
 
 /**
@@ -80,7 +67,7 @@ export async function getWebhookById(webhookId: string): Promise<Webhook | null>
         return null;
     }
 
-    return { id: snapshot.id, ...snapshot.data() } as Webhook;
+    return parseDoc(webhookSchema, { id: snapshot.id, ...snapshot.data() }, 'getWebhookById') as Webhook;
 }
 
 /**
@@ -89,7 +76,7 @@ export async function getWebhookById(webhookId: string): Promise<Webhook | null>
 export async function createWebhook(
     data: CreateWebhookData,
     createdBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<string> {
     assertAuthorized(callerRole, 'webhooks:manage');
 
@@ -155,7 +142,7 @@ export async function updateWebhook(
     webhookId: string,
     data: UpdateWebhookData,
     updatedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'webhooks:manage');
 
@@ -184,7 +171,8 @@ export async function updateWebhook(
 
     // Add fields that are being updated
     if (data.name) updateData.name = sanitizeString(data.name);
-    if (data.description !== undefined) updateData.description = data.description ? sanitizeString(data.description) : null;
+    if (data.description !== undefined)
+        updateData.description = data.description ? sanitizeString(data.description) : null;
     if (data.url) updateData.url = data.url.trim();
     if (data.method) updateData.method = data.method;
     if (data.events) updateData.events = data.events;
@@ -208,65 +196,44 @@ export async function deleteWebhook(webhookId: string, callerRole?: UserRole): P
 /**
  * Activate a webhook
  */
-export async function activateWebhook(
-    webhookId: string,
-    updatedBy: string,
-    callerRole?: UserRole
-): Promise<void> {
+export async function activateWebhook(webhookId: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
     await updateWebhook(webhookId, { status: 'ACTIVE' }, updatedBy, callerRole);
 }
 
 /**
  * Deactivate a webhook
  */
-export async function deactivateWebhook(
-    webhookId: string,
-    updatedBy: string,
-    callerRole?: UserRole
-): Promise<void> {
+export async function deactivateWebhook(webhookId: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
     await updateWebhook(webhookId, { status: 'INACTIVE' }, updatedBy, callerRole);
 }
 
 /**
  * Get webhook delivery logs
  */
-export async function getWebhookDeliveries(
-    webhookId: string,
-    limitCount: number = 50
-): Promise<WebhookDelivery[]> {
+export async function getWebhookDeliveries(webhookId: string, limitCount: number = 50): Promise<WebhookDelivery[]> {
     const deliveriesRef = collection(db, WEBHOOK_DELIVERIES_COLLECTION);
     const q = query(
         deliveriesRef,
         where('webhookId', '==', webhookId),
         orderBy('triggeredAt', 'desc'),
-        limit(limitCount)
+        limit(limitCount),
     );
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as WebhookDelivery[];
+    const raw = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return parseDocs(webhookDeliverySchema, raw, 'getWebhookDeliveries') as WebhookDelivery[];
 }
 
 /**
  * Get recent webhook deliveries across all webhooks
  */
-export async function getRecentDeliveries(
-    limitCount: number = 50
-): Promise<WebhookDelivery[]> {
+export async function getRecentDeliveries(limitCount: number = 50): Promise<WebhookDelivery[]> {
     const deliveriesRef = collection(db, WEBHOOK_DELIVERIES_COLLECTION);
-    const q = query(
-        deliveriesRef,
-        orderBy('triggeredAt', 'desc'),
-        limit(limitCount)
-    );
+    const q = query(deliveriesRef, orderBy('triggeredAt', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as WebhookDelivery[];
+    const raw = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return parseDocs(webhookDeliverySchema, raw, 'getRecentDeliveries') as WebhookDelivery[];
 }
 
 /**
@@ -306,10 +273,7 @@ export async function testWebhook(webhookId: string): Promise<{
 
         // Add signature if secret is configured
         if (webhook.secret) {
-            headers['X-Webhook-Signature'] = await generateSignature(
-                JSON.stringify(testPayload),
-                webhook.secret
-            );
+            headers['X-Webhook-Signature'] = await generateSignature(JSON.stringify(testPayload), webhook.secret);
         }
 
         const response = await fetch(webhook.url, {
@@ -345,13 +309,7 @@ async function generateSignature(payload: string, secret: string): Promise<strin
     const keyData = encoder.encode(secret);
     const payloadData = encoder.encode(payload);
 
-    const cryptoKey = await crypto.subtle.importKey(
-        'raw',
-        keyData,
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-    );
+    const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
 
     const signature = await crypto.subtle.sign('HMAC', cryptoKey, payloadData);
     const signatureArray = Array.from(new Uint8Array(signature));

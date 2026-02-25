@@ -253,9 +253,9 @@ describe('reportService', () => {
                             data: () => ({
                                 status: 'COMPLETED',
                                 outputs: [
-                                    { type: 'OIL', quantity: 100 },
-                                    { type: 'CARBON', quantity: 50 },
-                                    { type: 'STEEL', quantity: 30 },
+                                    { materialCategory: 'PYROLYSIS_OIL', quantity: 100 },
+                                    { materialCategory: 'CARBON_BLACK', quantity: 50 },
+                                    { materialCategory: 'SCRAP_STEEL', quantity: 30 },
                                 ],
                             }),
                         },
@@ -270,7 +270,7 @@ describe('reportService', () => {
                             id: 'b3',
                             data: () => ({
                                 status: 'COMPLETED',
-                                outputs: [{ type: 'OIL', quantity: 200 }],
+                                outputs: [{ materialCategory: 'PYROLYSIS_OIL', quantity: 200 }],
                             }),
                         },
                     ],
@@ -353,9 +353,9 @@ describe('reportService', () => {
                             reactorId: 'reactor-1',
                             endTime: { toDate: () => mockDate },
                             outputs: [
-                                { type: 'OIL', quantity: 150 },
-                                { type: 'CARBON', quantity: 80 },
-                                { type: 'STEEL', quantity: 40 },
+                                { materialCategory: 'PYROLYSIS_OIL', quantity: 150 },
+                                { materialCategory: 'CARBON_BLACK', quantity: 80 },
+                                { materialCategory: 'SCRAP_STEEL', quantity: 40 },
                             ],
                         }),
                     },

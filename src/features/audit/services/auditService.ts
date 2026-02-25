@@ -4,6 +4,7 @@ import {
     orderBy,
     limit,
     getDocs,
+    getCountFromServer,
     where,
     Timestamp,
     startAfter,
@@ -11,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import type { AuditLog, AuditFilters } from '../types';
+import { parseDocs, auditLogSchema } from '../../../lib/schemas';
 
 const AUDIT_COLLECTION = 'auditLogs';
 const DEFAULT_LIMIT = 50;
@@ -21,7 +23,7 @@ const DEFAULT_LIMIT = 50;
 export async function getAuditLogs(
     filters?: AuditFilters,
     pageSize: number = DEFAULT_LIMIT,
-    lastDoc?: QueryDocumentSnapshot
+    lastDoc?: QueryDocumentSnapshot,
 ): Promise<{ logs: AuditLog[]; lastDoc: QueryDocumentSnapshot | null }> {
     const auditRef = collection(db, AUDIT_COLLECTION);
 
@@ -56,19 +58,18 @@ export async function getAuditLogs(
     const q = query(auditRef, ...constraints);
     const snapshot = await getDocs(q);
 
-    const logs: AuditLog[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as AuditLog[];
+    const logs = parseDocs(
+        auditLogSchema,
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+        'getAuditLogs',
+    ) as AuditLog[];
 
     // Apply client-side filters that can't be done in Firestore
     let filteredLogs = logs;
 
     // Filter by action type (client-side because of complex matching)
     if (filters?.action) {
-        filteredLogs = filteredLogs.filter((log) =>
-            log.action.includes(filters.action!)
-        );
+        filteredLogs = filteredLogs.filter((log) => log.action.includes(filters.action!));
     }
 
     // Filter by search query (client-side)
@@ -85,9 +86,7 @@ export async function getAuditLogs(
         });
     }
 
-    const newLastDoc = snapshot.docs.length > 0
-        ? snapshot.docs[snapshot.docs.length - 1]
-        : null;
+    const newLastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
 
     return { logs: filteredLogs, lastDoc: newLastDoc };
 }
@@ -98,7 +97,7 @@ export async function getAuditLogs(
 export async function getAuditLogsByDocument(
     collectionName: string,
     documentId: string,
-    pageSize: number = 20
+    pageSize: number = 20,
 ): Promise<AuditLog[]> {
     const auditRef = collection(db, AUDIT_COLLECTION);
     const q = query(
@@ -106,38 +105,32 @@ export async function getAuditLogsByDocument(
         where('collection', '==', collectionName),
         where('documentId', '==', documentId),
         orderBy('timestamp', 'desc'),
-        limit(pageSize)
+        limit(pageSize),
     );
 
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as AuditLog[];
+    return parseDocs(
+        auditLogSchema,
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+        'getAuditLogsByDocument',
+    ) as AuditLog[];
 }
 
 /**
  * Get audit logs by user
  */
-export async function getAuditLogsByUser(
-    userId: string,
-    pageSize: number = 50
-): Promise<AuditLog[]> {
+export async function getAuditLogsByUser(userId: string, pageSize: number = 50): Promise<AuditLog[]> {
     const auditRef = collection(db, AUDIT_COLLECTION);
-    const q = query(
-        auditRef,
-        where('userId', '==', userId),
-        orderBy('timestamp', 'desc'),
-        limit(pageSize)
-    );
+    const q = query(auditRef, where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(pageSize));
 
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as AuditLog[];
+    return parseDocs(
+        auditLogSchema,
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+        'getAuditLogsByUser',
+    ) as AuditLog[];
 }
 
 /**
@@ -145,34 +138,28 @@ export async function getAuditLogsByUser(
  */
 export async function getRecentAuditLogs(count: number = 10): Promise<AuditLog[]> {
     const auditRef = collection(db, AUDIT_COLLECTION);
-    const q = query(
-        auditRef,
-        orderBy('timestamp', 'desc'),
-        limit(count)
-    );
+    const q = query(auditRef, orderBy('timestamp', 'desc'), limit(count));
 
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as AuditLog[];
+    return parseDocs(
+        auditLogSchema,
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+        'getRecentAuditLogs',
+    ) as AuditLog[];
 }
 
 /**
  * Get audit log count for a time period
  */
-export async function getAuditLogCount(
-    startDate: Date,
-    endDate: Date
-): Promise<number> {
+export async function getAuditLogCount(startDate: Date, endDate: Date): Promise<number> {
     const auditRef = collection(db, AUDIT_COLLECTION);
     const q = query(
         auditRef,
         where('timestamp', '>=', Timestamp.fromDate(startDate)),
-        where('timestamp', '<=', Timestamp.fromDate(endDate))
+        where('timestamp', '<=', Timestamp.fromDate(endDate)),
     );
 
-    const snapshot = await getDocs(q);
-    return snapshot.size;
+    const snapshot = await getCountFromServer(q);
+    return snapshot.data().count;
 }

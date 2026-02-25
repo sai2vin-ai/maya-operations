@@ -16,6 +16,7 @@ import { db } from '../../../lib/firebase';
 import { assertAuthorized } from '../../../lib/authorization';
 import type { MaintenanceJob, JobType, JobPriority, JobStatus, JobPartUsed } from '../../../types';
 import { type FirestoreDocData, type UserRole } from '../../../types';
+import { parseDoc, parseDocs, maintenanceJobSchema } from '../../../lib/schemas';
 
 const ASSETS_COLLECTION = 'assets';
 const JOBS_COLLECTION = 'maintenanceJobs';
@@ -80,10 +81,8 @@ export async function getJobs(limitCount = 100): Promise<MaintenanceJob[]> {
     const q = query(jobsRef, orderBy('reportedAt', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-    })) as MaintenanceJob[];
+    const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return parseDocs(maintenanceJobSchema, raw, 'getJobs') as MaintenanceJob[];
 }
 
 export async function getJobsByAsset(assetId: string): Promise<MaintenanceJob[]> {
@@ -91,10 +90,11 @@ export async function getJobsByAsset(assetId: string): Promise<MaintenanceJob[]>
     const q = query(jobsRef, where('assetId', '==', assetId));
     const snapshot = await getDocs(q);
 
-    const jobs = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-    })) as MaintenanceJob[];
+    const jobs = parseDocs(
+        maintenanceJobSchema,
+        snapshot.docs.map((d) => ({ id: d.id, ...d.data() })),
+        'getJobsByAsset',
+    ) as MaintenanceJob[];
 
     return jobs.sort((a, b) => {
         const aTime = a.reportedAt?.toMillis?.() || 0;
@@ -115,10 +115,11 @@ export async function getJobsByAssets(assetIds: string[]): Promise<MaintenanceJo
         const q = query(jobsRef, where('assetId', 'in', chunk));
         const snapshot = await getDocs(q);
         batches.push(
-            snapshot.docs.map((d) => ({
-                id: d.id,
-                ...d.data(),
-            })) as MaintenanceJob[],
+            parseDocs(
+                maintenanceJobSchema,
+                snapshot.docs.map((d) => ({ id: d.id, ...d.data() })),
+                'getJobsByAssets',
+            ) as MaintenanceJob[],
         );
     }
 
@@ -134,7 +135,7 @@ export async function getJobById(jobId: string): Promise<MaintenanceJob | null> 
     const jobRef = doc(db, JOBS_COLLECTION, jobId);
     const snapshot = await getDoc(jobRef);
     if (!snapshot.exists()) return null;
-    return { id: snapshot.id, ...snapshot.data() } as MaintenanceJob;
+    return parseDoc(maintenanceJobSchema, { id: snapshot.id, ...snapshot.data() }, 'getJobById') as MaintenanceJob;
 }
 
 export interface CreateJobData {
@@ -168,14 +169,21 @@ export async function createJob(data: CreateJobData, reportedBy: string, callerR
         jobData.assignedTo = data.assignedTo;
     }
 
-    // If breakdown job, mark asset as BREAKDOWN
+    // Use transaction to atomically create job + update asset status for breakdowns
     if (data.jobType === 'BREAKDOWN') {
-        const assetRef = doc(db, ASSETS_COLLECTION, data.assetId);
-        await updateDoc(assetRef, {
-            status: 'BREAKDOWN',
-            updatedAt: Timestamp.now(),
-            updatedBy: reportedBy,
+        let createdId = '';
+        await runTransaction(db, async (transaction) => {
+            const assetRef = doc(db, ASSETS_COLLECTION, data.assetId);
+            transaction.update(assetRef, {
+                status: 'BREAKDOWN',
+                updatedAt: Timestamp.now(),
+                updatedBy: reportedBy,
+            });
+            const newJobRef = doc(collection(db, JOBS_COLLECTION));
+            transaction.set(newJobRef, jobData);
+            createdId = newJobRef.id;
         });
+        return createdId;
     }
 
     const jobsRef = collection(db, JOBS_COLLECTION);
@@ -217,21 +225,27 @@ export async function updateJob(
     if (data.rootCause !== undefined) updateData.rootCause = data.rootCause;
     if (data.actionTaken !== undefined) updateData.actionTaken = data.actionTaken;
 
-    await updateDoc(jobRef, updateData as Record<string, unknown>);
-
-    // If completed, mark asset back to OPERATIONAL
+    // Use transaction when completing/closing to atomically update job + asset status
     if (data.status === 'COMPLETED' || data.status === 'CLOSED') {
-        const job = await getJobById(jobId);
-        if (job) {
-            const assetRef = doc(db, ASSETS_COLLECTION, job.assetId);
-            await updateDoc(assetRef, {
+        await runTransaction(db, async (transaction) => {
+            const jobSnap = await transaction.get(jobRef);
+            if (!jobSnap.exists()) throw new Error('Job not found');
+            const job = jobSnap.data();
+
+            transaction.update(jobRef, updateData as Record<string, unknown>);
+
+            const assetRef = doc(db, ASSETS_COLLECTION, job.assetId as string);
+            transaction.update(assetRef, {
                 status: 'OPERATIONAL',
                 lastPmDate: data.status === 'COMPLETED' ? Timestamp.now() : undefined,
                 updatedAt: Timestamp.now(),
                 updatedBy,
             });
-        }
+        });
+        return;
     }
+
+    await updateDoc(jobRef, updateData as Record<string, unknown>);
 }
 
 // ============================================
@@ -347,7 +361,8 @@ export async function getJobStats() {
     const activeJobs = jobs.filter((j) => !['COMPLETED', 'CLOSED'].includes(j.status));
     const completedThisMonth = jobs.filter((j) => {
         if (j.status !== 'COMPLETED' || !j.completedAt) return false;
-        const completed = j.completedAt.toDate ? j.completedAt.toDate() : new Date(j.completedAt as unknown as string);
+        const ts = j.completedAt as { toDate?: () => Date };
+        const completed = ts?.toDate ? ts.toDate() : new Date();
         const now = new Date();
         return completed.getMonth() === now.getMonth() && completed.getFullYear() === now.getFullYear();
     });
