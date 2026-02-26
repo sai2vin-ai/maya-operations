@@ -78,14 +78,15 @@ describe('userService', () => {
             expect(roleValues).toContain('PLANT_MANAGER');
             expect(roleValues).toContain('SHIFT_SUPERVISOR');
             expect(roleValues).toContain('GATE_OPERATOR');
+            expect(roleValues).toContain('WEIGHBRIDGE_OPERATOR');
             expect(roleValues).toContain('REACTOR_OPERATOR');
             expect(roleValues).toContain('MAINTENANCE_TECH');
             expect(roleValues).toContain('STORES_KEEPER');
             expect(roleValues).toContain('VIEWER');
         });
 
-        it('should have exactly 8 roles', () => {
-            expect(USER_ROLES).toHaveLength(8);
+        it('should have exactly 9 roles', () => {
+            expect(USER_ROLES).toHaveLength(9);
         });
 
         it('should have labels for all roles', () => {
