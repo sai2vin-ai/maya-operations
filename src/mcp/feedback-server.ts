@@ -58,7 +58,7 @@ function formatReport(id: string, data: admin.firestore.DocumentData): string {
 // --- MCP Server ---
 const server = new McpServer({
     name: 'maya-feedback',
-    version: '1.0.0',
+    version: '1.1.0',
 });
 
 // Tool: list_bug_reports
@@ -139,6 +139,59 @@ server.tool(
         }
 
         return { content: [{ type: 'text', text: formatReport(docId, docData) }] };
+    },
+);
+
+// Tool: update_bug_report
+server.tool(
+    'update_bug_report',
+    'Update a bug report — change status and/or add admin notes. Accepts a Firestore document ID or report number (e.g. BR-001).',
+    {
+        id: z.string().describe('Firestore document ID or report number (e.g. BR-001)'),
+        status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional().describe('New status'),
+        adminNotes: z.string().optional().describe('Admin notes to set on the report'),
+    },
+    async (args) => {
+        if (!args.status && args.adminNotes === undefined) {
+            return { content: [{ type: 'text', text: 'Provide at least one of: status, adminNotes.' }] };
+        }
+
+        // Resolve doc ID
+        let docId = args.id;
+        if (/^BR-\d+$/i.test(args.id)) {
+            const snapshot = await db
+                .collection(BUG_REPORTS)
+                .where('reportNumber', '==', args.id.toUpperCase())
+                .limit(1)
+                .get();
+            if (snapshot.empty) {
+                return { content: [{ type: 'text', text: `Bug report "${args.id}" not found.` }] };
+            }
+            docId = snapshot.docs[0].id;
+        } else {
+            const check = await db.collection(BUG_REPORTS).doc(args.id).get();
+            if (!check.exists) {
+                return { content: [{ type: 'text', text: `Bug report "${args.id}" not found.` }] };
+            }
+        }
+
+        const now = admin.firestore.Timestamp.now();
+        const updates: Record<string, unknown> = { updatedAt: now };
+
+        if (args.status) {
+            updates.status = args.status;
+            if (args.status === 'resolved') {
+                updates.resolvedAt = now;
+            }
+        }
+        if (args.adminNotes !== undefined) {
+            updates.adminNotes = args.adminNotes;
+        }
+
+        await db.collection(BUG_REPORTS).doc(docId).update(updates);
+
+        const updated = await db.collection(BUG_REPORTS).doc(docId).get();
+        return { content: [{ type: 'text', text: `✓ Updated.\n\n${formatReport(docId, updated.data()!)}` }] };
     },
 );
 
