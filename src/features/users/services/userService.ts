@@ -207,6 +207,7 @@ export const USER_ROLES: { value: UserRole; label: string }[] = [
     { value: 'PLANT_MANAGER', label: 'Plant Manager' },
     { value: 'SHIFT_SUPERVISOR', label: 'Shift Supervisor' },
     { value: 'GATE_OPERATOR', label: 'Gate Operator' },
+    { value: 'WEIGHBRIDGE_OPERATOR', label: 'Weighbridge Operator' },
     { value: 'REACTOR_OPERATOR', label: 'Reactor Operator' },
     { value: 'MAINTENANCE_TECH', label: 'Maintenance Technician' },
     { value: 'STORES_KEEPER', label: 'Stores Keeper' },
