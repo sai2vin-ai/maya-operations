@@ -211,8 +211,34 @@ export async function getInventoryForExport(): Promise<Record<string, unknown>[]
             Category: d.category || '',
             'Current Stock': d.currentStock ?? 0,
             'Minimum Stock': d.minimumStock ?? 0,
+            'Maximum Stock': d.maximumStock ?? '',
             Unit: d.unit || '',
             Location: d.location || '',
+            Status: (d.currentStock ?? 0) <= (d.minimumStock ?? 0) ? 'LOW STOCK' : 'OK',
+        };
+    });
+}
+
+/**
+ * Get spare parts for export
+ */
+export async function getSparePartsForExport(): Promise<Record<string, unknown>[]> {
+    const snapshot = await getDocs(query(collection(db, 'spareParts'), orderBy('partNumber', 'asc'), limit(1000)));
+
+    return snapshot.docs.map((doc) => {
+        const d = doc.data();
+        return {
+            'Part Number': d.partNumber || '',
+            'File Number': d.fileNumber || '',
+            Name: d.name || '',
+            Category: d.category || '',
+            'Sub Category': d.subCategory || '',
+            Unit: d.unit || '',
+            'Current Stock': d.currentStock ?? 0,
+            'Minimum Stock': d.minimumStock ?? 0,
+            'Unit Price': d.unitPrice ?? '',
+            Location: d.location || '',
+            'Used For': d.usedFor || '',
             Status: (d.currentStock ?? 0) <= (d.minimumStock ?? 0) ? 'LOW STOCK' : 'OK',
         };
     });

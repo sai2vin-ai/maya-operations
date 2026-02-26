@@ -5,6 +5,7 @@ import { hasPermission } from '../../../lib/authorization';
 import { useSpareParts } from '../hooks/useSpareParts';
 import { useMainCategories, useSubCategories } from '../hooks/useSparePartCategories';
 import ManageCategoriesModal from '../components/ManageCategoriesModal';
+import { getSparePartsForExport, exportToCSV, printReport } from '../../reports/services/reportService';
 import type { SparePart, SparePartCategory } from '../types';
 import { PageHeader, LoadingSpinner, ErrorAlert, EmptyState } from '../../../components/ui';
 
@@ -34,7 +35,29 @@ export default function SparePartsPage() {
     // Get all parts for summary stats
     const { data: allParts = [] } = useSpareParts({});
 
+    const [isExporting, setIsExporting] = useState(false);
+
     const canManageCategories = userData?.role ? hasPermission(userData.role, 'spare_parts:manage_categories') : false;
+
+    const handleExportCSV = async () => {
+        setIsExporting(true);
+        try {
+            const data = await getSparePartsForExport();
+            exportToCSV(data, 'spare_parts_report');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handlePrintPDF = async () => {
+        setIsExporting(true);
+        try {
+            const data = await getSparePartsForExport();
+            printReport('Spare Parts Report', data);
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     const getStockStatus = (part: SparePart) => {
         if (part.currentStock === 0) {
@@ -61,9 +84,40 @@ export default function SparePartsPage() {
                 backTo="/dashboard"
                 actions={
                     <div className="flex gap-2">
+                        <button
+                            onClick={handleExportCSV}
+                            disabled={isExporting}
+                            className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                />
+                            </svg>
+                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export CSV'}</span>
+                        </button>
+                        <button
+                            onClick={handlePrintPDF}
+                            disabled={isExporting}
+                            className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                                />
+                            </svg>
+                            <span className="hidden sm:inline">Print / PDF</span>
+                        </button>
                         {canManageCategories && (
                             <button onClick={() => setShowManageModal(true)} className="btn-secondary">
-                                Manage Categories
+                                <span className="hidden sm:inline">Manage Categories</span>
+                                <span className="sm:hidden">Categories</span>
                             </button>
                         )}
                         <button onClick={() => navigate('/spare-parts/new')} className="btn-primary">
