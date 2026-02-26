@@ -1,4 +1,5 @@
 import type { AuditFields } from '../../types';
+import type { Timestamp } from 'firebase/firestore';
 
 // ============================================
 // SPARE PARTS TYPES
@@ -28,6 +29,7 @@ export interface SparePart extends AuditFields {
     name: string;
     description?: string;
     category: SparePartCategory;
+    subCategory?: string; // Denormalized subcategory value string
     unit: string; // PCS, SET, MTR, etc.
     currentStock: number;
     minimumStock: number;
@@ -35,6 +37,16 @@ export interface SparePart extends AuditFields {
     machineIds?: string[]; // Linked machine/asset IDs
     location?: string; // Storage location (e.g., Rack A-1)
     unitPrice?: number;
+}
+
+// User-managed category/subcategory document stored in Firestore
+export interface SparePartCategoryDoc {
+    id: string;
+    label: string;
+    value: string; // e.g., "BALL_BEARING"
+    parentValue: string | null; // null = main category; "BEARING" = subcategory of BEARING
+    createdAt: Timestamp;
+    createdBy: string;
 }
 
 export type SparePartTransactionType = 'RECEIPT' | 'ISSUE';

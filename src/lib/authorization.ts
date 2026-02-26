@@ -29,6 +29,7 @@ type PermissionAction =
     | 'spare_parts:create'
     | 'spare_parts:update'
     | 'spare_parts:transact'
+    | 'spare_parts:manage_categories'
     | 'bug_reports:create'
     | 'bug_reports:manage'
     | 'maintenance:create'
@@ -62,6 +63,7 @@ const STATIC_ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'spare_parts:create',
         'spare_parts:update',
         'spare_parts:transact',
+        'spare_parts:manage_categories',
         'bug_reports:create',
         'bug_reports:manage',
         'maintenance:create',
@@ -90,6 +92,7 @@ const STATIC_ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
         'spare_parts:create',
         'spare_parts:update',
         'spare_parts:transact',
+        'spare_parts:manage_categories',
         'bug_reports:create',
         'bug_reports:manage',
         'maintenance:create',

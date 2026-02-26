@@ -5,8 +5,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../components/ui';
-import { createSparePart, SPARE_PART_CATEGORIES, SPARE_PART_UNITS } from '../services/sparePartsService';
+import { createSparePart, SPARE_PART_UNITS } from '../services/sparePartsService';
 import { useAssets } from '../../asset-register/hooks/useAssets';
+import { useMainCategories, useSubCategories } from '../hooks/useSparePartCategories';
 import type { SparePartCategory } from '../types';
 
 export default function SparePartCreatePage() {
@@ -14,6 +15,7 @@ export default function SparePartCreatePage() {
     const { userData } = useAuth();
     const toast = useToast();
     const { data: allAssets = [] } = useAssets();
+    const mainCategories = useMainCategories();
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -21,6 +23,7 @@ export default function SparePartCreatePage() {
     // Form fields
     const [name, setName] = useState('');
     const [category, setCategory] = useState<SparePartCategory>('GENERAL');
+    const [subCategory, setSubCategory] = useState('');
     const [fileNumber, setFileNumber] = useState('');
     const [description, setDescription] = useState('');
     const [unit, setUnit] = useState('PCS');
@@ -30,6 +33,13 @@ export default function SparePartCreatePage() {
     const [usedFor, setUsedFor] = useState('');
     const [unitPrice, setUnitPrice] = useState('');
     const [machineIds, setMachineIds] = useState<string[]>([]);
+
+    const subcategories = useSubCategories(category);
+
+    const handleCategoryChange = (newCategory: SparePartCategory) => {
+        setCategory(newCategory);
+        setSubCategory(''); // Reset subcategory when main category changes
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,6 +57,7 @@ export default function SparePartCreatePage() {
                 {
                     name,
                     category,
+                    subCategory: subCategory || undefined,
                     fileNumber: fileNumber || undefined,
                     description: description || undefined,
                     unit,
@@ -110,10 +121,10 @@ export default function SparePartCreatePage() {
                         <label className="block text-sm font-medium text-foreground-secondary mb-1">Category *</label>
                         <select
                             value={category}
-                            onChange={(e) => setCategory(e.target.value as SparePartCategory)}
+                            onChange={(e) => handleCategoryChange(e.target.value as SparePartCategory)}
                             className="input-field w-full"
                         >
-                            {SPARE_PART_CATEGORIES.map((cat) => (
+                            {mainCategories.map((cat) => (
                                 <option key={cat.value} value={cat.value}>
                                     {cat.label}
                                 </option>
@@ -121,6 +132,25 @@ export default function SparePartCreatePage() {
                         </select>
                     </div>
                 </div>
+
+                {/* Subcategory */}
+                {subcategories.length > 0 && (
+                    <div>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Subcategory</label>
+                        <select
+                            value={subCategory}
+                            onChange={(e) => setSubCategory(e.target.value)}
+                            className="input-field w-full"
+                        >
+                            <option value="">— None —</option>
+                            {subcategories.map((sub) => (
+                                <option key={sub.id} value={sub.value}>
+                                    {sub.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 {/* File Number and Description */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

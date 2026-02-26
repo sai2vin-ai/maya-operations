@@ -10,11 +10,11 @@ import {
     updateSparePart,
     receiptSparePart,
     issueSparePart,
-    SPARE_PART_CATEGORIES,
     SPARE_PART_UNITS,
 } from '../services/sparePartsService';
 import { useToast } from '../../../components/ui';
 import { useAssets, useAssetsByIds } from '../../asset-register/hooks/useAssets';
+import { useMainCategories, useSubCategories } from '../hooks/useSparePartCategories';
 import type { SparePart, SparePartTransaction, SparePartCategory } from '../types';
 
 export default function SparePartDetailPage() {
@@ -34,10 +34,16 @@ export default function SparePartDetailPage() {
     const { data: allAssets = [] } = useAssets();
     const { data: linkedAssets = [] } = useAssetsByIds(part?.machineIds);
 
+    // Categories
+    const mainCategories = useMainCategories();
+
     // Edit mode
     const [editing, setEditing] = useState(false);
     const [editName, setEditName] = useState('');
     const [editCategory, setEditCategory] = useState<SparePartCategory>('GENERAL');
+    const [editSubCategory, setEditSubCategory] = useState('');
+
+    const editSubcategories = useSubCategories(editCategory);
     const [editFileNumber, setEditFileNumber] = useState('');
     const [editLocation, setEditLocation] = useState('');
     const [editUsedFor, setEditUsedFor] = useState('');
@@ -73,6 +79,7 @@ export default function SparePartDetailPage() {
                 setPart(fetchedPart);
                 setEditName(fetchedPart.name);
                 setEditCategory(fetchedPart.category);
+                setEditSubCategory(fetchedPart.subCategory || '');
                 setEditFileNumber(fetchedPart.fileNumber || '');
                 setEditLocation(fetchedPart.location || '');
                 setEditUsedFor(fetchedPart.usedFor || '');
@@ -103,6 +110,7 @@ export default function SparePartDetailPage() {
                 {
                     name: editName,
                     category: editCategory,
+                    subCategory: editSubCategory || null,
                     fileNumber: editFileNumber || undefined,
                     location: editLocation || undefined,
                     usedFor: editUsedFor || undefined,
@@ -396,6 +404,9 @@ export default function SparePartDetailPage() {
                         <div>
                             <span className="text-foreground-faint">Category:</span>{' '}
                             <span className="text-foreground">{part.category}</span>
+                            {part.subCategory && (
+                                <span className="text-foreground-muted text-xs block">Sub: {part.subCategory}</span>
+                            )}
                         </div>
                         <div>
                             <span className="text-foreground-faint">Unit:</span>{' '}
@@ -443,16 +454,36 @@ export default function SparePartDetailPage() {
                                 <label className="block text-sm text-foreground-muted mb-1">Category</label>
                                 <select
                                     value={editCategory}
-                                    onChange={(e) => setEditCategory(e.target.value as SparePartCategory)}
+                                    onChange={(e) => {
+                                        setEditCategory(e.target.value as SparePartCategory);
+                                        setEditSubCategory('');
+                                    }}
                                     className="input-field w-full"
                                 >
-                                    {SPARE_PART_CATEGORIES.map((cat) => (
+                                    {mainCategories.map((cat) => (
                                         <option key={cat.value} value={cat.value}>
                                             {cat.label}
                                         </option>
                                     ))}
                                 </select>
                             </div>
+                            {editSubcategories.length > 0 && (
+                                <div>
+                                    <label className="block text-sm text-foreground-muted mb-1">Subcategory</label>
+                                    <select
+                                        value={editSubCategory}
+                                        onChange={(e) => setEditSubCategory(e.target.value)}
+                                        className="input-field w-full"
+                                    >
+                                        <option value="">— None —</option>
+                                        {editSubcategories.map((sub) => (
+                                            <option key={sub.id} value={sub.value}>
+                                                {sub.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm text-foreground-muted mb-1">Unit</label>
                                 <select

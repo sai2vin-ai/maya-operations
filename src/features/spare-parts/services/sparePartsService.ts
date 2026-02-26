@@ -132,6 +132,7 @@ export interface CreateSparePartData {
     name: string;
     description?: string;
     category: SparePartCategory;
+    subCategory?: string;
     unit: string;
     currentStock: number;
     minimumStock: number;
@@ -156,6 +157,7 @@ export async function createSparePart(
         name: data.name,
         description: data.description || null,
         category: data.category,
+        subCategory: data.subCategory || null,
         unit: data.unit,
         currentStock: data.currentStock,
         minimumStock: data.minimumStock,
@@ -194,6 +196,7 @@ export interface UpdateSparePartData {
     name?: string;
     description?: string;
     category?: SparePartCategory;
+    subCategory?: string | null;
     unit?: string;
     minimumStock?: number;
     usedFor?: string;
@@ -221,6 +224,7 @@ export async function updateSparePart(
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description || null;
     if (data.category !== undefined) updateData.category = data.category;
+    if (data.subCategory !== undefined) updateData.subCategory = data.subCategory || null;
     if (data.unit !== undefined) updateData.unit = data.unit;
     if (data.minimumStock !== undefined) updateData.minimumStock = data.minimumStock;
     if (data.usedFor !== undefined) updateData.usedFor = data.usedFor || null;

@@ -26,6 +26,7 @@ export const sparePartKeys = {
 // Filter types
 export interface SparePartFilters {
     category?: 'all' | 'low-stock' | SparePartCategory;
+    subCategory?: string | 'all';
     searchQuery?: string;
 }
 
@@ -41,6 +42,11 @@ function applyFilters(parts: Awaited<ReturnType<typeof getSpareParts>>, filters?
             } else if (part.category !== filters.category) {
                 return false;
             }
+        }
+
+        // Subcategory filter
+        if (filters.subCategory && filters.subCategory !== 'all') {
+            if (part.subCategory !== filters.subCategory) return false;
         }
 
         // Search filter

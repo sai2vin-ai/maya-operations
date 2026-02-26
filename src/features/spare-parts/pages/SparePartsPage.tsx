@@ -1,28 +1,40 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
+import { hasPermission } from '../../../lib/authorization';
 import { useSpareParts } from '../hooks/useSpareParts';
-import { SPARE_PART_CATEGORIES } from '../services/sparePartsService';
+import { useMainCategories, useSubCategories } from '../hooks/useSparePartCategories';
+import ManageCategoriesModal from '../components/ManageCategoriesModal';
 import type { SparePart, SparePartCategory } from '../types';
-import {
-    PageHeader,
-    LoadingSpinner,
-    ErrorAlert,
-    EmptyState,
-} from '../../../components/ui';
+import { PageHeader, LoadingSpinner, ErrorAlert, EmptyState } from '../../../components/ui';
 
 export default function SparePartsPage() {
     const navigate = useNavigate();
+    const { userData } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<SparePartCategory | 'all'>('all');
+    const [subCategoryFilter, setSubCategoryFilter] = useState<string | 'all'>('all');
+    const [showManageModal, setShowManageModal] = useState(false);
+
+    const mainCategories = useMainCategories();
+    const subcategories = useSubCategories(categoryFilter === 'all' ? null : categoryFilter);
 
     // React Query hook
-    const { data: parts = [], isLoading, error, refetch } = useSpareParts({
+    const {
+        data: parts = [],
+        isLoading,
+        error,
+        refetch,
+    } = useSpareParts({
         category: categoryFilter,
-        searchQuery
+        subCategory: subCategoryFilter,
+        searchQuery,
     });
 
     // Get all parts for summary stats
     const { data: allParts = [] } = useSpareParts({});
+
+    const canManageCategories = userData?.role ? hasPermission(userData.role, 'spare_parts:manage_categories') : false;
 
     const getStockStatus = (part: SparePart) => {
         if (part.currentStock === 0) {
@@ -34,7 +46,12 @@ export default function SparePartsPage() {
         return { label: 'In Stock', color: 'bg-green-500/20 text-green-400' };
     };
 
-    const lowStockCount = allParts.filter(p => p.currentStock <= p.minimumStock).length;
+    const lowStockCount = allParts.filter((p) => p.currentStock <= p.minimumStock).length;
+
+    const handleCategoryChange = (value: SparePartCategory | 'all') => {
+        setCategoryFilter(value);
+        setSubCategoryFilter('all');
+    };
 
     return (
         <div>
@@ -43,42 +60,59 @@ export default function SparePartsPage() {
                 subtitle={`${allParts.length} parts | ${lowStockCount} low stock`}
                 backTo="/dashboard"
                 actions={
-                    <button
-                        onClick={() => navigate('/spare-parts/new')}
-                        className="btn-primary"
-                    >
-                        + Add Part
-                    </button>
+                    <div className="flex gap-2">
+                        {canManageCategories && (
+                            <button onClick={() => setShowManageModal(true)} className="btn-secondary">
+                                Manage Categories
+                            </button>
+                        )}
+                        <button onClick={() => navigate('/spare-parts/new')} className="btn-primary">
+                            + Add Part
+                        </button>
+                    </div>
                 }
             />
 
             <main className="p-4 max-w-6xl mx-auto">
                 {/* Error */}
                 {error && (
-                    <ErrorAlert
-                        message={error.message || 'Failed to load spare parts'}
-                        onDismiss={() => refetch()}
-                    />
+                    <ErrorAlert message={error.message || 'Failed to load spare parts'} onDismiss={() => refetch()} />
                 )}
 
-                {/* Search and Filter */}
+                {/* Search and Filters */}
                 <div className="glass-card p-4 mb-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="input-field"
-                            placeholder="Search by part number, name, or file number..."
+                            placeholder="Search by part number, name..."
                         />
                         <select
                             value={categoryFilter}
-                            onChange={(e) => setCategoryFilter(e.target.value as SparePartCategory | 'all')}
+                            onChange={(e) => handleCategoryChange(e.target.value as SparePartCategory | 'all')}
                             className="input-field"
                         >
                             <option value="all">All Categories</option>
-                            {SPARE_PART_CATEGORIES.map(cat => (
-                                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                            <option value="low-stock">Low Stock</option>
+                            {mainCategories.map((cat) => (
+                                <option key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={subCategoryFilter}
+                            onChange={(e) => setSubCategoryFilter(e.target.value)}
+                            className="input-field"
+                            disabled={categoryFilter === 'all' || subcategories.length === 0}
+                        >
+                            <option value="all">All Subcategories</option>
+                            {subcategories.map((sub) => (
+                                <option key={sub.id} value={sub.value}>
+                                    {sub.label}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -94,13 +128,23 @@ export default function SparePartsPage() {
                             <table className="w-full">
                                 <thead className="bg-surface-tertiary/50">
                                     <tr>
-                                        <th className="text-left p-4 text-foreground-secondary font-medium">Part Number</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">
+                                            Part Number
+                                        </th>
                                         <th className="text-left p-4 text-foreground-secondary font-medium">Name</th>
-                                        <th className="text-left p-4 text-foreground-secondary font-medium">Category</th>
-                                        <th className="text-left p-4 text-foreground-secondary font-medium">Location</th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">
+                                            Category
+                                        </th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium">
+                                            Location
+                                        </th>
                                         <th className="text-right p-4 text-foreground-secondary font-medium">Stock</th>
-                                        <th className="text-center p-4 text-foreground-secondary font-medium">Status</th>
-                                        <th className="text-center p-4 text-foreground-secondary font-medium">Actions</th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium">
+                                            Status
+                                        </th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-700">
@@ -115,23 +159,36 @@ export default function SparePartsPage() {
                                                 <td className="p-4">
                                                     <span className="text-foreground font-mono">{part.partNumber}</span>
                                                     {part.fileNumber && (
-                                                        <span className="text-foreground-faint text-xs block">File: {part.fileNumber}</span>
+                                                        <span className="text-foreground-faint text-xs block">
+                                                            File: {part.fileNumber}
+                                                        </span>
                                                     )}
                                                 </td>
                                                 <td className="p-4">
                                                     <span className="text-foreground">{part.name}</span>
                                                     {part.usedFor && (
-                                                        <span className="text-foreground-faint text-xs block">{part.usedFor}</span>
+                                                        <span className="text-foreground-faint text-xs block">
+                                                            {part.usedFor}
+                                                        </span>
                                                     )}
                                                 </td>
                                                 <td className="p-4">
                                                     <span className="text-foreground-secondary">{part.category}</span>
+                                                    {part.subCategory && (
+                                                        <span className="text-foreground-faint text-xs block">
+                                                            {part.subCategory}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="text-foreground-muted">{part.location || '-'}</span>
+                                                    <span className="text-foreground-muted">
+                                                        {part.location || '-'}
+                                                    </span>
                                                 </td>
                                                 <td className="p-4 text-right">
-                                                    <span className="text-foreground font-bold">{part.currentStock}</span>
+                                                    <span className="text-foreground font-bold">
+                                                        {part.currentStock}
+                                                    </span>
                                                     <span className="text-foreground-faint ml-1">{part.unit}</span>
                                                 </td>
                                                 <td className="p-4 text-center">
@@ -160,13 +217,24 @@ export default function SparePartsPage() {
                         {parts.length === 0 && (
                             <EmptyState
                                 title="No spare parts found"
-                                description={searchQuery || categoryFilter !== 'all' ? 'Try adjusting your filters' : 'Add your first spare part'}
-                                action={!searchQuery && categoryFilter === 'all' ? { label: 'Add Part', onClick: () => navigate('/spare-parts/new') } : undefined}
+                                description={
+                                    searchQuery || categoryFilter !== 'all'
+                                        ? 'Try adjusting your filters'
+                                        : 'Add your first spare part'
+                                }
+                                action={
+                                    !searchQuery && categoryFilter === 'all'
+                                        ? { label: 'Add Part', onClick: () => navigate('/spare-parts/new') }
+                                        : undefined
+                                }
                             />
                         )}
                     </div>
                 )}
             </main>
+
+            {/* Manage Categories Modal */}
+            {showManageModal && <ManageCategoriesModal onClose={() => setShowManageModal(false)} />}
         </div>
     );
 }
