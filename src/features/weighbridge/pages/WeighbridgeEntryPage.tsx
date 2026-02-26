@@ -107,7 +107,7 @@ export default function WeighbridgeEntryPage() {
         try {
             if (entryType === 'RM_IN') {
                 const entries = await getEntriesByStatus('PENDING');
-                setPendingGateEntries(entries.filter(e => e.entryType === 'IN'));
+                setPendingGateEntries(entries.filter((e) => e.entryType === 'IN'));
             } else {
                 const allBatches = await getBatches();
                 setBatches(allBatches);
@@ -132,19 +132,22 @@ export default function WeighbridgeEntryPage() {
             setSaving(true);
             setError(null);
 
-            const id = await createWeighbridgeEntry({
-                entryType,
-                vehicleNumber,
-                driverName: driverName || undefined,
-                driverPhone: driverPhone || undefined,
-                partyName: partyName || undefined,
-                inventoryItemId: inventoryItemId || undefined,
-                materialName: materialName || undefined,
-                unit,
-                notes: notes || undefined,
-                gateEntryId: gateEntryId || undefined,
-                batchId: batchId || undefined,
-            }, userData.id);
+            const id = await createWeighbridgeEntry(
+                {
+                    entryType,
+                    vehicleNumber,
+                    driverName: driverName || undefined,
+                    driverPhone: driverPhone || undefined,
+                    partyName: partyName || undefined,
+                    inventoryItemId: inventoryItemId || undefined,
+                    materialName: materialName || undefined,
+                    unit,
+                    notes: notes || undefined,
+                    gateEntryId: gateEntryId || undefined,
+                    batchId: batchId || undefined,
+                },
+                userData.id,
+            );
 
             setSuccess('Entry created!');
             toast.success('Weighbridge entry created successfully');
@@ -168,12 +171,17 @@ export default function WeighbridgeEntryPage() {
 
             if (entry?.status === 'PENDING') {
                 // First weight
-                await recordFirstWeight(entryId, { weight: weightValue, isGross }, userData.id);
+                await recordFirstWeight(entryId, { weight: weightValue, isGross }, userData.id, userData.role);
                 setSuccess('First weight recorded!');
                 toast.success('First weight recorded');
             } else if (entry?.status === 'FIRST_WEIGHT') {
                 // Second weight - complete entry
-                await recordSecondWeightAndComplete(entryId, { weight: weightValue, isGross }, userData.id);
+                await recordSecondWeightAndComplete(
+                    entryId,
+                    { weight: weightValue, isGross },
+                    userData.id,
+                    userData.role,
+                );
                 setSuccess('Entry completed! Inventory updated.');
                 toast.success('Entry completed! Inventory updated');
             }
@@ -195,7 +203,7 @@ export default function WeighbridgeEntryPage() {
 
         try {
             setSaving(true);
-            await cancelWeighbridgeEntry(entryId, userData.id);
+            await cancelWeighbridgeEntry(entryId, userData.id, userData.role);
             toast.success('Entry cancelled');
             navigate('/weighbridge');
         } catch (err) {
@@ -228,15 +236,24 @@ export default function WeighbridgeEntryPage() {
         <div className="p-6 max-w-2xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/weighbridge')} className="text-foreground-muted hover:text-foreground">
+                <button
+                    onClick={() => navigate('/weighbridge')}
+                    className="text-foreground-muted hover:text-foreground"
+                >
                     ← Back
                 </button>
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        {isNew ? (entryType === 'RM_IN' ? '📥 Raw Material IN' : '📤 Finished Goods OUT') : entry?.entryNumber}
+                        {isNew
+                            ? entryType === 'RM_IN'
+                                ? '📥 Raw Material IN'
+                                : '📤 Finished Goods OUT'
+                            : entry?.entryNumber}
                     </h1>
                     {entry && (
-                        <p className="text-foreground-muted">{entry.vehicleNumber} • {entry.status}</p>
+                        <p className="text-foreground-muted">
+                            {entry.vehicleNumber} • {entry.status}
+                        </p>
                     )}
                 </div>
             </div>
@@ -279,12 +296,14 @@ export default function WeighbridgeEntryPage() {
                         {/* Link to Gate Entry (RM_IN) */}
                         {entryType === 'RM_IN' && pendingGateEntries.length > 0 && (
                             <div>
-                                <label className="block text-sm text-foreground-muted mb-1">Link to Gate Entry (optional)</label>
+                                <label className="block text-sm text-foreground-muted mb-1">
+                                    Link to Gate Entry (optional)
+                                </label>
                                 <select
                                     value={gateEntryId}
                                     onChange={(e) => {
                                         setGateEntryId(e.target.value);
-                                        const ge = pendingGateEntries.find(g => g.id === e.target.value);
+                                        const ge = pendingGateEntries.find((g) => g.id === e.target.value);
                                         if (ge) {
                                             setVehicleNumber(ge.vehicleNumber);
                                             setDriverName(ge.driverName || '');
@@ -295,7 +314,7 @@ export default function WeighbridgeEntryPage() {
                                     className="input-field w-full"
                                 >
                                     <option value="">No linked gate entry</option>
-                                    {pendingGateEntries.map(ge => (
+                                    {pendingGateEntries.map((ge) => (
                                         <option key={ge.id} value={ge.id}>
                                             {ge.entryNumber} — {ge.vehicleNumber} ({ge.supplierName || 'No supplier'})
                                         </option>
@@ -307,14 +326,16 @@ export default function WeighbridgeEntryPage() {
                         {/* Link to Batch (FG_OUT) */}
                         {entryType === 'FG_OUT' && batches.length > 0 && (
                             <div>
-                                <label className="block text-sm text-foreground-muted mb-1">Link to Production Batch (optional)</label>
+                                <label className="block text-sm text-foreground-muted mb-1">
+                                    Link to Production Batch (optional)
+                                </label>
                                 <select
                                     value={batchId}
                                     onChange={(e) => setBatchId(e.target.value)}
                                     className="input-field w-full"
                                 >
                                     <option value="">No linked batch</option>
-                                    {batches.map(b => (
+                                    {batches.map((b) => (
                                         <option key={b.id} value={b.id}>
                                             {b.batchNumber} ({b.status})
                                         </option>
@@ -377,14 +398,16 @@ export default function WeighbridgeEntryPage() {
                                 value={inventoryItemId}
                                 onChange={(e) => {
                                     setInventoryItemId(e.target.value);
-                                    const item = inventoryItems.find(i => i.id === e.target.value);
+                                    const item = inventoryItems.find((i) => i.id === e.target.value);
                                     if (item) setMaterialName(item.name);
                                 }}
                                 className="input-field w-full"
                             >
                                 <option value="">Select material...</option>
-                                {inventoryItems.map(item => (
-                                    <option key={item.id} value={item.id}>{item.name} ({item.code})</option>
+                                {inventoryItems.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name} ({item.code})
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -432,12 +455,34 @@ export default function WeighbridgeEntryPage() {
                     <div className="glass-card p-6 mb-4">
                         <h3 className="text-lg font-semibold text-foreground mb-4">Entry Details</h3>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div><span className="text-foreground-faint">Entry Number:</span> <span className="text-foreground">{entry.entryNumber}</span></div>
-                            <div><span className="text-foreground-faint">Type:</span> <span className="text-foreground">{entry.entryType === 'RM_IN' ? 'Raw Material IN' : 'Finished Goods OUT'}</span></div>
-                            <div><span className="text-foreground-faint">Vehicle:</span> <span className="text-foreground">{entry.vehicleNumber}</span></div>
-                            <div><span className="text-foreground-faint">Driver:</span> <span className="text-foreground">{entry.driverName || '-'}</span></div>
-                            <div><span className="text-foreground-faint">{entry.entryType === 'RM_IN' ? 'Supplier' : 'Customer'}:</span> <span className="text-foreground">{entry.partyName || '-'}</span></div>
-                            <div><span className="text-foreground-faint">Material:</span> <span className="text-foreground">{entry.materialName || '-'}</span></div>
+                            <div>
+                                <span className="text-foreground-faint">Entry Number:</span>{' '}
+                                <span className="text-foreground">{entry.entryNumber}</span>
+                            </div>
+                            <div>
+                                <span className="text-foreground-faint">Type:</span>{' '}
+                                <span className="text-foreground">
+                                    {entry.entryType === 'RM_IN' ? 'Raw Material IN' : 'Finished Goods OUT'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-foreground-faint">Vehicle:</span>{' '}
+                                <span className="text-foreground">{entry.vehicleNumber}</span>
+                            </div>
+                            <div>
+                                <span className="text-foreground-faint">Driver:</span>{' '}
+                                <span className="text-foreground">{entry.driverName || '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-foreground-faint">
+                                    {entry.entryType === 'RM_IN' ? 'Supplier' : 'Customer'}:
+                                </span>{' '}
+                                <span className="text-foreground">{entry.partyName || '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-foreground-faint">Material:</span>{' '}
+                                <span className="text-foreground">{entry.materialName || '-'}</span>
+                            </div>
                         </div>
                         {(entry.gateEntryId || entry.batchId) && (
                             <div className="mt-4 pt-4 border-t border-border-secondary">
@@ -468,18 +513,24 @@ export default function WeighbridgeEntryPage() {
                         <div className="grid grid-cols-3 gap-4 text-center mb-4">
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Gross Weight</p>
-                                <p className="text-2xl font-bold text-foreground">{entry.grossWeight ? `${entry.grossWeight} ${entry.unit}` : '-'}</p>
+                                <p className="text-2xl font-bold text-foreground">
+                                    {entry.grossWeight ? `${entry.grossWeight} ${entry.unit}` : '-'}
+                                </p>
                                 {entry.firstWeightTime && entry.grossWeight && (
                                     <p className="text-xs text-foreground-faint">{formatDate(entry.firstWeightTime)}</p>
                                 )}
                             </div>
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Tare Weight</p>
-                                <p className="text-2xl font-bold text-foreground">{entry.tareWeight ? `${entry.tareWeight} ${entry.unit}` : '-'}</p>
+                                <p className="text-2xl font-bold text-foreground">
+                                    {entry.tareWeight ? `${entry.tareWeight} ${entry.unit}` : '-'}
+                                </p>
                             </div>
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Net Weight</p>
-                                <p className="text-2xl font-bold text-green-400">{entry.netWeight ? `${entry.netWeight} ${entry.unit}` : '-'}</p>
+                                <p className="text-2xl font-bold text-green-400">
+                                    {entry.netWeight ? `${entry.netWeight} ${entry.unit}` : '-'}
+                                </p>
                             </div>
                         </div>
 

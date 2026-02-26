@@ -64,10 +64,7 @@ describe('useGateEntries hooks integration', () => {
 
             vi.mocked(gateEntryService.getGateEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useGateEntries({ status: 'PENDING' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useGateEntries({ status: 'PENDING' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -86,10 +83,7 @@ describe('useGateEntries hooks integration', () => {
 
             vi.mocked(gateEntryService.getGateEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useGateEntries({ status: 'COMPLETED' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useGateEntries({ status: 'COMPLETED' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -106,10 +100,7 @@ describe('useGateEntries hooks integration', () => {
 
             vi.mocked(gateEntryService.getGateEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useGateEntries({ searchQuery: '0001' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useGateEntries({ searchQuery: '0001' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -127,10 +118,7 @@ describe('useGateEntries hooks integration', () => {
 
             vi.mocked(gateEntryService.getGateEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useGateEntries({ searchQuery: 'MH12' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useGateEntries({ searchQuery: 'MH12' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -148,10 +136,9 @@ describe('useGateEntries hooks integration', () => {
 
             vi.mocked(gateEntryService.getGateEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useGateEntries({ searchQuery: 'rubber' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useGateEntries({ searchQuery: 'rubber' }), {
+                wrapper: createWrapper(),
+            });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -169,10 +156,7 @@ describe('useGateEntries hooks integration', () => {
 
             vi.mocked(gateEntryService.getGateEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useGateEntries({ searchQuery: 'jane' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useGateEntries({ searchQuery: 'jane' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -191,10 +175,7 @@ describe('useGateEntries hooks integration', () => {
 
             vi.mocked(gateEntryService.getGateEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useGateEntries({ status: 'all' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useGateEntries({ status: 'all' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -253,10 +234,7 @@ describe('useGateEntries hooks integration', () => {
 
             await result.current.mutateAsync(createData);
 
-            expect(gateEntryService.createGateEntry).toHaveBeenCalledWith(
-                createData.data,
-                createData.createdBy
-            );
+            expect(gateEntryService.createGateEntry).toHaveBeenCalledWith(createData.data, createData.createdBy);
         });
     });
 
@@ -273,10 +251,7 @@ describe('useGateEntries hooks integration', () => {
                 updatedBy: 'admin',
             });
 
-            expect(gateEntryService.completeGateEntry).toHaveBeenCalledWith(
-                'entry-123',
-                'admin'
-            );
+            expect(gateEntryService.completeGateEntry).toHaveBeenCalledWith('entry-123', 'admin', undefined);
         });
     });
 
@@ -297,7 +272,8 @@ describe('useGateEntries hooks integration', () => {
             expect(gateEntryService.cancelGateEntry).toHaveBeenCalledWith(
                 'entry-123',
                 'Vehicle left without unloading',
-                'admin'
+                'admin',
+                undefined,
             );
         });
     });
@@ -306,11 +282,7 @@ describe('useGateEntries hooks integration', () => {
         it('should generate correct query keys', () => {
             expect(gateEntryKeys.all).toEqual(['gateEntries']);
             expect(gateEntryKeys.lists()).toEqual(['gateEntries', 'list']);
-            expect(gateEntryKeys.list({ status: 'PENDING' })).toEqual([
-                'gateEntries',
-                'list',
-                { status: 'PENDING' },
-            ]);
+            expect(gateEntryKeys.list({ status: 'PENDING' })).toEqual(['gateEntries', 'list', { status: 'PENDING' }]);
             expect(gateEntryKeys.details()).toEqual(['gateEntries', 'detail']);
             expect(gateEntryKeys.detail('123')).toEqual(['gateEntries', 'detail', '123']);
         });

@@ -82,7 +82,7 @@ export default function GateEntryDetailPage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
@@ -93,18 +93,24 @@ export default function GateEntryDetailPage() {
             setError(null);
             setSuccess(null);
 
-            await updateGateEntry(id, {
-                materialCategory: formData.materialCategory as MaterialCategory || undefined,
-                quantity: formData.quantity ? parseFloat(formData.quantity) : undefined,
-                unit: formData.unit,
-                weighbridgeReading: formData.weighbridgeReading ? parseFloat(formData.weighbridgeReading) : undefined,
-                tareWeight: formData.tareWeight ? parseFloat(formData.tareWeight) : undefined,
-                supplierName: formData.supplierName || undefined,
-                driverName: formData.driverName || undefined,
-                driverPhone: formData.driverPhone || undefined,
-                purpose: formData.purpose || undefined,
-                notes: formData.notes || undefined,
-            }, userData.id);
+            await updateGateEntry(
+                id,
+                {
+                    materialCategory: (formData.materialCategory as MaterialCategory) || undefined,
+                    quantity: formData.quantity ? parseFloat(formData.quantity) : undefined,
+                    unit: formData.unit,
+                    weighbridgeReading: formData.weighbridgeReading
+                        ? parseFloat(formData.weighbridgeReading)
+                        : undefined,
+                    tareWeight: formData.tareWeight ? parseFloat(formData.tareWeight) : undefined,
+                    supplierName: formData.supplierName || undefined,
+                    driverName: formData.driverName || undefined,
+                    driverPhone: formData.driverPhone || undefined,
+                    purpose: formData.purpose || undefined,
+                    notes: formData.notes || undefined,
+                },
+                userData.id,
+            );
 
             setSuccess('Entry updated successfully');
             toast.success('Entry updated successfully');
@@ -124,7 +130,7 @@ export default function GateEntryDetailPage() {
         try {
             setSaving(true);
             setError(null);
-            await completeGateEntry(id, userData.id);
+            await completeGateEntry(id, userData.id, userData.role);
             setSuccess('Entry marked as completed');
             toast.success('Entry marked as completed');
             await loadEntry(id);
@@ -146,7 +152,7 @@ export default function GateEntryDetailPage() {
         try {
             setSaving(true);
             setError(null);
-            await cancelGateEntry(id, reason, userData.id);
+            await cancelGateEntry(id, reason, userData.id, userData.role);
             setSuccess('Entry cancelled');
             toast.success('Entry cancelled');
             setCancelDialogOpen(false);
@@ -187,11 +193,11 @@ export default function GateEntryDetailPage() {
     };
 
     const getMaterialLabel = (category?: string) => {
-        return MATERIAL_CATEGORIES.find(m => m.value === category)?.label || category || '-';
+        return MATERIAL_CATEGORIES.find((m) => m.value === category)?.label || category || '-';
     };
 
     const getStatusInfo = (status: GateEntryStatus) => {
-        return ENTRY_STATUSES.find(s => s.value === status) || { label: status, color: 'gray' };
+        return ENTRY_STATUSES.find((s) => s.value === status) || { label: status, color: 'gray' };
     };
 
     if (loading) {
@@ -228,8 +234,18 @@ export default function GateEntryDetailPage() {
                             onClick={() => navigate('/gate')}
                             className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            <svg
+                                className="w-5 h-5 text-foreground-muted"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                />
                             </svg>
                         </button>
                         <div>
@@ -239,12 +255,14 @@ export default function GateEntryDetailPage() {
                     </div>
 
                     {!isEditing && entry.status === 'PENDING' && (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="btn-secondary flex items-center gap-2"
-                        >
+                        <button onClick={() => setIsEditing(true)} className="btn-secondary flex items-center gap-2">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
                             </svg>
                             Edit
                         </button>
@@ -252,13 +270,17 @@ export default function GateEntryDetailPage() {
 
                     {isEditing && (
                         <div className="flex gap-2">
-                            <button onClick={cancelEditing} className="btn-secondary">Cancel</button>
+                            <button onClick={cancelEditing} className="btn-secondary">
+                                Cancel
+                            </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
                                 className="btn-primary flex items-center gap-2"
                             >
-                                {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                                {saving && (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                )}
                                 Save
                             </button>
                         </div>
@@ -282,32 +304,55 @@ export default function GateEntryDetailPage() {
                 {/* Entry Overview */}
                 <div className="glass-card p-6 mb-4">
                     <div className="flex items-start gap-4">
-                        <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${entry.entryType === 'IN'
-                                ? 'bg-green-500/20 text-green-400'
-                                : 'bg-orange-500/20 text-orange-400'
-                            }`}>
+                        <div
+                            className={`w-16 h-16 rounded-xl flex items-center justify-center ${
+                                entry.entryType === 'IN'
+                                    ? 'bg-green-500/20 text-green-400'
+                                    : 'bg-orange-500/20 text-orange-400'
+                            }`}
+                        >
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 {entry.entryType === 'IN' ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M11 16l-4-4m0 0l4-4m-4 4h14"
+                                    />
                                 ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                    />
                                 )}
                             </svg>
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <h2 className="text-2xl font-bold text-foreground">{entry.vehicleNumber}</h2>
-                                <span className={`px-2 py-0.5 text-sm font-medium rounded ${entry.entryType === 'IN' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
-                                    }`}>
+                                <span
+                                    className={`px-2 py-0.5 text-sm font-medium rounded ${
+                                        entry.entryType === 'IN'
+                                            ? 'bg-green-500/20 text-green-400'
+                                            : 'bg-orange-500/20 text-orange-400'
+                                    }`}
+                                >
                                     {entry.entryType}
                                 </span>
                             </div>
                             <p className="text-foreground-muted">{entry.entryNumber}</p>
                             <div className="flex items-center gap-2 mt-2">
-                                <span className={`status-badge ${statusInfo.color === 'green' ? 'status-active' :
-                                        statusInfo.color === 'yellow' ? 'status-pending' :
-                                            'status-inactive'
-                                    }`}>
+                                <span
+                                    className={`status-badge ${
+                                        statusInfo.color === 'green'
+                                            ? 'status-active'
+                                            : statusInfo.color === 'yellow'
+                                              ? 'status-pending'
+                                              : 'status-inactive'
+                                    }`}
+                                >
                                     {statusInfo.label}
                                 </span>
                             </div>
@@ -319,11 +364,7 @@ export default function GateEntryDetailPage() {
                 {entry.vehiclePhoto && (
                     <div className="glass-card p-6 mb-4">
                         <h3 className="text-lg font-semibold text-foreground mb-4">Vehicle Photo</h3>
-                        <img
-                            src={entry.vehiclePhoto}
-                            alt="Vehicle"
-                            className="w-full max-w-md rounded-xl"
-                        />
+                        <img src={entry.vehiclePhoto} alt="Vehicle" className="w-full max-w-md rounded-xl" />
                     </div>
                 )}
 
@@ -332,7 +373,9 @@ export default function GateEntryDetailPage() {
                     <h3 className="text-lg font-semibold text-foreground mb-4">Material & Weight</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Material Category</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Material Category
+                            </label>
                             {isEditing ? (
                                 <select
                                     name="materialCategory"
@@ -341,8 +384,10 @@ export default function GateEntryDetailPage() {
                                     className="input-field w-full"
                                 >
                                     <option value="">Select material...</option>
-                                    {MATERIAL_CATEGORIES.map(mat => (
-                                        <option key={mat.value} value={mat.value}>{mat.label}</option>
+                                    {MATERIAL_CATEGORIES.map((mat) => (
+                                        <option key={mat.value} value={mat.value}>
+                                            {mat.label}
+                                        </option>
                                     ))}
                                 </select>
                             ) : (
@@ -351,7 +396,9 @@ export default function GateEntryDetailPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Quantity</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                    Quantity
+                                </label>
                                 {isEditing ? (
                                     <input
                                         type="number"
@@ -384,7 +431,9 @@ export default function GateEntryDetailPage() {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Weighbridge Reading (kg)</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Weighbridge Reading (kg)
+                            </label>
                             {isEditing ? (
                                 <input
                                     type="number"
@@ -399,7 +448,9 @@ export default function GateEntryDetailPage() {
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Tare Weight (kg)</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Tare Weight (kg)
+                            </label>
                             {isEditing ? (
                                 <input
                                     type="number"
@@ -426,7 +477,9 @@ export default function GateEntryDetailPage() {
                     <h3 className="text-lg font-semibold text-foreground mb-4">Supplier/Driver Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Supplier Name</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Supplier Name
+                            </label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -440,7 +493,9 @@ export default function GateEntryDetailPage() {
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Driver Name</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Driver Name
+                            </label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -454,7 +509,9 @@ export default function GateEntryDetailPage() {
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Driver Phone</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Driver Phone
+                            </label>
                             {isEditing ? (
                                 <input
                                     type="tel"
@@ -491,8 +548,18 @@ export default function GateEntryDetailPage() {
                     <div className="space-y-3 text-sm">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                                <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg
+                                    className="w-4 h-4 text-green-400"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
                                 </svg>
                             </div>
                             <div>
@@ -503,8 +570,18 @@ export default function GateEntryDetailPage() {
                         {entry.exitTime && (
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                                    <svg
+                                        className="w-4 h-4 text-orange-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7"
+                                        />
                                     </svg>
                                 </div>
                                 <div>
@@ -521,7 +598,7 @@ export default function GateEntryDetailPage() {
                     <div className="glass-card p-6 mb-4">
                         <h3 className="text-lg font-semibold text-foreground mb-4">Linked Weighbridge Entries</h3>
                         <div className="space-y-2">
-                            {linkedWeighbridgeEntries.map(wb => (
+                            {linkedWeighbridgeEntries.map((wb) => (
                                 <div
                                     key={wb.id}
                                     onClick={() => navigate(`/weighbridge/${wb.id}`)}
@@ -556,7 +633,12 @@ export default function GateEntryDetailPage() {
                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all flex items-center gap-2"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
                                 </svg>
                                 Mark Completed
                             </button>
@@ -566,7 +648,12 @@ export default function GateEntryDetailPage() {
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all flex items-center gap-2"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
                                 </svg>
                                 Cancel Entry
                             </button>

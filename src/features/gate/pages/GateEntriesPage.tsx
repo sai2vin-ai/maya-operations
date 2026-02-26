@@ -4,13 +4,7 @@ import { useGateEntries, useCompleteGateEntry, useCancelGateEntry } from '../hoo
 import { MATERIAL_CATEGORIES, ENTRY_STATUSES } from '../services/gateEntryService';
 import { useAuth } from '../../../contexts/AuthContext';
 import type { GateEntryStatus } from '../types';
-import {
-    PageHeader,
-    LoadingSpinner,
-    ErrorAlert,
-    EmptyState,
-    InputDialog,
-} from '../../../components/ui';
+import { PageHeader, LoadingSpinner, ErrorAlert, EmptyState, InputDialog } from '../../../components/ui';
 
 const GateEntryFilters = [
     { value: 'all', label: 'All', activeColor: 'blue' },
@@ -34,7 +28,7 @@ export default function GateEntriesPage() {
     const handleComplete = async (entryId: string) => {
         if (!userData?.id) return;
         try {
-            await completeEntry.mutateAsync({ entryId, updatedBy: userData.id });
+            await completeEntry.mutateAsync({ entryId, updatedBy: userData.id, callerRole: userData.role });
         } catch {
             // Error handled by mutation
         }
@@ -49,7 +43,12 @@ export default function GateEntriesPage() {
         if (!userData?.id || !cancellingEntryId) return;
 
         try {
-            await cancelEntry.mutateAsync({ entryId: cancellingEntryId, reason, updatedBy: userData.id });
+            await cancelEntry.mutateAsync({
+                entryId: cancellingEntryId,
+                reason,
+                updatedBy: userData.id,
+                callerRole: userData.role,
+            });
             setCancelDialogOpen(false);
             setCancellingEntryId(null);
         } catch {
@@ -63,11 +62,11 @@ export default function GateEntriesPage() {
     };
 
     const getMaterialLabel = (category?: string) => {
-        return MATERIAL_CATEGORIES.find(m => m.value === category)?.label || category || '-';
+        return MATERIAL_CATEGORIES.find((m) => m.value === category)?.label || category || '-';
     };
 
     const getStatusInfo = (status: GateEntryStatus) => {
-        return ENTRY_STATUSES.find(s => s.value === status) || { label: status, color: 'gray' };
+        return ENTRY_STATUSES.find((s) => s.value === status) || { label: status, color: 'gray' };
     };
 
     const formatTime = (timestamp: unknown) => {
@@ -89,7 +88,7 @@ export default function GateEntriesPage() {
                 green: 'bg-green-600 text-white',
                 yellow: 'bg-yellow-600 text-white',
             };
-            const filterDef = GateEntryFilters.find(f => f.value === filterValue);
+            const filterDef = GateEntryFilters.find((f) => f.value === filterValue);
             return colorMap[filterDef?.activeColor || 'blue'] || 'bg-blue-600 text-white';
         }
         return 'bg-surface-tertiary text-foreground-secondary hover:bg-surface-hover';
@@ -102,10 +101,7 @@ export default function GateEntriesPage() {
                 subtitle={`${entries.length} entries total`}
                 backTo="/dashboard"
                 actions={
-                    <button
-                        onClick={() => navigate('/gate/new')}
-                        className="btn-primary flex items-center gap-2"
-                    >
+                    <button onClick={() => navigate('/gate/new')} className="btn-primary flex items-center gap-2">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -145,7 +141,12 @@ export default function GateEntriesPage() {
                 {/* Error Messages */}
                 {(error || completeEntry.error || cancelEntry.error) && (
                     <ErrorAlert
-                        message={error?.message || completeEntry.error?.message || cancelEntry.error?.message || 'An error occurred'}
+                        message={
+                            error?.message ||
+                            completeEntry.error?.message ||
+                            cancelEntry.error?.message ||
+                            'An error occurred'
+                        }
                         onDismiss={() => refetch()}
                     />
                 )}
@@ -159,13 +160,29 @@ export default function GateEntriesPage() {
                         {entries.length === 0 ? (
                             <EmptyState
                                 icon={
-                                    <svg className="w-8 h-8 text-foreground-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    <svg
+                                        className="w-8 h-8 text-foreground-faint"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                                        />
                                     </svg>
                                 }
                                 title="No entries found"
-                                description={searchQuery ? 'Try a different search term' : 'Record your first gate entry'}
-                                action={!searchQuery ? { label: 'New Entry', onClick: () => navigate('/gate/new') } : undefined}
+                                description={
+                                    searchQuery ? 'Try a different search term' : 'Record your first gate entry'
+                                }
+                                action={
+                                    !searchQuery
+                                        ? { label: 'New Entry', onClick: () => navigate('/gate/new') }
+                                        : undefined
+                                }
                             />
                         ) : (
                             entries.map((entry) => {
@@ -179,15 +196,33 @@ export default function GateEntriesPage() {
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-start gap-4">
                                                 {/* Entry Type Icon */}
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${entry.entryType === 'IN'
-                                                    ? 'bg-green-500/20 text-green-400'
-                                                    : 'bg-orange-500/20 text-orange-400'
-                                                    }`}>
-                                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <div
+                                                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                                                        entry.entryType === 'IN'
+                                                            ? 'bg-green-500/20 text-green-400'
+                                                            : 'bg-orange-500/20 text-orange-400'
+                                                    }`}
+                                                >
+                                                    <svg
+                                                        className="w-6 h-6"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
                                                         {entry.entryType === 'IN' ? (
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M11 16l-4-4m0 0l4-4m-4 4h14"
+                                                            />
                                                         ) : (
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                                            />
                                                         )}
                                                     </svg>
                                                 </div>
@@ -195,21 +230,33 @@ export default function GateEntriesPage() {
                                                 {/* Entry Info */}
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="text-foreground font-bold text-lg">{entry.vehicleNumber}</h3>
-                                                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${entry.entryType === 'IN' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
-                                                            }`}>
+                                                        <h3 className="text-foreground font-bold text-lg">
+                                                            {entry.vehicleNumber}
+                                                        </h3>
+                                                        <span
+                                                            className={`px-2 py-0.5 text-xs font-medium rounded ${
+                                                                entry.entryType === 'IN'
+                                                                    ? 'bg-green-500/20 text-green-400'
+                                                                    : 'bg-orange-500/20 text-orange-400'
+                                                            }`}
+                                                        >
                                                             {entry.entryType}
                                                         </span>
                                                     </div>
                                                     <p className="text-foreground-muted text-sm">{entry.entryNumber}</p>
                                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-foreground-faint">
                                                         <span>{getMaterialLabel(entry.materialCategory)}</span>
-                                                        {entry.netWeight && <span>{entry.netWeight} {entry.unit}</span>}
+                                                        {entry.netWeight && (
+                                                            <span>
+                                                                {entry.netWeight} {entry.unit}
+                                                            </span>
+                                                        )}
                                                         <span>{formatTime(entry.entryTime)}</span>
                                                     </div>
                                                     {entry.supplierName && (
                                                         <p className="text-foreground-faint text-xs mt-1">
-                                                            {entry.supplierName} {entry.driverName && `| ${entry.driverName}`}
+                                                            {entry.supplierName}{' '}
+                                                            {entry.driverName && `| ${entry.driverName}`}
                                                         </p>
                                                     )}
                                                 </div>
@@ -217,10 +264,15 @@ export default function GateEntriesPage() {
 
                                             {/* Status & Actions */}
                                             <div className="flex flex-col items-end gap-2">
-                                                <span className={`status-badge ${statusInfo.color === 'green' ? 'status-active' :
-                                                    statusInfo.color === 'yellow' ? 'status-pending' :
-                                                        'status-inactive'
-                                                    }`}>
+                                                <span
+                                                    className={`status-badge ${
+                                                        statusInfo.color === 'green'
+                                                            ? 'status-active'
+                                                            : statusInfo.color === 'yellow'
+                                                              ? 'status-pending'
+                                                              : 'status-inactive'
+                                                    }`}
+                                                >
                                                     {statusInfo.label}
                                                 </span>
 
@@ -235,8 +287,18 @@ export default function GateEntriesPage() {
                                                             className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
                                                             title="Mark as Completed"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            <svg
+                                                                className="w-4 h-4"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M5 13l4 4L19 7"
+                                                                />
                                                             </svg>
                                                         </button>
                                                         <button
@@ -248,8 +310,18 @@ export default function GateEntriesPage() {
                                                             className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
                                                             title="Cancel Entry"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            <svg
+                                                                className="w-4 h-4"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M6 18L18 6M6 6l12 12"
+                                                                />
                                                             </svg>
                                                         </button>
                                                     </div>

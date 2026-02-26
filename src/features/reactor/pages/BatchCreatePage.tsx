@@ -71,6 +71,7 @@ export default function BatchCreatePage() {
                     notes: formData.notes || undefined,
                 },
                 userData.id,
+                userData.role,
             );
 
             toast.success('Batch created successfully');

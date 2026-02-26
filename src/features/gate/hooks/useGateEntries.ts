@@ -10,6 +10,7 @@ import {
     type UpdateGateEntryData,
 } from '../services/gateEntryService';
 import type { GateEntryStatus } from '../types';
+import type { UserRole } from '../../../types';
 
 // Query keys
 export const gateEntryKeys = {
@@ -85,15 +86,8 @@ export function useUpdateGateEntry() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            entryId,
-            data,
-            updatedBy,
-        }: {
-            entryId: string;
-            data: UpdateGateEntryData;
-            updatedBy: string;
-        }) => updateGateEntry(entryId, data, updatedBy),
+        mutationFn: ({ entryId, data, updatedBy }: { entryId: string; data: UpdateGateEntryData; updatedBy: string }) =>
+            updateGateEntry(entryId, data, updatedBy),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: gateEntryKeys.all });
             queryClient.invalidateQueries({ queryKey: gateEntryKeys.detail(variables.entryId) });
@@ -106,8 +100,15 @@ export function useCompleteGateEntry() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ entryId, updatedBy }: { entryId: string; updatedBy: string }) =>
-            completeGateEntry(entryId, updatedBy),
+        mutationFn: ({
+            entryId,
+            updatedBy,
+            callerRole,
+        }: {
+            entryId: string;
+            updatedBy: string;
+            callerRole?: UserRole;
+        }) => completeGateEntry(entryId, updatedBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: gateEntryKeys.all });
         },
@@ -123,11 +124,13 @@ export function useCancelGateEntry() {
             entryId,
             reason,
             updatedBy,
+            callerRole,
         }: {
             entryId: string;
             reason: string;
             updatedBy: string;
-        }) => cancelGateEntry(entryId, reason, updatedBy),
+            callerRole?: UserRole;
+        }) => cancelGateEntry(entryId, reason, updatedBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: gateEntryKeys.all });
         },

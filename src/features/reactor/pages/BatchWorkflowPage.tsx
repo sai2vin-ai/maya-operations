@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { getBatchById, completeStep, uploadStepPhoto, recordOutput, cancelBatch, BATCH_STEPS, getBatchStatusInfo, type CompleteStepData } from '../services/batchService';
+import {
+    getBatchById,
+    completeStep,
+    uploadStepPhoto,
+    recordOutput,
+    cancelBatch,
+    BATCH_STEPS,
+    getBatchStatusInfo,
+    type CompleteStepData,
+} from '../services/batchService';
 import { MATERIAL_CATEGORIES, getGateEntries } from '../../gate/services/gateEntryService';
 import { getInventoryItemsByCategory } from '../../inventory/services/inventoryService';
 import { InputDialog, ErrorBoundary } from '../../../components/ui';
@@ -62,7 +71,7 @@ export default function BatchWorkflowPage() {
     const loadGateEntries = async () => {
         try {
             const entries = await getGateEntries(50);
-            const completed = entries.filter(e => e.status === 'COMPLETED');
+            const completed = entries.filter((e) => e.status === 'COMPLETED');
             setAvailableGateEntries(completed);
         } catch (err) {
             console.error('Failed to load gate entries:', err);
@@ -87,8 +96,8 @@ export default function BatchWorkflowPage() {
     };
 
     const handlePhotoCaptured = useCallback((blob: Blob, dataUrl: string) => {
-        setPhotoBlobs(prev => [...prev, blob]);
-        setCapturedPhotos(prev => [...prev, dataUrl]);
+        setPhotoBlobs((prev) => [...prev, blob]);
+        setCapturedPhotos((prev) => [...prev, dataUrl]);
     }, []);
 
     const clearPhotos = useCallback(() => {
@@ -100,7 +109,7 @@ export default function BatchWorkflowPage() {
         if (!batch || !userData?.id) return;
 
         const nextStep = batch.currentStep + 1;
-        const stepInfo = BATCH_STEPS.find(s => s.stepNumber === nextStep);
+        const stepInfo = BATCH_STEPS.find((s) => s.stepNumber === nextStep);
         if (nextStep > BATCH_STEPS.length || !stepInfo) return;
 
         try {
@@ -135,7 +144,7 @@ export default function BatchWorkflowPage() {
                 stepData.nitrogenPurged = nitrogenPurged;
             }
             if (nextStep === 8 && pyrolysisReadings.length > 0) {
-                stepData.pyrolysisReadings = pyrolysisReadings.map(r => ({
+                stepData.pyrolysisReadings = pyrolysisReadings.map((r) => ({
                     reactorTemp: parseFloat(r.reactorTemp) || 0,
                     reactorPressure: parseFloat(r.reactorPressure) || 0,
                     firstTankTemp: r.firstTankTemp ? parseFloat(r.firstTankTemp) : undefined,
@@ -145,7 +154,7 @@ export default function BatchWorkflowPage() {
                 }));
             }
 
-            await completeStep(batch.id, stepData, userData.id);
+            await completeStep(batch.id, stepData, userData.id, userData.role);
 
             setSuccess(`Step ${nextStep} completed!`);
             setStepNotes('');
@@ -164,51 +173,68 @@ export default function BatchWorkflowPage() {
         } finally {
             setSaving(false);
         }
-    }, [batch, userData, photoBlobs, stepNotes, stepTemp, stepPressure, inputWeight, selectedGateEntryIds, nitrogenPurged, pyrolysisReadings]);
+    }, [
+        batch,
+        userData,
+        photoBlobs,
+        stepNotes,
+        stepTemp,
+        stepPressure,
+        inputWeight,
+        selectedGateEntryIds,
+        nitrogenPurged,
+        pyrolysisReadings,
+    ]);
 
-    const handleRecordOutput = useCallback(async (data: {
-        materialCategory: MaterialCategory;
-        quantity: number;
-        unit: 'KG' | 'TONS';
-        qualityGrade?: string;
-        inventoryItemId?: string;
-    }) => {
-        if (!batch || !userData?.id) return;
+    const handleRecordOutput = useCallback(
+        async (data: {
+            materialCategory: MaterialCategory;
+            quantity: number;
+            unit: 'KG' | 'TONS';
+            qualityGrade?: string;
+            inventoryItemId?: string;
+        }) => {
+            if (!batch || !userData?.id) return;
 
-        try {
-            setSaving(true);
-            setError(null);
+            try {
+                setSaving(true);
+                setError(null);
 
-            await recordOutput(batch.id, data, userData.id);
+                await recordOutput(batch.id, data, userData.id, userData.role);
 
-            const inventoryNote = data.inventoryItemId ? ' & inventory updated!' : '!';
-            setSuccess(`Output recorded${inventoryNote}`);
-            setShowOutputForm(false);
+                const inventoryNote = data.inventoryItemId ? ' & inventory updated!' : '!';
+                setSuccess(`Output recorded${inventoryNote}`);
+                setShowOutputForm(false);
 
-            await loadBatch(batch.id);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to record output');
-        } finally {
-            setSaving(false);
-        }
-    }, [batch, userData]);
+                await loadBatch(batch.id);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to record output');
+            } finally {
+                setSaving(false);
+            }
+        },
+        [batch, userData],
+    );
 
-    const handleCancelBatchConfirm = useCallback(async (reason: string) => {
-        if (!batch || !userData?.id) return;
+    const handleCancelBatchConfirm = useCallback(
+        async (reason: string) => {
+            if (!batch || !userData?.id) return;
 
-        try {
-            setSaving(true);
-            await cancelBatch(batch.id, reason, userData.id);
-            setCancelDialogOpen(false);
-            navigate('/reactor');
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to cancel batch');
-        } finally {
-            setSaving(false);
-        }
-    }, [batch, userData, navigate]);
+            try {
+                setSaving(true);
+                await cancelBatch(batch.id, reason, userData.id, userData.role);
+                setCancelDialogOpen(false);
+                navigate('/reactor');
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to cancel batch');
+            } finally {
+                setSaving(false);
+            }
+        },
+        [batch, userData, navigate],
+    );
 
-    const currentStepInfo = batch ? BATCH_STEPS.find(s => s.stepNumber === batch.currentStep + 1) : null;
+    const currentStepInfo = batch ? BATCH_STEPS.find((s) => s.stepNumber === batch.currentStep + 1) : null;
     const isCompleted = batch?.status === 'COMPLETED';
     const isCancelled = batch?.status === 'CANCELLED';
 
@@ -245,17 +271,32 @@ export default function BatchWorkflowPage() {
                             onClick={() => navigate('/reactor')}
                             className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            <svg
+                                className="w-5 h-5 text-foreground-muted"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                />
                             </svg>
                         </button>
                         <div>
                             <h1 className="text-xl font-bold text-foreground">{batch.batchNumber}</h1>
                             <div className="flex items-center gap-2">
-                                <span className={`status-badge ${statusInfo.color === 'green' ? 'status-active' :
-                                    statusInfo.color === 'yellow' ? 'status-pending' :
-                                        'status-inactive'
-                                    }`}>
+                                <span
+                                    className={`status-badge ${
+                                        statusInfo.color === 'green'
+                                            ? 'status-active'
+                                            : statusInfo.color === 'yellow'
+                                              ? 'status-pending'
+                                              : 'status-inactive'
+                                    }`}
+                                >
                                     {statusInfo.label}
                                 </span>
                             </div>
@@ -300,10 +341,13 @@ export default function BatchWorkflowPage() {
                             return (
                                 <div
                                     key={step.stepNumber}
-                                    className={`p-2 rounded-lg text-center text-xs ${isComplete ? 'bg-green-500/20 text-green-400' :
-                                        isCurrent ? 'bg-blue-500/20 text-blue-400 ring-2 ring-blue-500' :
-                                            'bg-surface-tertiary/50 text-foreground-faint'
-                                        }`}
+                                    className={`p-2 rounded-lg text-center text-xs ${
+                                        isComplete
+                                            ? 'bg-green-500/20 text-green-400'
+                                            : isCurrent
+                                              ? 'bg-blue-500/20 text-blue-400 ring-2 ring-blue-500'
+                                              : 'bg-surface-tertiary/50 text-foreground-faint'
+                                    }`}
                                 >
                                     <div className="font-bold">{step.stepNumber}</div>
                                     <div className="truncate">{step.stepName.split(' ')[0]}</div>
@@ -325,8 +369,12 @@ export default function BatchWorkflowPage() {
                             <ErrorBoundary
                                 fallback={(err, reset) => (
                                     <div className="glass-card p-4 mb-4 border border-yellow-500/30 bg-yellow-500/5">
-                                        <p className="text-yellow-400 text-sm mb-2">Camera unavailable: {err.message}</p>
-                                        <button onClick={reset} className="btn-secondary text-sm">Retry</button>
+                                        <p className="text-yellow-400 text-sm mb-2">
+                                            Camera unavailable: {err.message}
+                                        </p>
+                                        <button onClick={reset} className="btn-secondary text-sm">
+                                            Retry
+                                        </button>
                                     </div>
                                 )}
                             >
@@ -348,7 +396,9 @@ export default function BatchWorkflowPage() {
                         {/* Step 3: Input Weight for LOADING */}
                         {currentStepInfo.stepNumber === 3 && (
                             <div className="mb-4">
-                                <label className="block text-sm font-medium text-foreground-secondary mb-1">Input Weight (KG) *</label>
+                                <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                    Input Weight (KG) *
+                                </label>
                                 <input
                                     type="number"
                                     value={inputWeight}
@@ -363,22 +413,33 @@ export default function BatchWorkflowPage() {
                                             Link Gate Entries (optional)
                                         </label>
                                         <div className="bg-surface-tertiary/50 p-3 rounded-lg max-h-40 overflow-y-auto space-y-2">
-                                            {availableGateEntries.map(entry => (
-                                                <label key={entry.id} className="flex items-center gap-2 cursor-pointer">
+                                            {availableGateEntries.map((entry) => (
+                                                <label
+                                                    key={entry.id}
+                                                    className="flex items-center gap-2 cursor-pointer"
+                                                >
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedGateEntryIds.includes(entry.id)}
                                                         onChange={(e) => {
                                                             if (e.target.checked) {
-                                                                setSelectedGateEntryIds([...selectedGateEntryIds, entry.id]);
+                                                                setSelectedGateEntryIds([
+                                                                    ...selectedGateEntryIds,
+                                                                    entry.id,
+                                                                ]);
                                                             } else {
-                                                                setSelectedGateEntryIds(selectedGateEntryIds.filter(id => id !== entry.id));
+                                                                setSelectedGateEntryIds(
+                                                                    selectedGateEntryIds.filter(
+                                                                        (id) => id !== entry.id,
+                                                                    ),
+                                                                );
                                                             }
                                                         }}
                                                         className="w-4 h-4 rounded bg-surface-tertiary border-border-secondary"
                                                     />
                                                     <span className="text-sm text-foreground-secondary">
-                                                        {entry.entryNumber} - {entry.vehicleNumber} ({entry.quantity} {entry.unit})
+                                                        {entry.entryNumber} - {entry.vehicleNumber} ({entry.quantity}{' '}
+                                                        {entry.unit})
                                                     </span>
                                                 </label>
                                             ))}
@@ -393,10 +454,7 @@ export default function BatchWorkflowPage() {
 
                         {/* Step 8: Pyrolysis Readings */}
                         {currentStepInfo.stepNumber === 8 && (
-                            <PyrolysisReadings
-                                readings={pyrolysisReadings}
-                                onChange={setPyrolysisReadings}
-                            />
+                            <PyrolysisReadings readings={pyrolysisReadings} onChange={setPyrolysisReadings} />
                         )}
 
                         {/* Steps 10 & 11: Nitrogen Purge */}
@@ -413,7 +471,9 @@ export default function BatchWorkflowPage() {
                                 </label>
                                 {'tempThreshold' in currentStepInfo && (
                                     <p className="text-xs text-yellow-400 mt-2">
-                                        Temperature must be at {(currentStepInfo as { tempThreshold?: number }).tempThreshold}C before proceeding
+                                        Temperature must be at{' '}
+                                        {(currentStepInfo as { tempThreshold?: number }).tempThreshold}C before
+                                        proceeding
                                     </p>
                                 )}
                             </div>
@@ -423,7 +483,9 @@ export default function BatchWorkflowPage() {
                         {currentStepInfo.stepNumber >= 7 && currentStepInfo.stepNumber !== 8 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Temperature (C)</label>
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                        Temperature (C)
+                                    </label>
                                     <input
                                         type="number"
                                         value={stepTemp}
@@ -433,7 +495,9 @@ export default function BatchWorkflowPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Pressure (bar)</label>
+                                    <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                        Pressure (bar)
+                                    </label>
                                     <input
                                         type="number"
                                         value={stepPressure}
@@ -461,7 +525,9 @@ export default function BatchWorkflowPage() {
                             disabled={saving}
                             className="btn-primary w-full flex items-center justify-center gap-2"
                         >
-                            {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                            {saving && (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            )}
                             Complete Step {currentStepInfo.stepNumber}
                         </button>
                     </div>
@@ -490,13 +556,21 @@ export default function BatchWorkflowPage() {
                         {batch.outputs && batch.outputs.length > 0 ? (
                             <div className="space-y-2">
                                 {batch.outputs.map((output, idx) => (
-                                    <div key={idx} className="flex items-center justify-between bg-surface-tertiary/50 p-3 rounded-lg">
+                                    <div
+                                        key={idx}
+                                        className="flex items-center justify-between bg-surface-tertiary/50 p-3 rounded-lg"
+                                    >
                                         <div>
                                             <span className="text-foreground font-medium">
-                                                {MATERIAL_CATEGORIES.find(m => m.value === output.materialCategory)?.label}
+                                                {
+                                                    MATERIAL_CATEGORIES.find((m) => m.value === output.materialCategory)
+                                                        ?.label
+                                                }
                                             </span>
                                             {output.qualityGrade && (
-                                                <span className="text-foreground-muted ml-2">({output.qualityGrade})</span>
+                                                <span className="text-foreground-muted ml-2">
+                                                    ({output.qualityGrade})
+                                                </span>
                                             )}
                                         </div>
                                         <span className="text-blue-400 font-semibold">
