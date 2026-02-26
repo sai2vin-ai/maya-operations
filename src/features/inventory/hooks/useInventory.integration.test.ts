@@ -62,10 +62,9 @@ describe('useInventory hooks integration', () => {
 
             vi.mocked(inventoryService.getInventoryItems).mockResolvedValue(mockItems);
 
-            const { result } = renderHook(
-                () => useInventory({ category: 'RAW_MATERIAL' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useInventory({ category: 'RAW_MATERIAL' }), {
+                wrapper: createWrapper(),
+            });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -83,10 +82,7 @@ describe('useInventory hooks integration', () => {
 
             vi.mocked(inventoryService.getInventoryItems).mockResolvedValue(mockItems);
 
-            const { result } = renderHook(
-                () => useInventory({ category: 'low-stock' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useInventory({ category: 'low-stock' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -104,10 +100,7 @@ describe('useInventory hooks integration', () => {
 
             vi.mocked(inventoryService.getInventoryItems).mockResolvedValue(mockItems);
 
-            const { result } = renderHook(
-                () => useInventory({ searchQuery: 'tyre' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useInventory({ searchQuery: 'tyre' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -125,10 +118,7 @@ describe('useInventory hooks integration', () => {
 
             vi.mocked(inventoryService.getInventoryItems).mockResolvedValue(mockItems);
 
-            const { result } = renderHook(
-                () => useInventory({ searchQuery: 'FP' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useInventory({ searchQuery: 'FP' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -146,10 +136,9 @@ describe('useInventory hooks integration', () => {
 
             vi.mocked(inventoryService.getInventoryItems).mockResolvedValue(mockItems);
 
-            const { result } = renderHook(
-                () => useInventory({ searchQuery: 'warehouse' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useInventory({ searchQuery: 'warehouse' }), {
+                wrapper: createWrapper(),
+            });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -210,7 +199,8 @@ describe('useInventory hooks integration', () => {
 
             expect(inventoryService.createInventoryItem).toHaveBeenCalledWith(
                 createData.data,
-                createData.createdBy
+                createData.createdBy,
+                undefined,
             );
         });
     });
@@ -237,7 +227,8 @@ describe('useInventory hooks integration', () => {
 
             expect(inventoryService.recordTransaction).toHaveBeenCalledWith(
                 transactionData.data,
-                transactionData.recordedBy
+                transactionData.recordedBy,
+                undefined,
             );
         });
 
@@ -263,7 +254,8 @@ describe('useInventory hooks integration', () => {
 
             expect(inventoryService.recordTransaction).toHaveBeenCalledWith(
                 transactionData.data,
-                transactionData.recordedBy
+                transactionData.recordedBy,
+                undefined,
             );
         });
     });

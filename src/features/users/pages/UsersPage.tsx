@@ -26,7 +26,7 @@ export default function UsersPage() {
 
     // Get role label
     const getRoleLabel = (role: string) => {
-        const found = USER_ROLES.find(r => r.value === role);
+        const found = USER_ROLES.find((r) => r.value === role);
         return found?.label || role;
     };
 
@@ -39,6 +39,7 @@ export default function UsersPage() {
                 userId: user.id,
                 currentStatus: user.status,
                 updatedBy: userData.id || '',
+                callerRole: userData.role,
             });
         } catch {
             // Error handled by mutation
@@ -52,10 +53,7 @@ export default function UsersPage() {
                 subtitle={`${users.length} users total`}
                 backTo="/dashboard"
                 actions={
-                    <button
-                        onClick={() => navigate('/users/new')}
-                        className="btn-primary flex items-center gap-2"
-                    >
+                    <button onClick={() => navigate('/users/new')} className="btn-primary flex items-center gap-2">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -92,8 +90,14 @@ export default function UsersPage() {
                             <EmptyState
                                 icon={EmptyStateIcons.users}
                                 title="No users found"
-                                description={searchQuery ? 'Try a different search term' : 'Add your first user to get started'}
-                                action={!searchQuery ? { label: 'Add User', onClick: () => navigate('/users/new') } : undefined}
+                                description={
+                                    searchQuery ? 'Try a different search term' : 'Add your first user to get started'
+                                }
+                                action={
+                                    !searchQuery
+                                        ? { label: 'Add User', onClick: () => navigate('/users/new') }
+                                        : undefined
+                                }
                             />
                         ) : (
                             users.map((user) => (
@@ -116,9 +120,13 @@ export default function UsersPage() {
                                                 <h3 className="text-foreground font-semibold">{user.name}</h3>
                                                 <p className="text-foreground-muted text-sm">{user.email}</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-foreground-faint">{user.employeeId}</span>
+                                                    <span className="text-xs text-foreground-faint">
+                                                        {user.employeeId}
+                                                    </span>
                                                     <span className="text-xs text-foreground-faint">•</span>
-                                                    <span className="text-xs text-foreground-faint">{getRoleLabel(user.role)}</span>
+                                                    <span className="text-xs text-foreground-faint">
+                                                        {getRoleLabel(user.role)}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -133,23 +141,49 @@ export default function UsersPage() {
                                                     handleToggleStatus(user);
                                                 }}
                                                 disabled={toggleStatus.isPending}
-                                                className={`p-2 rounded-lg transition-colors ${user.status === 'ACTIVE'
-                                                    ? 'hover:bg-red-500/20 text-red-400'
-                                                    : 'hover:bg-green-500/20 text-green-400'
-                                                    }`}
+                                                className={`p-2 rounded-lg transition-colors ${
+                                                    user.status === 'ACTIVE'
+                                                        ? 'hover:bg-red-500/20 text-red-400'
+                                                        : 'hover:bg-green-500/20 text-green-400'
+                                                }`}
                                                 title={user.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
                                             >
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <svg
+                                                    className="w-5 h-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
                                                     {user.status === 'ACTIVE' ? (
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                                                        />
                                                     ) : (
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
                                                     )}
                                                 </svg>
                                             </button>
 
-                                            <svg className="w-5 h-5 text-foreground-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            <svg
+                                                className="w-5 h-5 text-foreground-faint"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M9 5l7 7-7 7"
+                                                />
                                             </svg>
                                         </div>
                                     </div>

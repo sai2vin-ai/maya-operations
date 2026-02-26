@@ -9,6 +9,7 @@ import {
     type CreateUserData,
     type UpdateUserData,
 } from '../services/userService';
+import type { UserRole } from '../../../types';
 
 // Query keys
 export const userKeys = {
@@ -72,8 +73,15 @@ export function useCreateUser() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ data, createdBy }: { data: CreateUserData; createdBy: string }) =>
-            createUser(data, createdBy),
+        mutationFn: ({
+            data,
+            createdBy,
+            callerRole,
+        }: {
+            data: CreateUserData;
+            createdBy: string;
+            callerRole?: UserRole;
+        }) => createUser(data, createdBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userKeys.all });
         },
@@ -89,11 +97,13 @@ export function useUpdateUser() {
             userId,
             data,
             updatedBy,
+            callerRole,
         }: {
             userId: string;
             data: UpdateUserData;
             updatedBy: string;
-        }) => updateUser(userId, data, updatedBy),
+            callerRole?: UserRole;
+        }) => updateUser(userId, data, updatedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: userKeys.all });
             queryClient.invalidateQueries({ queryKey: userKeys.detail(variables.userId) });
@@ -110,15 +120,17 @@ export function useToggleUserStatus() {
             userId,
             currentStatus,
             updatedBy,
+            callerRole,
         }: {
             userId: string;
             currentStatus: string;
             updatedBy: string;
+            callerRole?: UserRole;
         }) => {
             if (currentStatus === 'ACTIVE') {
-                return deactivateUser(userId, updatedBy);
+                return deactivateUser(userId, updatedBy, callerRole);
             } else {
-                return activateUser(userId, updatedBy);
+                return activateUser(userId, updatedBy, callerRole);
             }
         },
         onSuccess: () => {

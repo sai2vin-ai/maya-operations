@@ -13,6 +13,7 @@ import {
     type RecordSecondWeightData,
 } from '../services/weighbridgeService';
 import type { WeighbridgeEntryType } from '../types';
+import type { UserRole } from '../../../types';
 
 // Query keys
 export const weighbridgeKeys = {
@@ -95,8 +96,15 @@ export function useCreateWeighbridgeEntry() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ data, createdBy }: { data: CreateWeighbridgeEntryData; createdBy: string }) =>
-            createWeighbridgeEntry(data, createdBy),
+        mutationFn: ({
+            data,
+            createdBy,
+            callerRole,
+        }: {
+            data: CreateWeighbridgeEntryData;
+            createdBy: string;
+            callerRole?: UserRole;
+        }) => createWeighbridgeEntry(data, createdBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: weighbridgeKeys.all });
         },
@@ -112,11 +120,13 @@ export function useRecordFirstWeight() {
             entryId,
             data,
             updatedBy,
+            callerRole,
         }: {
             entryId: string;
             data: RecordFirstWeightData;
             updatedBy: string;
-        }) => recordFirstWeight(entryId, data, updatedBy),
+            callerRole?: UserRole;
+        }) => recordFirstWeight(entryId, data, updatedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: weighbridgeKeys.all });
             queryClient.invalidateQueries({ queryKey: weighbridgeKeys.detail(variables.entryId) });
@@ -133,11 +143,13 @@ export function useRecordSecondWeight() {
             entryId,
             data,
             updatedBy,
+            callerRole,
         }: {
             entryId: string;
             data: RecordSecondWeightData;
             updatedBy: string;
-        }) => recordSecondWeightAndComplete(entryId, data, updatedBy),
+            callerRole?: UserRole;
+        }) => recordSecondWeightAndComplete(entryId, data, updatedBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: weighbridgeKeys.all });
         },
@@ -149,8 +161,15 @@ export function useCancelWeighbridgeEntry() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ entryId, updatedBy }: { entryId: string; updatedBy: string }) =>
-            cancelWeighbridgeEntry(entryId, updatedBy),
+        mutationFn: ({
+            entryId,
+            updatedBy,
+            callerRole,
+        }: {
+            entryId: string;
+            updatedBy: string;
+            callerRole?: UserRole;
+        }) => cancelWeighbridgeEntry(entryId, updatedBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: weighbridgeKeys.all });
         },

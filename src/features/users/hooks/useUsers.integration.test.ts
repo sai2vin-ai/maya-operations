@@ -58,10 +58,7 @@ describe('useUsers hooks integration', () => {
 
             vi.mocked(userService.getUsers).mockResolvedValue(mockUsers);
 
-            const { result } = renderHook(
-                () => useUsers({ status: 'active' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useUsers({ status: 'active' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -79,10 +76,7 @@ describe('useUsers hooks integration', () => {
 
             vi.mocked(userService.getUsers).mockResolvedValue(mockUsers);
 
-            const { result } = renderHook(
-                () => useUsers({ status: 'inactive' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useUsers({ status: 'inactive' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -100,10 +94,7 @@ describe('useUsers hooks integration', () => {
 
             vi.mocked(userService.getUsers).mockResolvedValue(mockUsers);
 
-            const { result } = renderHook(
-                () => useUsers({ searchQuery: 'john' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useUsers({ searchQuery: 'john' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -121,10 +112,7 @@ describe('useUsers hooks integration', () => {
 
             vi.mocked(userService.getUsers).mockResolvedValue(mockUsers);
 
-            const { result } = renderHook(
-                () => useUsers({ searchQuery: 'jane@' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useUsers({ searchQuery: 'jane@' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -142,10 +130,7 @@ describe('useUsers hooks integration', () => {
 
             vi.mocked(userService.getUsers).mockResolvedValue(mockUsers);
 
-            const { result } = renderHook(
-                () => useUsers({ searchQuery: 'admin' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useUsers({ searchQuery: 'admin' }), { wrapper: createWrapper() });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -220,10 +205,7 @@ describe('useUsers hooks integration', () => {
 
             await result.current.mutateAsync(createData);
 
-            expect(userService.createUser).toHaveBeenCalledWith(
-                createData.data,
-                createData.createdBy
-            );
+            expect(userService.createUser).toHaveBeenCalledWith(createData.data, createData.createdBy, undefined);
         });
     });
 
@@ -241,7 +223,7 @@ describe('useUsers hooks integration', () => {
                 updatedBy: 'admin',
             });
 
-            expect(userService.deactivateUser).toHaveBeenCalledWith('user-123', 'admin');
+            expect(userService.deactivateUser).toHaveBeenCalledWith('user-123', 'admin', undefined);
             expect(userService.activateUser).not.toHaveBeenCalled();
         });
 
@@ -258,7 +240,7 @@ describe('useUsers hooks integration', () => {
                 updatedBy: 'admin',
             });
 
-            expect(userService.activateUser).toHaveBeenCalledWith('user-123', 'admin');
+            expect(userService.activateUser).toHaveBeenCalledWith('user-123', 'admin', undefined);
             expect(userService.deactivateUser).not.toHaveBeenCalled();
         });
     });

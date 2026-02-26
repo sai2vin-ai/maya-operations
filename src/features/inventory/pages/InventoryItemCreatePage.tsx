@@ -38,15 +38,19 @@ export default function InventoryItemCreatePage() {
             setLoading(true);
             setError(null);
 
-            await createInventoryItem({
-                name: name.trim(),
-                category,
-                unit,
-                minimumStock,
-                maximumStock: maximumStock || undefined,
-                location: location.trim() || undefined,
-                initialStock: initialStock || undefined,
-            }, userData.id);
+            await createInventoryItem(
+                {
+                    name: name.trim(),
+                    category,
+                    unit,
+                    minimumStock,
+                    maximumStock: maximumStock || undefined,
+                    location: location.trim() || undefined,
+                    initialStock: initialStock || undefined,
+                },
+                userData.id,
+                userData.role,
+            );
 
             toast.success('Inventory item created successfully');
             navigate('/inventory');
@@ -67,7 +71,12 @@ export default function InventoryItemCreatePage() {
                         onClick={() => navigate('/inventory')}
                         className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                     >
-                        <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg
+                            className="w-5 h-5 text-foreground-muted"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>

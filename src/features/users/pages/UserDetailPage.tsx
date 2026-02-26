@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import {
-    getUserById,
-    updateUser,
-    sendPasswordReset,
-    USER_ROLES,
-    USER_STATUSES,
-} from '../services/userService';
+import { getUserById, updateUser, sendPasswordReset, USER_ROLES, USER_STATUSES } from '../services/userService';
 import { useToast } from '../../../components/ui';
 import type { User, UserRole, UserStatus } from '../types';
 
@@ -66,7 +60,7 @@ export default function UserDetailPage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
@@ -77,7 +71,7 @@ export default function UserDetailPage() {
             setError(null);
             setSuccess(null);
 
-            await updateUser(id, formData, currentUser.id || '');
+            await updateUser(id, formData, currentUser.id || '', currentUser.role);
 
             setSuccess('User updated successfully');
             toast.success('User updated successfully');
@@ -155,8 +149,18 @@ export default function UserDetailPage() {
                             onClick={() => navigate('/users')}
                             className="p-2 hover:bg-surface-tertiary rounded-lg transition-colors"
                         >
-                            <svg className="w-5 h-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            <svg
+                                className="w-5 h-5 text-foreground-muted"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                />
                             </svg>
                         </button>
                         <div>
@@ -166,12 +170,14 @@ export default function UserDetailPage() {
                     </div>
 
                     {!isEditing ? (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="btn-primary flex items-center gap-2"
-                        >
+                        <button onClick={() => setIsEditing(true)} className="btn-primary flex items-center gap-2">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
                             </svg>
                             Edit
                         </button>
@@ -185,7 +191,9 @@ export default function UserDetailPage() {
                                 disabled={saving}
                                 className="btn-primary flex items-center gap-2"
                             >
-                                {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                                {saving && (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                )}
                                 Save
                             </button>
                         </div>
@@ -218,11 +226,15 @@ export default function UserDetailPage() {
                             <h2 className="text-2xl font-bold text-foreground">{user.name}</h2>
                             <p className="text-foreground-muted">{user.email}</p>
                             <div className="flex items-center gap-2 mt-2">
-                                <span className={`status-badge ${user.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}`}>
+                                <span
+                                    className={`status-badge ${user.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}`}
+                                >
                                     {user.status}
                                 </span>
                                 <span className="text-foreground-faint">•</span>
-                                <span className="text-foreground-muted">{USER_ROLES.find(r => r.value === user.role)?.label || user.role}</span>
+                                <span className="text-foreground-muted">
+                                    {USER_ROLES.find((r) => r.value === user.role)?.label || user.role}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -235,7 +247,9 @@ export default function UserDetailPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Name */}
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Full Name</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Full Name
+                            </label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -273,7 +287,9 @@ export default function UserDetailPage() {
 
                         {/* Employee ID */}
                         <div>
-                            <label className="block text-sm font-medium text-foreground-secondary mb-1">Employee ID</label>
+                            <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                                Employee ID
+                            </label>
                             {isEditing ? (
                                 <input
                                     type="text"
@@ -297,12 +313,16 @@ export default function UserDetailPage() {
                                     onChange={handleInputChange}
                                     className="input-field w-full"
                                 >
-                                    {USER_ROLES.map(role => (
-                                        <option key={role.value} value={role.value}>{role.label}</option>
+                                    {USER_ROLES.map((role) => (
+                                        <option key={role.value} value={role.value}>
+                                            {role.label}
+                                        </option>
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-foreground py-2">{USER_ROLES.find(r => r.value === user.role)?.label || user.role}</p>
+                                <p className="text-foreground py-2">
+                                    {USER_ROLES.find((r) => r.value === user.role)?.label || user.role}
+                                </p>
                             )}
                         </div>
 
@@ -316,12 +336,16 @@ export default function UserDetailPage() {
                                     onChange={handleInputChange}
                                     className="input-field w-full"
                                 >
-                                    {USER_STATUSES.map(status => (
-                                        <option key={status.value} value={status.value}>{status.label}</option>
+                                    {USER_STATUSES.map((status) => (
+                                        <option key={status.value} value={status.value}>
+                                            {status.label}
+                                        </option>
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-foreground py-2">{USER_STATUSES.find(s => s.value === user.status)?.label || user.status}</p>
+                                <p className="text-foreground py-2">
+                                    {USER_STATUSES.find((s) => s.value === user.status)?.label || user.status}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -337,7 +361,12 @@ export default function UserDetailPage() {
                             className="btn-secondary flex items-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                                />
                             </svg>
                             Reset Password
                         </button>

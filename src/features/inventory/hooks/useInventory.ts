@@ -10,6 +10,7 @@ import {
     type RecordTransactionData,
 } from '../services/inventoryService';
 import type { InventoryCategory } from '../types';
+import type { UserRole } from '../../../types';
 
 // Query keys
 export const inventoryKeys = {
@@ -77,8 +78,15 @@ export function useCreateInventoryItem() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ data, createdBy }: { data: CreateInventoryItemData; createdBy: string }) =>
-            createInventoryItem(data, createdBy),
+        mutationFn: ({
+            data,
+            createdBy,
+            callerRole,
+        }: {
+            data: CreateInventoryItemData;
+            createdBy: string;
+            callerRole?: UserRole;
+        }) => createInventoryItem(data, createdBy, callerRole),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: inventoryKeys.all });
         },
@@ -94,11 +102,13 @@ export function useUpdateInventoryItem() {
             itemId,
             data,
             updatedBy,
+            callerRole,
         }: {
             itemId: string;
             data: UpdateInventoryItemData;
             updatedBy: string;
-        }) => updateInventoryItem(itemId, data, updatedBy),
+            callerRole?: UserRole;
+        }) => updateInventoryItem(itemId, data, updatedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: inventoryKeys.all });
             queryClient.invalidateQueries({ queryKey: inventoryKeys.detail(variables.itemId) });
@@ -111,8 +121,15 @@ export function useRecordTransaction() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ data, recordedBy }: { data: RecordTransactionData; recordedBy: string }) =>
-            recordTransaction(data, recordedBy),
+        mutationFn: ({
+            data,
+            recordedBy,
+            callerRole,
+        }: {
+            data: RecordTransactionData;
+            recordedBy: string;
+            callerRole?: UserRole;
+        }) => recordTransaction(data, recordedBy, callerRole),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: inventoryKeys.all });
             queryClient.invalidateQueries({ queryKey: inventoryKeys.detail(variables.data.itemId) });

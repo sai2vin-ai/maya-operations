@@ -62,10 +62,9 @@ describe('useWeighbridge hooks integration', () => {
 
             vi.mocked(weighbridgeService.getWeighbridgeEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useWeighbridgeEntries({ entryType: 'RM_IN' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useWeighbridgeEntries({ entryType: 'RM_IN' }), {
+                wrapper: createWrapper(),
+            });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -83,10 +82,9 @@ describe('useWeighbridge hooks integration', () => {
 
             vi.mocked(weighbridgeService.getWeighbridgeEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useWeighbridgeEntries({ searchQuery: '00001' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useWeighbridgeEntries({ searchQuery: '00001' }), {
+                wrapper: createWrapper(),
+            });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -104,10 +102,9 @@ describe('useWeighbridge hooks integration', () => {
 
             vi.mocked(weighbridgeService.getWeighbridgeEntries).mockResolvedValue(mockEntries);
 
-            const { result } = renderHook(
-                () => useWeighbridgeEntries({ searchQuery: 'KA01' }),
-                { wrapper: createWrapper() }
-            );
+            const { result } = renderHook(() => useWeighbridgeEntries({ searchQuery: 'KA01' }), {
+                wrapper: createWrapper(),
+            });
 
             await waitFor(() => {
                 expect(result.current.isSuccess).toBe(true);
@@ -134,9 +131,7 @@ describe('useWeighbridge hooks integration', () => {
 
     describe('usePendingEntries', () => {
         it('should fetch pending entries', async () => {
-            const mockEntries = [
-                mockWeighbridgeEntry({ id: '1', status: 'PENDING' }),
-            ];
+            const mockEntries = [mockWeighbridgeEntry({ id: '1', status: 'PENDING' })];
 
             vi.mocked(weighbridgeService.getPendingEntries).mockResolvedValue(mockEntries);
 
@@ -155,10 +150,7 @@ describe('useWeighbridge hooks integration', () => {
 
     describe('useTodayEntries', () => {
         it('should fetch today entries', async () => {
-            const mockEntries = [
-                mockWeighbridgeEntry({ id: '1' }),
-                mockWeighbridgeEntry({ id: '2' }),
-            ];
+            const mockEntries = [mockWeighbridgeEntry({ id: '1' }), mockWeighbridgeEntry({ id: '2' })];
 
             vi.mocked(weighbridgeService.getTodayEntries).mockResolvedValue(mockEntries);
 
@@ -224,7 +216,8 @@ describe('useWeighbridge hooks integration', () => {
 
             expect(weighbridgeService.createWeighbridgeEntry).toHaveBeenCalledWith(
                 createData.data,
-                createData.createdBy
+                createData.createdBy,
+                undefined,
             );
         });
     });
@@ -251,7 +244,8 @@ describe('useWeighbridge hooks integration', () => {
             expect(weighbridgeService.recordFirstWeight).toHaveBeenCalledWith(
                 weightData.entryId,
                 weightData.data,
-                weightData.updatedBy
+                weightData.updatedBy,
+                undefined,
             );
         });
     });
@@ -278,7 +272,8 @@ describe('useWeighbridge hooks integration', () => {
             expect(weighbridgeService.recordSecondWeightAndComplete).toHaveBeenCalledWith(
                 weightData.entryId,
                 weightData.data,
-                weightData.updatedBy
+                weightData.updatedBy,
+                undefined,
             );
         });
     });
@@ -296,10 +291,7 @@ describe('useWeighbridge hooks integration', () => {
                 updatedBy: 'admin',
             });
 
-            expect(weighbridgeService.cancelWeighbridgeEntry).toHaveBeenCalledWith(
-                'entry-123',
-                'admin'
-            );
+            expect(weighbridgeService.cancelWeighbridgeEntry).toHaveBeenCalledWith('entry-123', 'admin', undefined);
         });
     });
 
@@ -307,7 +299,11 @@ describe('useWeighbridge hooks integration', () => {
         it('should generate correct query keys', () => {
             expect(weighbridgeKeys.all).toEqual(['weighbridge']);
             expect(weighbridgeKeys.lists()).toEqual(['weighbridge', 'list']);
-            expect(weighbridgeKeys.list({ entryType: 'RM_IN' })).toEqual(['weighbridge', 'list', { entryType: 'RM_IN' }]);
+            expect(weighbridgeKeys.list({ entryType: 'RM_IN' })).toEqual([
+                'weighbridge',
+                'list',
+                { entryType: 'RM_IN' },
+            ]);
             expect(weighbridgeKeys.pending()).toEqual(['weighbridge', 'pending']);
             expect(weighbridgeKeys.today()).toEqual(['weighbridge', 'today']);
             expect(weighbridgeKeys.details()).toEqual(['weighbridge', 'detail']);

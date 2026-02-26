@@ -147,6 +147,7 @@ export default function WeighbridgeEntryPage() {
                     batchId: batchId || undefined,
                 },
                 userData.id,
+                userData.role,
             );
 
             setSuccess('Entry created!');
