@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getReactorAssets, getReactorStatusInfo, createReactorAsset } from '../../asset-register/services/assetService';
-import { getActiveBatch, getBatchStatusInfo } from '../services/batchService';
+import { getReactorAssets, createReactorAsset } from '../../asset-register/services/assetService';
+import { getActiveBatch, getBatchStatusInfo, getMonthlyBatchCount } from '../services/batchService';
 import { useAuth } from '../../../contexts/AuthContext';
 import type { Asset } from '../../../types';
 import type { Batch } from '../types';
 
 interface ReactorWithBatch extends Asset {
     activeBatch?: Batch | null;
+    monthlyBatchCount?: number;
 }
 
 export default function ReactorDashboardPage() {
@@ -21,6 +22,8 @@ export default function ReactorDashboardPage() {
     const [newReactorName, setNewReactorName] = useState('');
     const [adding, setAdding] = useState(false);
 
+    const currentMonth = new Date().toLocaleDateString([], { month: 'long', year: 'numeric' });
+
     useEffect(() => {
         loadReactors();
     }, []);
@@ -31,15 +34,17 @@ export default function ReactorDashboardPage() {
             setError(null);
             const fetchedReactors = await getReactorAssets();
 
-            // Load active batch for each reactor
-            const reactorsWithBatches = await Promise.all(
+            const reactorsWithData = await Promise.all(
                 fetchedReactors.map(async (reactor) => {
-                    const activeBatch = await getActiveBatch(reactor.id);
-                    return { ...reactor, activeBatch };
+                    const [activeBatch, monthlyBatchCount] = await Promise.all([
+                        getActiveBatch(reactor.id),
+                        getMonthlyBatchCount(reactor.id),
+                    ]);
+                    return { ...reactor, activeBatch, monthlyBatchCount };
                 }),
             );
 
-            setReactors(reactorsWithBatches);
+            setReactors(reactorsWithData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load reactors');
         } finally {
@@ -52,14 +57,7 @@ export default function ReactorDashboardPage() {
 
         try {
             setAdding(true);
-            await createReactorAsset(
-                {
-                    reactorNumber: newReactorNumber,
-                    name: newReactorName,
-                },
-                userData?.id || '',
-            );
-
+            await createReactorAsset({ reactorNumber: newReactorNumber, name: newReactorName }, userData?.id || '');
             setNewReactorNumber('');
             setNewReactorName('');
             setShowAddReactor(false);
@@ -71,35 +69,10 @@ export default function ReactorDashboardPage() {
         }
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'IDLE':
-                return 'from-gray-500 to-gray-600';
-            case 'IN_BATCH':
-                return 'from-green-500 to-green-600';
-            case 'MAINTENANCE':
-                return 'from-yellow-500 to-yellow-600';
-            case 'OFFLINE':
-                return 'from-red-500 to-red-600';
-            default:
-                return 'from-gray-500 to-gray-600';
-        }
-    };
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'IDLE':
-                return '⏸️';
-            case 'IN_BATCH':
-                return '🔥';
-            case 'MAINTENANCE':
-                return '🔧';
-            case 'OFFLINE':
-                return '❌';
-            default:
-                return '❓';
-        }
-    };
+    // Summary stats
+    const totalMonthlyBatches = reactors.reduce((sum, r) => sum + (r.monthlyBatchCount || 0), 0);
+    const activeCount = reactors.filter((r) => r.reactorStatus === 'IN_BATCH').length;
+    const idleCount = reactors.filter((r) => r.reactorStatus === 'IDLE').length;
 
     return (
         <div>
@@ -143,7 +116,7 @@ export default function ReactorDashboardPage() {
                 </div>
             </header>
 
-            <main className="p-4">
+            <main className="p-4 max-w-7xl mx-auto">
                 {/* Error */}
                 {error && (
                     <div className="glass-card p-4 mb-4 border border-red-500/50 bg-red-500/10">
@@ -158,7 +131,7 @@ export default function ReactorDashboardPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <input
                                 type="text"
-                                placeholder="Reactor Number (e.g., R1)"
+                                placeholder="Reactor Number (e.g., M1)"
                                 value={newReactorNumber}
                                 onChange={(e) => setNewReactorNumber(e.target.value)}
                                 className="input-field"
@@ -188,143 +161,215 @@ export default function ReactorDashboardPage() {
                     </div>
                 )}
 
-                {/* Reactors Grid */}
-                {!loading && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {reactors.length === 0 ? (
-                            <div className="col-span-full glass-card p-8 text-center">
-                                <div className="w-16 h-16 bg-surface-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-3xl">🔥</span>
+                {!loading && reactors.length > 0 && (
+                    <>
+                        {/* Monthly Summary Bar */}
+                        <div className="glass-card p-4 mb-6">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-sm font-medium text-foreground-muted">{currentMonth}</h2>
+                                <div className="flex items-center gap-6 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                        <span className="text-foreground-muted">{activeCount} Active</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                                        <span className="text-foreground-muted">{idleCount} Idle</span>
+                                    </div>
+                                    <div className="text-foreground font-semibold">
+                                        {totalMonthlyBatches} batches this month
+                                    </div>
                                 </div>
-                                <h3 className="text-foreground font-semibold mb-2">No Reactors Configured</h3>
-                                <p className="text-foreground-muted">Add your first reactor to get started</p>
                             </div>
-                        ) : (
-                            reactors.map((reactor) => {
-                                const rStatus = reactor.reactorStatus || 'IDLE';
-                                const statusInfo = getReactorStatusInfo(rStatus);
-                                return (
-                                    <div
-                                        key={reactor.id}
-                                        className="glass-card overflow-hidden hover:scale-[1.02] transition-transform cursor-pointer"
-                                        onClick={() => {
-                                            if (reactor.activeBatch) {
-                                                navigate(`/batch/${reactor.activeBatch.id}`);
-                                            }
-                                        }}
-                                    >
-                                        {/* Status Header */}
-                                        <div className={`bg-gradient-to-r ${getStatusColor(rStatus)} p-4`}>
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-3xl">{getStatusIcon(rStatus)}</span>
-                                                    <div>
-                                                        <h3 className="text-foreground font-bold text-xl">
-                                                            {reactor.reactorNumber}
-                                                        </h3>
-                                                        <p className="text-foreground/80 text-sm">{reactor.name}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="bg-white/20 px-2 py-1 rounded text-foreground text-sm">
-                                                        {statusInfo.label}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
+                        </div>
 
-                                        {/* Content */}
-                                        <div className="p-4">
-                                            {/* Active Batch Info */}
-                                            {reactor.activeBatch ? (
-                                                <div className="mb-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-foreground-muted text-sm">
-                                                            Active Batch
-                                                        </span>
-                                                        <span
-                                                            className={`status-badge ${
-                                                                reactor.activeBatch.status === 'IN_PROGRESS'
-                                                                    ? 'status-active'
-                                                                    : reactor.activeBatch.status === 'COOLING'
-                                                                      ? 'status-pending'
-                                                                      : 'status-inactive'
+                        {/* Reactors Table */}
+                        <div className="glass-card overflow-hidden">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-surface-tertiary/50">
+                                        <th className="text-left p-4 text-foreground-secondary font-medium text-sm">
+                                            Reactor
+                                        </th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium text-sm">
+                                            Status
+                                        </th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium text-sm">
+                                            Active Batch
+                                        </th>
+                                        <th className="text-left p-4 text-foreground-secondary font-medium text-sm">
+                                            Progress
+                                        </th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium text-sm">
+                                            This Month
+                                        </th>
+                                        <th className="text-center p-4 text-foreground-secondary font-medium text-sm">
+                                            Total
+                                        </th>
+                                        <th className="text-right p-4 text-foreground-secondary font-medium text-sm">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-700/50">
+                                    {reactors.map((reactor) => {
+                                        const rStatus = reactor.reactorStatus || 'IDLE';
+                                        const batch = reactor.activeBatch;
+                                        const progress = batch
+                                            ? Math.round((batch.currentStep / batch.totalSteps) * 100)
+                                            : 0;
+
+                                        return (
+                                            <tr
+                                                key={reactor.id}
+                                                className="hover:bg-surface-tertiary/30 transition-colors"
+                                            >
+                                                {/* Reactor */}
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div
+                                                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                                                                rStatus === 'IN_BATCH'
+                                                                    ? 'bg-green-500/20'
+                                                                    : rStatus === 'MAINTENANCE'
+                                                                      ? 'bg-yellow-500/20'
+                                                                      : rStatus === 'OFFLINE'
+                                                                        ? 'bg-red-500/20'
+                                                                        : 'bg-gray-500/20'
                                                             }`}
                                                         >
-                                                            {getBatchStatusInfo(reactor.activeBatch.status).label}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-foreground font-semibold">
-                                                        {reactor.activeBatch.batchNumber}
-                                                    </p>
-
-                                                    {/* Progress Bar */}
-                                                    <div className="mt-3">
-                                                        <div className="flex justify-between text-xs text-foreground-muted mb-1">
-                                                            <span>
-                                                                Step {reactor.activeBatch.currentStep} of{' '}
-                                                                {reactor.activeBatch.totalSteps}
-                                                            </span>
-                                                            <span>
-                                                                {Math.round(
-                                                                    (reactor.activeBatch.currentStep /
-                                                                        reactor.activeBatch.totalSteps) *
-                                                                        100,
-                                                                )}
-                                                                %
-                                                            </span>
+                                                            {rStatus === 'IN_BATCH'
+                                                                ? '🔥'
+                                                                : rStatus === 'MAINTENANCE'
+                                                                  ? '🔧'
+                                                                  : rStatus === 'OFFLINE'
+                                                                    ? '❌'
+                                                                    : '⏸️'}
                                                         </div>
-                                                        <div className="h-2 bg-surface-tertiary rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
-                                                                style={{
-                                                                    width: `${(reactor.activeBatch.currentStep / reactor.activeBatch.totalSteps) * 100}%`,
-                                                                }}
-                                                            />
+                                                        <div>
+                                                            <p className="text-foreground font-semibold">
+                                                                {reactor.reactorNumber}
+                                                            </p>
+                                                            <p className="text-foreground-faint text-xs">
+                                                                {reactor.name}
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="mb-4">
-                                                    <p className="text-foreground-faint text-sm">No active batch</p>
-                                                    {rStatus === 'IDLE' && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigate(`/reactor/${reactor.id}/new-batch`);
-                                                            }}
-                                                            className="mt-3 btn-primary w-full"
-                                                        >
-                                                            Start New Batch
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            )}
+                                                </td>
 
-                                            {/* Stats */}
-                                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                                                <div>
-                                                    <span className="text-foreground-muted text-xs">Total Batches</span>
-                                                    <p className="text-foreground font-semibold">
-                                                        {reactor.totalBatches || 0}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <span className="text-foreground-muted text-xs">
-                                                        Last Maintenance
+                                                {/* Status */}
+                                                <td className="p-4">
+                                                    <span
+                                                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                            rStatus === 'IN_BATCH'
+                                                                ? 'bg-green-500/20 text-green-400'
+                                                                : rStatus === 'MAINTENANCE'
+                                                                  ? 'bg-yellow-500/20 text-yellow-400'
+                                                                  : rStatus === 'OFFLINE'
+                                                                    ? 'bg-red-500/20 text-red-400'
+                                                                    : 'bg-gray-500/20 text-gray-400'
+                                                        }`}
+                                                    >
+                                                        {rStatus === 'IN_BATCH'
+                                                            ? 'Running'
+                                                            : rStatus.charAt(0) + rStatus.slice(1).toLowerCase()}
                                                     </span>
-                                                    <p className="text-foreground font-semibold text-sm">
-                                                        {reactor.lastMaintenanceDate
-                                                            ?.toDate?.()
-                                                            ?.toLocaleDateString() || 'N/A'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
+                                                </td>
+
+                                                {/* Active Batch */}
+                                                <td className="p-4">
+                                                    {batch ? (
+                                                        <button
+                                                            onClick={() => navigate(`/batch/${batch.id}`)}
+                                                            className="text-blue-400 hover:text-blue-300 font-mono text-sm hover:underline"
+                                                        >
+                                                            {batch.batchNumber}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-foreground-faint text-sm">—</span>
+                                                    )}
+                                                    {batch && (
+                                                        <span
+                                                            className={`ml-2 px-1.5 py-0.5 rounded text-xs ${
+                                                                batch.status === 'IN_PROGRESS'
+                                                                    ? 'bg-green-500/20 text-green-400'
+                                                                    : batch.status === 'COOLING'
+                                                                      ? 'bg-yellow-500/20 text-yellow-400'
+                                                                      : 'bg-blue-500/20 text-blue-400'
+                                                            }`}
+                                                        >
+                                                            {getBatchStatusInfo(batch.status).label}
+                                                        </span>
+                                                    )}
+                                                </td>
+
+                                                {/* Progress */}
+                                                <td className="p-4">
+                                                    {batch ? (
+                                                        <div className="flex items-center gap-2 min-w-[120px]">
+                                                            <div className="flex-1 h-1.5 bg-surface-tertiary rounded-full overflow-hidden">
+                                                                <div
+                                                                    className="h-full bg-blue-500 transition-all rounded-full"
+                                                                    style={{ width: `${progress}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-foreground-muted text-xs w-12 text-right">
+                                                                {batch.currentStep}/{batch.totalSteps}
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-foreground-faint text-sm">—</span>
+                                                    )}
+                                                </td>
+
+                                                {/* This Month */}
+                                                <td className="p-4 text-center">
+                                                    <span className="text-foreground font-semibold">
+                                                        {reactor.monthlyBatchCount || 0}
+                                                    </span>
+                                                </td>
+
+                                                {/* Total */}
+                                                <td className="p-4 text-center">
+                                                    <span className="text-foreground-secondary">
+                                                        {reactor.totalBatches || 0}
+                                                    </span>
+                                                </td>
+
+                                                {/* Action */}
+                                                <td className="p-4 text-right">
+                                                    {rStatus === 'IDLE' && !batch ? (
+                                                        <button
+                                                            onClick={() => navigate(`/reactor/${reactor.id}/new-batch`)}
+                                                            className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
+                                                        >
+                                                            New Batch
+                                                        </button>
+                                                    ) : batch ? (
+                                                        <button
+                                                            onClick={() => navigate(`/batch/${batch.id}`)}
+                                                            className="px-3 py-1.5 bg-surface-tertiary hover:bg-surface-tertiary/80 text-foreground-secondary text-sm rounded-lg transition-colors"
+                                                        >
+                                                            View
+                                                        </button>
+                                                    ) : null}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+
+                {!loading && reactors.length === 0 && (
+                    <div className="glass-card p-8 text-center">
+                        <div className="w-16 h-16 bg-surface-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-3xl">🔥</span>
+                        </div>
+                        <h3 className="text-foreground font-semibold mb-2">No Reactors Configured</h3>
+                        <p className="text-foreground-muted">Add your first reactor to get started</p>
                     </div>
                 )}
             </main>

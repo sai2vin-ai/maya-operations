@@ -27,14 +27,16 @@ const BATCHES_COLLECTION = 'batches';
 
 /**
  * Generates a sequential batch number in the format {reactor}-{date}-{serial}.
- * Queries existing batches to determine the next serial for the given reactor and date.
+ * Queries existing batches to determine the next serial for the given reactor and month.
+ * Batch numbers auto-increment within a month and reset each new month.
  * @param reactorNumber - The reactor identifier (e.g., "M1")
- * @returns The next available batch number (e.g., "M1-20260128-001")
+ * @returns The next available batch number (e.g., "M1-MAR2026-001")
  */
 async function generateBatchNumber(reactorNumber: string): Promise<string> {
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0].replace(/-/g, ''); // 20260128
-    const prefix = `${reactorNumber}-${dateStr}`;
+    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const monthStr = `${monthNames[today.getMonth()]}${today.getFullYear()}`; // MAR2026
+    const prefix = `${reactorNumber}-${monthStr}`;
 
     const batchesRef = collection(db, BATCHES_COLLECTION);
     const q = query(
@@ -99,6 +101,22 @@ export async function getBatchesByReactor(reactorId: string): Promise<Batch[]> {
 
     const raw = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     return parseDocs(batchSchema, raw, 'getBatchesByReactor') as Batch[];
+}
+
+/**
+ * Gets the batch count for a reactor in the current calendar month.
+ * @param reactorId - The reactor document ID
+ * @returns The number of batches started this month
+ */
+export async function getMonthlyBatchCount(reactorId: string): Promise<number> {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startTimestamp = Timestamp.fromDate(monthStart);
+
+    const batchesRef = collection(db, BATCHES_COLLECTION);
+    const q = query(batchesRef, where('reactorId', '==', reactorId), where('startTime', '>=', startTimestamp));
+    const snapshot = await getDocs(q);
+    return snapshot.size;
 }
 
 /**
