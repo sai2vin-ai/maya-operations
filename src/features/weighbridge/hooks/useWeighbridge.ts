@@ -3,6 +3,7 @@ import {
     getWeighbridgeEntries,
     getPendingEntries,
     getTodayEntries,
+    getEntriesByDateRange,
     getWeighbridgeEntryById,
     createWeighbridgeEntry,
     recordFirstWeight,
@@ -79,6 +80,16 @@ export function useTodayEntries() {
     return useQuery({
         queryKey: weighbridgeKeys.today(),
         queryFn: getTodayEntries,
+    });
+}
+
+// Hook to fetch entries by date range
+export function useWeighbridgeHistory(startDate: Date | null, endDate: Date | null, filters?: WeighbridgeFilters) {
+    return useQuery({
+        queryKey: [...weighbridgeKeys.lists(), 'history', startDate?.toISOString(), endDate?.toISOString(), filters],
+        queryFn: () => getEntriesByDateRange(startDate!, endDate!),
+        enabled: !!startDate && !!endDate,
+        select: (data) => applyFilters(data, filters),
     });
 }
 

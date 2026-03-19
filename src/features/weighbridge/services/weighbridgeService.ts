@@ -34,7 +34,7 @@ async function generateEntryNumber(): Promise<string> {
         where('entryNumber', '>=', prefix),
         where('entryNumber', '<=', prefix + '\uf8ff'),
         orderBy('entryNumber', 'desc'),
-        limit(1)
+        limit(1),
     );
     const snapshot = await getDocs(q);
 
@@ -54,7 +54,7 @@ export async function getWeighbridgeEntries(limitCount: number = 50): Promise<We
     const q = query(entriesRef, orderBy('createdAt', 'desc'), limit(limitCount));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as WeighbridgeEntry[];
@@ -66,7 +66,7 @@ export async function getWeighbridgeEntriesByType(entryType: WeighbridgeEntryTyp
     const q = query(entriesRef, where('entryType', '==', entryType));
     const snapshot = await getDocs(q);
 
-    const entries = snapshot.docs.map(doc => ({
+    const entries = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as WeighbridgeEntry[];
@@ -85,7 +85,7 @@ export async function getPendingEntries(): Promise<WeighbridgeEntry[]> {
     const q = query(entriesRef, where('status', 'in', ['PENDING', 'FIRST_WEIGHT']));
     const snapshot = await getDocs(q);
 
-    const entries = snapshot.docs.map(doc => ({
+    const entries = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as WeighbridgeEntry[];
@@ -113,7 +113,7 @@ export async function getWeighbridgeEntriesByGateEntryId(gateEntryId: string): P
     const q = query(entriesRef, where('gateEntryId', '==', gateEntryId));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(d => ({
+    return snapshot.docs.map((d) => ({
         id: d.id,
         ...d.data(),
     })) as WeighbridgeEntry[];
@@ -138,7 +138,7 @@ export interface CreateWeighbridgeEntryData {
 export async function createWeighbridgeEntry(
     data: CreateWeighbridgeEntryData,
     createdBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<string> {
     assertAuthorized(callerRole, 'weighbridge:create');
     const entryNumber = await generateEntryNumber();
@@ -177,14 +177,14 @@ export async function createWeighbridgeEntry(
 // Record first weight (gross or tare depending on flow)
 export interface RecordFirstWeightData {
     weight: number;
-    isGross: boolean;  // true = gross weight first (loaded truck), false = tare first (empty truck)
+    isGross: boolean; // true = gross weight first (loaded truck), false = tare first (empty truck)
 }
 
 export async function recordFirstWeight(
     entryId: string,
     data: RecordFirstWeightData,
     updatedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'weighbridge:update');
     const entryRef = doc(db, WEIGHBRIDGE_COLLECTION, entryId);
@@ -208,14 +208,14 @@ export async function recordFirstWeight(
 // Record second weight and complete entry
 export interface RecordSecondWeightData {
     weight: number;
-    isGross: boolean;  // true = gross weight, false = tare weight
+    isGross: boolean; // true = gross weight, false = tare weight
 }
 
 export async function recordSecondWeightAndComplete(
     entryId: string,
     data: RecordSecondWeightData,
     updatedBy: string,
-    callerRole?: UserRole
+    callerRole?: UserRole,
 ): Promise<void> {
     assertAuthorized(callerRole, 'weighbridge:update');
     const entryRef = doc(db, WEIGHBRIDGE_COLLECTION, entryId);
@@ -271,34 +271,36 @@ export async function recordSecondWeightAndComplete(
 
         if (entry.entryType === 'RM_IN') {
             // Raw material coming IN = RECEIPT to inventory
-            await recordTransaction({
-                itemId: entry.inventoryItemId,
-                transactionType: 'RECEIPT',
-                quantity: quantityInKg,
-                referenceType: 'WEIGHBRIDGE_ENTRY',
-                referenceId: entryId,
-                reason: `Weighbridge IN: ${entry.entryNumber}`,
-            }, updatedBy);
+            await recordTransaction(
+                {
+                    itemId: entry.inventoryItemId,
+                    transactionType: 'RECEIPT',
+                    quantity: quantityInKg,
+                    referenceType: 'WEIGHBRIDGE_ENTRY',
+                    referenceId: entryId,
+                    reason: `Weighbridge IN: ${entry.entryNumber}`,
+                },
+                updatedBy,
+            );
         } else if (entry.entryType === 'FG_OUT') {
             // Finished goods going OUT = ISSUE from inventory
-            await recordTransaction({
-                itemId: entry.inventoryItemId,
-                transactionType: 'ISSUE',
-                quantity: quantityInKg,
-                referenceType: 'WEIGHBRIDGE_ENTRY',
-                referenceId: entryId,
-                reason: `Weighbridge OUT: ${entry.entryNumber}`,
-            }, updatedBy);
+            await recordTransaction(
+                {
+                    itemId: entry.inventoryItemId,
+                    transactionType: 'ISSUE',
+                    quantity: quantityInKg,
+                    referenceType: 'WEIGHBRIDGE_ENTRY',
+                    referenceId: entryId,
+                    reason: `Weighbridge OUT: ${entry.entryNumber}`,
+                },
+                updatedBy,
+            );
         }
     }
 }
 
 // Cancel entry
-export async function cancelWeighbridgeEntry(
-    entryId: string,
-    updatedBy: string,
-    callerRole?: UserRole
-): Promise<void> {
+export async function cancelWeighbridgeEntry(entryId: string, updatedBy: string, callerRole?: UserRole): Promise<void> {
     assertAuthorized(callerRole, 'weighbridge:update');
     const entryRef = doc(db, WEIGHBRIDGE_COLLECTION, entryId);
 
@@ -319,7 +321,7 @@ export async function getTodayEntries(): Promise<WeighbridgeEntry[]> {
     const q = query(entriesRef, where('createdAt', '>=', todayStart));
     const snapshot = await getDocs(q);
 
-    const entries = snapshot.docs.map(doc => ({
+    const entries = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as WeighbridgeEntry[];
@@ -329,4 +331,31 @@ export async function getTodayEntries(): Promise<WeighbridgeEntry[]> {
         const bTime = getTimestampMillis(b.createdAt);
         return bTime - aTime;
     });
+}
+
+// Get entries by date range
+export async function getEntriesByDateRange(
+    startDate: Date,
+    endDate: Date,
+    limitCount: number = 200,
+): Promise<WeighbridgeEntry[]> {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const entriesRef = collection(db, WEIGHBRIDGE_COLLECTION);
+    const q = query(
+        entriesRef,
+        where('createdAt', '>=', Timestamp.fromDate(start)),
+        where('createdAt', '<=', Timestamp.fromDate(end)),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount),
+    );
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as WeighbridgeEntry[];
 }
