@@ -333,6 +333,28 @@ export async function getTodayEntries(): Promise<WeighbridgeEntry[]> {
     });
 }
 
+// Get current month's entries
+export async function getMonthlyEntries(): Promise<WeighbridgeEntry[]> {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startTimestamp = Timestamp.fromDate(monthStart);
+
+    const entriesRef = collection(db, WEIGHBRIDGE_COLLECTION);
+    const q = query(entriesRef, where('createdAt', '>=', startTimestamp));
+    const snapshot = await getDocs(q);
+
+    const entries = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as WeighbridgeEntry[];
+
+    return entries.sort((a, b) => {
+        const aTime = getTimestampMillis(a.createdAt);
+        const bTime = getTimestampMillis(b.createdAt);
+        return bTime - aTime;
+    });
+}
+
 // Get entries by date range
 export async function getEntriesByDateRange(
     startDate: Date,

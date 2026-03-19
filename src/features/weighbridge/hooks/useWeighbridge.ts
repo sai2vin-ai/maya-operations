@@ -4,6 +4,7 @@ import {
     getPendingEntries,
     getTodayEntries,
     getEntriesByDateRange,
+    getMonthlyEntries,
     getWeighbridgeEntryById,
     createWeighbridgeEntry,
     recordFirstWeight,
@@ -80,6 +81,14 @@ export function useTodayEntries() {
     return useQuery({
         queryKey: weighbridgeKeys.today(),
         queryFn: getTodayEntries,
+    });
+}
+
+// Hook to fetch current month's entries
+export function useMonthlyEntries() {
+    return useQuery({
+        queryKey: [...weighbridgeKeys.all, 'monthly'],
+        queryFn: getMonthlyEntries,
     });
 }
 

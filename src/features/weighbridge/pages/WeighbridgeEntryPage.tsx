@@ -515,7 +515,7 @@ export default function WeighbridgeEntryPage() {
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Gross Weight</p>
                                 <p className="text-2xl font-bold text-foreground">
-                                    {entry.grossWeight ? `${entry.grossWeight} ${entry.unit}` : '-'}
+                                    {entry.grossWeight ? `${entry.grossWeight.toLocaleString()} KG` : '-'}
                                 </p>
                                 {entry.firstWeightTime && entry.grossWeight && (
                                     <p className="text-xs text-foreground-faint">{formatDate(entry.firstWeightTime)}</p>
@@ -524,13 +524,13 @@ export default function WeighbridgeEntryPage() {
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Tare Weight</p>
                                 <p className="text-2xl font-bold text-foreground">
-                                    {entry.tareWeight ? `${entry.tareWeight} ${entry.unit}` : '-'}
+                                    {entry.tareWeight ? `${entry.tareWeight.toLocaleString()} KG` : '-'}
                                 </p>
                             </div>
                             <div className="bg-surface-tertiary/50 p-4 rounded-lg">
                                 <p className="text-foreground-muted text-sm">Net Weight</p>
                                 <p className="text-2xl font-bold text-green-400">
-                                    {entry.netWeight ? `${entry.netWeight} ${entry.unit}` : '-'}
+                                    {entry.netWeight ? `${entry.netWeight.toLocaleString()} KG` : '-'}
                                 </p>
                             </div>
                         </div>

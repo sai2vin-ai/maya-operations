@@ -1,10 +1,23 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTodayEntries, usePendingEntries, useWeighbridgeHistory } from '../hooks/useWeighbridge';
+import { useTodayEntries, usePendingEntries, useWeighbridgeHistory, useMonthlyEntries } from '../hooks/useWeighbridge';
 import type { WeighbridgeEntry } from '../types';
 import { PageHeader, LoadingSpinner, ErrorAlert } from '../../../components/ui';
 
 type ViewMode = 'today' | 'history';
+
+// Material breakdown helper: calculates weight totals per material name
+function getMaterialBreakdown(entries: WeighbridgeEntry[]) {
+    const breakdown: Record<string, { count: number; weight: number }> = {};
+    for (const e of entries) {
+        if (e.status !== 'COMPLETED') continue;
+        const name = e.materialName || 'Other';
+        if (!breakdown[name]) breakdown[name] = { count: 0, weight: 0 };
+        breakdown[name].count += 1;
+        breakdown[name].weight += e.netWeight || 0;
+    }
+    return breakdown;
+}
 
 export default function WeighbridgePage() {
     const navigate = useNavigate();
@@ -27,6 +40,7 @@ export default function WeighbridgePage() {
         refetch: refetchToday,
     } = useTodayEntries();
     const { data: pendingEntries = [] } = usePendingEntries();
+    const { data: monthlyEntries = [] } = useMonthlyEntries();
     const {
         data: historyEntries = [],
         isLoading: historyLoading,
@@ -89,12 +103,33 @@ export default function WeighbridgePage() {
     const filteredEntries =
         filter === 'all' ? entries : entries.filter((e: WeighbridgeEntry) => e.entryType === filter);
 
+    // Today's totals
     const todayRmIn = todayEntries.filter((e: WeighbridgeEntry) => e.entryType === 'RM_IN' && e.status === 'COMPLETED');
     const todayFgOut = todayEntries.filter(
         (e: WeighbridgeEntry) => e.entryType === 'FG_OUT' && e.status === 'COMPLETED',
     );
     const totalRmInWeight = todayRmIn.reduce((sum: number, e: WeighbridgeEntry) => sum + (e.netWeight || 0), 0);
     const totalFgOutWeight = todayFgOut.reduce((sum: number, e: WeighbridgeEntry) => sum + (e.netWeight || 0), 0);
+
+    // Material breakdowns for today
+    const todayRmBreakdown = useMemo(() => getMaterialBreakdown(todayRmIn), [todayRmIn]);
+    const todayFgBreakdown = useMemo(() => getMaterialBreakdown(todayFgOut), [todayFgOut]);
+
+    // Monthly totals and breakdowns
+    const monthlyRmIn = useMemo(
+        () => monthlyEntries.filter((e) => e.entryType === 'RM_IN' && e.status === 'COMPLETED'),
+        [monthlyEntries],
+    );
+    const monthlyFgOut = useMemo(
+        () => monthlyEntries.filter((e) => e.entryType === 'FG_OUT' && e.status === 'COMPLETED'),
+        [monthlyEntries],
+    );
+    const monthlyRmBreakdown = useMemo(() => getMaterialBreakdown(monthlyRmIn), [monthlyRmIn]);
+    const monthlyFgBreakdown = useMemo(() => getMaterialBreakdown(monthlyFgOut), [monthlyFgOut]);
+    const monthlyRmTotal = monthlyRmIn.reduce((sum, e) => sum + (e.netWeight || 0), 0);
+    const monthlyFgTotal = monthlyFgOut.reduce((sum, e) => sum + (e.netWeight || 0), 0);
+
+    const currentMonth = new Date().toLocaleDateString([], { month: 'long', year: 'numeric' });
 
     return (
         <div>
@@ -119,35 +154,137 @@ export default function WeighbridgePage() {
 
                 {!isLoading && (
                     <>
-                        {/* Quick Actions - always visible */}
+                        {/* Quick Actions with Material Breakdown */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            {/* Raw Material IN */}
                             <button
                                 onClick={() => navigate('/weighbridge/new?type=RM_IN')}
                                 className="glass-card p-6 text-left hover:bg-surface-tertiary/50 transition-all group"
                             >
-                                <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <span className="text-2xl">📥</span>
+                                <div className="flex items-center gap-4 mb-3">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <span className="text-xl">📥</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-foreground">Raw Material IN</h3>
+                                        <p className="text-cyan-400 text-sm">
+                                            {todayRmIn.length} entries | {(totalRmInWeight / 1000).toFixed(2)} TONS
+                                            today
+                                        </p>
+                                    </div>
                                 </div>
-                                <h3 className="text-xl font-semibold text-foreground mb-1">Raw Material IN</h3>
-                                <p className="text-foreground-muted">Record incoming raw materials</p>
-                                <p className="text-cyan-400 mt-2">
-                                    {todayRmIn.length} entries | {(totalRmInWeight / 1000).toFixed(2)} TONS today
-                                </p>
+                                {Object.keys(todayRmBreakdown).length > 0 && (
+                                    <div className="space-y-1 border-t border-border-secondary pt-3">
+                                        {Object.entries(todayRmBreakdown).map(([material, data]) => (
+                                            <div key={material} className="flex justify-between text-sm">
+                                                <span className="text-foreground-muted">{material}</span>
+                                                <span className="text-cyan-300 font-medium">
+                                                    {(data.weight / 1000).toFixed(2)} T
+                                                    <span className="text-foreground-faint ml-1">({data.count})</span>
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </button>
 
+                            {/* Finished Goods OUT */}
                             <button
                                 onClick={() => navigate('/weighbridge/new?type=FG_OUT')}
                                 className="glass-card p-6 text-left hover:bg-surface-tertiary/50 transition-all group"
                             >
-                                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <span className="text-2xl">📤</span>
+                                <div className="flex items-center gap-4 mb-3">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <span className="text-xl">📤</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-foreground">Finished Goods OUT</h3>
+                                        <p className="text-orange-400 text-sm">
+                                            {todayFgOut.length} entries | {(totalFgOutWeight / 1000).toFixed(2)} TONS
+                                            today
+                                        </p>
+                                    </div>
                                 </div>
-                                <h3 className="text-xl font-semibold text-foreground mb-1">Finished Goods OUT</h3>
-                                <p className="text-foreground-muted">Record outgoing finished goods</p>
-                                <p className="text-orange-400 mt-2">
-                                    {todayFgOut.length} entries | {(totalFgOutWeight / 1000).toFixed(2)} TONS today
-                                </p>
+                                {Object.keys(todayFgBreakdown).length > 0 && (
+                                    <div className="space-y-1 border-t border-border-secondary pt-3">
+                                        {Object.entries(todayFgBreakdown).map(([material, data]) => (
+                                            <div key={material} className="flex justify-between text-sm">
+                                                <span className="text-foreground-muted">{material}</span>
+                                                <span className="text-orange-300 font-medium">
+                                                    {(data.weight / 1000).toFixed(2)} T
+                                                    <span className="text-foreground-faint ml-1">({data.count})</span>
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </button>
+                        </div>
+
+                        {/* Monthly Summary */}
+                        <div className="glass-card p-6 mb-6">
+                            <h2 className="text-lg font-semibold text-foreground mb-4">
+                                Monthly Total — {currentMonth}
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Monthly RM IN */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-sm font-medium text-cyan-400">Raw Material IN</h3>
+                                        <span className="text-foreground font-semibold">
+                                            {(monthlyRmTotal / 1000).toFixed(2)} TONS
+                                        </span>
+                                    </div>
+                                    {Object.keys(monthlyRmBreakdown).length > 0 ? (
+                                        <div className="space-y-2">
+                                            {Object.entries(monthlyRmBreakdown).map(([material, data]) => (
+                                                <div key={material} className="flex items-center justify-between">
+                                                    <span className="text-sm text-foreground-muted">{material}</span>
+                                                    <div className="text-right">
+                                                        <span className="text-sm text-foreground font-medium">
+                                                            {(data.weight / 1000).toFixed(2)} T
+                                                        </span>
+                                                        <span className="text-xs text-foreground-faint ml-2">
+                                                            {data.count} entries
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-foreground-faint">No entries this month</p>
+                                    )}
+                                </div>
+
+                                {/* Monthly FG OUT */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-sm font-medium text-orange-400">Finished Goods OUT</h3>
+                                        <span className="text-foreground font-semibold">
+                                            {(monthlyFgTotal / 1000).toFixed(2)} TONS
+                                        </span>
+                                    </div>
+                                    {Object.keys(monthlyFgBreakdown).length > 0 ? (
+                                        <div className="space-y-2">
+                                            {Object.entries(monthlyFgBreakdown).map(([material, data]) => (
+                                                <div key={material} className="flex items-center justify-between">
+                                                    <span className="text-sm text-foreground-muted">{material}</span>
+                                                    <div className="text-right">
+                                                        <span className="text-sm text-foreground font-medium">
+                                                            {(data.weight / 1000).toFixed(2)} T
+                                                        </span>
+                                                        <span className="text-xs text-foreground-faint ml-2">
+                                                            {data.count} entries
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-foreground-faint">No entries this month</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Pending Entries */}
