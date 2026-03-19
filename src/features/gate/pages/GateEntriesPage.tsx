@@ -242,6 +242,23 @@ export default function GateEntriesPage() {
                                                         >
                                                             {entry.entryType}
                                                         </span>
+                                                        {entry.vehicleType && (
+                                                            <span
+                                                                className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                                                                    entry.vehicleType === 'CARGO'
+                                                                        ? 'bg-blue-500/20 text-blue-400'
+                                                                        : entry.vehicleType === 'INTERNAL'
+                                                                          ? 'bg-purple-500/20 text-purple-400'
+                                                                          : 'bg-teal-500/20 text-teal-400'
+                                                                }`}
+                                                            >
+                                                                {entry.vehicleType === 'CARGO'
+                                                                    ? 'Cargo'
+                                                                    : entry.vehicleType === 'INTERNAL'
+                                                                      ? 'Internal'
+                                                                      : 'Visitor'}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <p className="text-foreground-muted text-sm">{entry.entryNumber}</p>
                                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-foreground-faint">

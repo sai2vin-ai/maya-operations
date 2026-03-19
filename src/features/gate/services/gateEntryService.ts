@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
-import type { GateEntry, EntryType, MaterialCategory, GateEntryStatus } from '../types';
+import type { GateEntry, EntryType, VehicleType, MaterialCategory, GateEntryStatus } from '../types';
 import type { FirestoreDocData, UserRole } from '../../../types';
 import { assertAuthorized } from '../../../lib/authorization';
 import { validateFile, generateSafeFilename, validateVehicleNumber, sanitizeString } from '../../../utils/validation';
@@ -178,6 +178,7 @@ export async function uploadPhotoFromBlob(
 
 export interface CreateGateEntryData {
     entryType: EntryType;
+    vehicleType?: VehicleType;
     vehicleNumber: string;
     vehiclePhoto?: string;
     materialCategory?: MaterialCategory;
@@ -252,6 +253,7 @@ export async function createGateEntry(
     };
 
     // Only add optional fields if they have values
+    if (data.vehicleType) entryDoc.vehicleType = data.vehicleType;
     if (data.vehiclePhoto) entryDoc.vehiclePhoto = data.vehiclePhoto;
     if (data.materialCategory) entryDoc.materialCategory = data.materialCategory;
     if (data.quantity != null) entryDoc.quantity = data.quantity;
@@ -395,6 +397,144 @@ export const MATERIAL_CATEGORIES: { value: MaterialCategory; label: string; unit
     { value: 'CB-HG', label: 'Carbon Black (High Grade)', unit: 'KG' },
     { value: 'PO-CRD', label: 'Pyrolysis Oil (Crude)', unit: 'KG' },
     { value: 'SW-MIX', label: 'Steel Wire (Mixed)', unit: 'KG' },
+];
+
+/**
+ * Generate and print a gate pass for cargo vehicles exiting the campus.
+ * Designed to be attached to the invoice carried by the vehicle.
+ */
+export function printGatePass(entry: GateEntry): void {
+    const materialLabel =
+        MATERIAL_CATEGORIES.find((m) => m.value === entry.materialCategory)?.label || entry.materialCategory || '-';
+
+    const formatTimestamp = (ts: unknown) => {
+        if (!ts) return '-';
+        const t = ts as { toDate?: () => Date };
+        const date = t.toDate ? t.toDate() : new Date(ts as string | number);
+        return date.toLocaleString();
+    };
+
+    const html = `
+        <!DOCTYPE html>
+        <html><head><title>Gate Pass - ${entry.entryNumber}</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 30px; color: #333; max-width: 700px; margin: 0 auto; }
+            .header { text-align: center; border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+            .header h1 { font-size: 22px; margin: 0 0 4px; text-transform: uppercase; letter-spacing: 2px; }
+            .header h2 { font-size: 16px; margin: 0; color: #666; font-weight: normal; }
+            .pass-title { text-align: center; font-size: 20px; font-weight: bold; margin: 20px 0; padding: 10px; background: #f0f0f0; border: 2px solid #333; text-transform: uppercase; letter-spacing: 3px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #ccc; margin-bottom: 20px; }
+            .info-item { padding: 10px 15px; border-bottom: 1px solid #ccc; }
+            .info-item:nth-child(even) { border-left: 1px solid #ccc; }
+            .info-item label { display: block; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+            .info-item span { font-size: 15px; font-weight: 600; }
+            .cargo-section { border: 2px solid #333; padding: 15px; margin-bottom: 20px; }
+            .cargo-section h3 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ccc; padding-bottom: 8px; }
+            .cargo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+            .cargo-item label { display: block; font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 3px; }
+            .cargo-item span { font-size: 18px; font-weight: 700; }
+            .signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 50px; }
+            .sig-block { text-align: center; padding-top: 40px; border-top: 1px solid #333; }
+            .sig-block label { font-size: 11px; color: #666; text-transform: uppercase; }
+            .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #999; border-top: 1px solid #ccc; padding-top: 10px; }
+            .pass-no { text-align: right; font-size: 12px; color: #666; margin-bottom: 5px; }
+            @media print { body { padding: 15px; } }
+        </style></head><body>
+        <div class="header">
+            <h1>Maya Recyclage</h1>
+            <h2>Pyrolysis Operations — Plant Management</h2>
+        </div>
+        <div class="pass-no">Pass No: ${entry.entryNumber}</div>
+        <div class="pass-title">Gate Pass — Outward</div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Vehicle Number</label>
+                <span>${entry.vehicleNumber}</span>
+            </div>
+            <div class="info-item">
+                <label>Driver Name</label>
+                <span>${entry.driverName || '-'}</span>
+            </div>
+            <div class="info-item">
+                <label>Supplier / Customer</label>
+                <span>${entry.supplierName || '-'}</span>
+            </div>
+            <div class="info-item">
+                <label>Driver Phone</label>
+                <span>${entry.driverPhone || '-'}</span>
+            </div>
+            <div class="info-item">
+                <label>Entry Time</label>
+                <span>${formatTimestamp(entry.entryTime)}</span>
+            </div>
+            <div class="info-item">
+                <label>Out Time</label>
+                <span>${formatTimestamp(entry.exitTime)}</span>
+            </div>
+        </div>
+
+        <div class="cargo-section">
+            <h3>Cargo Details</h3>
+            <div class="cargo-grid">
+                <div class="cargo-item">
+                    <label>Material</label>
+                    <span>${materialLabel}</span>
+                </div>
+                <div class="cargo-item">
+                    <label>Net Weight</label>
+                    <span>${entry.netWeight != null ? entry.netWeight.toLocaleString() + ' ' + (entry.unit || 'KG') : '-'}</span>
+                </div>
+                <div class="cargo-item">
+                    <label>Quantity</label>
+                    <span>${entry.quantity != null ? entry.quantity + ' ' + (entry.unit || '') : '-'}</span>
+                </div>
+            </div>
+            ${
+                entry.weighbridgeReading != null || entry.tareWeight != null
+                    ? `
+            <div class="cargo-grid" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
+                <div class="cargo-item">
+                    <label>Gross Weight (kg)</label>
+                    <span>${entry.weighbridgeReading != null ? entry.weighbridgeReading.toLocaleString() : '-'}</span>
+                </div>
+                <div class="cargo-item">
+                    <label>Tare Weight (kg)</label>
+                    <span>${entry.tareWeight != null ? entry.tareWeight.toLocaleString() : '-'}</span>
+                </div>
+                <div class="cargo-item"></div>
+            </div>`
+                    : ''
+            }
+        </div>
+
+        ${entry.notes ? `<p style="font-size: 13px; color: #666;"><strong>Notes:</strong> ${entry.notes}</p>` : ''}
+
+        <div class="signatures">
+            <div class="sig-block"><label>Security / Gate</label></div>
+            <div class="sig-block"><label>Store In-Charge</label></div>
+            <div class="sig-block"><label>Authorized Signatory</label></div>
+        </div>
+
+        <div class="footer">
+            Generated: ${new Date().toLocaleString()} | ${entry.entryNumber} | This is a system-generated gate pass
+        </div>
+        </body></html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.print();
+    }
+}
+
+// Vehicle types for UI
+export const VEHICLE_TYPES: { value: VehicleType; label: string; description: string }[] = [
+    { value: 'CARGO', label: 'Cargo Vehicle', description: 'Material transport vehicle' },
+    { value: 'INTERNAL', label: 'Internal Vehicle', description: 'Company vehicle' },
+    { value: 'VISITOR', label: 'Visitor', description: 'Visitor or guest vehicle' },
 ];
 
 // Entry statuses for UI

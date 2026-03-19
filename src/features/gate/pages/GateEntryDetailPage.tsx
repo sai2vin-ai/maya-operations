@@ -6,6 +6,7 @@ import {
     updateGateEntry,
     completeGateEntry,
     cancelGateEntry,
+    printGatePass,
     MATERIAL_CATEGORIES,
     ENTRY_STATUSES,
 } from '../services/gateEntryService';
@@ -341,6 +342,23 @@ export default function GateEntryDetailPage() {
                                 >
                                     {entry.entryType}
                                 </span>
+                                {entry.vehicleType && (
+                                    <span
+                                        className={`px-2 py-0.5 text-sm font-medium rounded ${
+                                            entry.vehicleType === 'CARGO'
+                                                ? 'bg-blue-500/20 text-blue-400'
+                                                : entry.vehicleType === 'INTERNAL'
+                                                  ? 'bg-purple-500/20 text-purple-400'
+                                                  : 'bg-teal-500/20 text-teal-400'
+                                        }`}
+                                    >
+                                        {entry.vehicleType === 'CARGO'
+                                            ? '🚛 Cargo'
+                                            : entry.vehicleType === 'INTERNAL'
+                                              ? '🏭 Internal'
+                                              : '👤 Visitor'}
+                                    </span>
+                                )}
                             </div>
                             <p className="text-foreground-muted">{entry.entryNumber}</p>
                             <div className="flex items-center gap-2 mt-2">
@@ -621,6 +639,36 @@ export default function GateEntryDetailPage() {
                         </div>
                     </div>
                 )}
+
+                {/* Gate Pass - for completed cargo OUT entries */}
+                {entry.status === 'COMPLETED' &&
+                    entry.entryType === 'OUT' &&
+                    (!entry.vehicleType || entry.vehicleType === 'CARGO') && (
+                        <div className="glass-card p-6 mb-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-foreground">Gate Pass</h3>
+                                    <p className="text-sm text-foreground-muted">
+                                        Print gate pass for invoice attachment
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => printGatePass(entry)}
+                                    className="btn-primary flex items-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                                        />
+                                    </svg>
+                                    Print Gate Pass
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                 {/* Actions */}
                 {entry.status === 'PENDING' && !isEditing && (
