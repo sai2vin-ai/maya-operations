@@ -162,8 +162,8 @@ describe('reportService', () => {
             expect(writtenHtml).toContain('Production Report');
             expect(writtenHtml).toContain('<th>Name</th>');
             expect(writtenHtml).toContain('<th>Value</th>');
-            expect(writtenHtml).toContain('<td>Alice</td>');
-            expect(writtenHtml).toContain('<td>100</td>');
+            expect(writtenHtml).toContain('Alice');
+            expect(writtenHtml).toContain('100');
         });
 
         it('should call document.close and print after writing', () => {

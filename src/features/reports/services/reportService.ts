@@ -289,11 +289,52 @@ export function formatWeighbridgeForExport(
 }
 
 /**
- * Generate printable HTML report and open print dialog
+ * Color map for status columns: maps cell values to colors.
+ * Used by both printReport (HTML) and exportToExcel (XLSX).
  */
-export function printReport(title: string, data: Record<string, unknown>[]): void {
+export interface StatusColorRule {
+    bg: string; // hex color for background (e.g. '#E6F4EA')
+    text: string; // hex color for text (e.g. '#1E7E34')
+}
+export type StatusColorMap = Record<string, Record<string, StatusColorRule>>;
+
+/** Preset color maps for common modules */
+export const STATUS_COLORS = {
+    inventory: {
+        Status: {
+            'In Stock': { bg: 'E6F4EA', text: '1E7E34' },
+            OK: { bg: 'E6F4EA', text: '1E7E34' },
+            'LOW STOCK': { bg: 'FFF3CD', text: 'B8860B' },
+            'Low Stock': { bg: 'FFF3CD', text: 'B8860B' },
+            'OUT OF STOCK': { bg: 'F8D7DA', text: 'CC0000' },
+            'Out of Stock': { bg: 'F8D7DA', text: 'CC0000' },
+        },
+    } as StatusColorMap,
+    weighbridge: {
+        Status: {
+            COMPLETED: { bg: 'E6F4EA', text: '1E7E34' },
+            PENDING: { bg: 'FFF3CD', text: 'B8860B' },
+            FIRST_WEIGHT: { bg: 'D6E9F8', text: '1A6DB0' },
+            CANCELLED: { bg: 'F8D7DA', text: 'CC0000' },
+        },
+    } as StatusColorMap,
+};
+
+/**
+ * Generate printable HTML report with optional colored status columns
+ */
+export function printReport(title: string, data: Record<string, unknown>[], colorMap?: StatusColorMap): void {
     if (data.length === 0) return;
     const headers = Object.keys(data[0]);
+
+    const renderCell = (header: string, value: unknown) => {
+        const strValue = String(value ?? '');
+        const rule = colorMap?.[header]?.[strValue];
+        if (rule) {
+            return `<td style="border:1px solid #ddd;padding:6px 8px"><span style="background:#${rule.bg};color:#${rule.text};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">${strValue}</span></td>`;
+        }
+        return `<td style="border:1px solid #ddd;padding:6px 8px">${strValue}</td>`;
+    };
 
     const html = `
         <!DOCTYPE html>
@@ -312,7 +353,7 @@ export function printReport(title: string, data: Record<string, unknown>[]): voi
         <p>Generated: ${new Date().toLocaleString()}</p>
         <table>
             <thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
-            <tbody>${data.map((row) => `<tr>${headers.map((h) => `<td>${row[h] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
+            <tbody>${data.map((row) => `<tr>${headers.map((h) => renderCell(h, row[h])).join('')}</tr>`).join('')}</tbody>
         </table>
         </body></html>
     `;
@@ -326,7 +367,7 @@ export function printReport(title: string, data: Record<string, unknown>[]): voi
 }
 
 /**
- * Export data to CSV
+ * Export data to CSV (kept for backwards compatibility)
  */
 export function exportToCSV(data: Record<string, unknown>[], filename: string): void {
     if (data.length === 0) return;
@@ -356,6 +397,72 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string): 
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+
+/**
+ * Export data to Excel (.xlsx) with optional colored status columns
+ */
+export async function exportToExcel(
+    data: Record<string, unknown>[],
+    filename: string,
+    colorMap?: StatusColorMap,
+): Promise<void> {
+    if (data.length === 0) return;
+
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Report');
+
+    const headers = Object.keys(data[0]);
+
+    // Add header row with styling
+    const headerRow = sheet.addRow(headers);
+    headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+        cell.alignment = { horizontal: 'left', vertical: 'middle' };
+        cell.border = {
+            bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+        };
+    });
+
+    // Add data rows
+    for (const row of data) {
+        const dataRow = sheet.addRow(headers.map((h) => row[h] ?? ''));
+        // Apply color map
+        if (colorMap) {
+            dataRow.eachCell((cell, colNumber) => {
+                const header = headers[colNumber - 1];
+                const strValue = String(cell.value ?? '');
+                const rule = colorMap[header]?.[strValue];
+                if (rule) {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${rule.bg}` } };
+                    cell.font = { bold: true, color: { argb: `FF${rule.text}` } };
+                }
+            });
+        }
+    }
+
+    // Auto-fit column widths
+    sheet.columns.forEach((column) => {
+        let maxLength = 10;
+        column.eachCell?.({ includeEmpty: true }, (cell) => {
+            const len = String(cell.value ?? '').length;
+            if (len > maxLength) maxLength = len;
+        });
+        column.width = Math.min(maxLength + 2, 40);
+    });
+
+    // Download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`;
     link.click();
     URL.revokeObjectURL(link.href);
 }

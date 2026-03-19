@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInventory } from '../hooks/useInventory';
 import { INVENTORY_CATEGORIES } from '../services/inventoryService';
-import { getInventoryForExport, exportToCSV, printReport } from '../../reports/services/reportService';
+import { getInventoryForExport, exportToExcel, printReport, STATUS_COLORS } from '../../reports/services/reportService';
 import type { InventoryItem, InventoryCategory } from '../types';
 import { PageHeader, LoadingSpinner, ErrorAlert, EmptyState } from '../../../components/ui';
 
@@ -19,11 +19,11 @@ export default function InventoryPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isExporting, setIsExporting] = useState(false);
 
-    const handleExportCSV = async () => {
+    const handleExportExcel = async () => {
         setIsExporting(true);
         try {
             const data = await getInventoryForExport();
-            exportToCSV(data, 'inventory_report');
+            await exportToExcel(data, 'inventory_report', STATUS_COLORS.inventory);
         } finally {
             setIsExporting(false);
         }
@@ -33,7 +33,7 @@ export default function InventoryPage() {
         setIsExporting(true);
         try {
             const data = await getInventoryForExport();
-            printReport('Inventory Report', data);
+            printReport('Inventory Report', data, STATUS_COLORS.inventory);
         } finally {
             setIsExporting(false);
         }
@@ -176,7 +176,7 @@ export default function InventoryPage() {
                 actions={
                     <div className="flex gap-2">
                         <button
-                            onClick={handleExportCSV}
+                            onClick={handleExportExcel}
                             disabled={isExporting}
                             className="btn-secondary flex items-center gap-2 disabled:opacity-50"
                         >
@@ -188,7 +188,7 @@ export default function InventoryPage() {
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                                 />
                             </svg>
-                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export CSV'}</span>
+                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export Excel'}</span>
                         </button>
                         <button
                             onClick={handlePrintPDF}

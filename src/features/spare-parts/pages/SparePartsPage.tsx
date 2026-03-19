@@ -5,7 +5,12 @@ import { hasPermission } from '../../../lib/authorization';
 import { useSpareParts } from '../hooks/useSpareParts';
 import { useMainCategories, useSubCategories } from '../hooks/useSparePartCategories';
 import ManageCategoriesModal from '../components/ManageCategoriesModal';
-import { getSparePartsForExport, exportToCSV, printReport } from '../../reports/services/reportService';
+import {
+    getSparePartsForExport,
+    exportToExcel,
+    printReport,
+    STATUS_COLORS,
+} from '../../reports/services/reportService';
 import type { SparePart, SparePartCategory } from '../types';
 import { PageHeader, LoadingSpinner, ErrorAlert, EmptyState } from '../../../components/ui';
 
@@ -39,11 +44,11 @@ export default function SparePartsPage() {
 
     const canManageCategories = userData?.role ? hasPermission(userData.role, 'spare_parts:manage_categories') : false;
 
-    const handleExportCSV = async () => {
+    const handleExportExcel = async () => {
         setIsExporting(true);
         try {
             const data = await getSparePartsForExport();
-            exportToCSV(data, 'spare_parts_report');
+            await exportToExcel(data, 'spare_parts_report', STATUS_COLORS.inventory);
         } finally {
             setIsExporting(false);
         }
@@ -53,7 +58,7 @@ export default function SparePartsPage() {
         setIsExporting(true);
         try {
             const data = await getSparePartsForExport();
-            printReport('Spare Parts Report', data);
+            printReport('Spare Parts Report', data, STATUS_COLORS.inventory);
         } finally {
             setIsExporting(false);
         }
@@ -85,7 +90,7 @@ export default function SparePartsPage() {
                 actions={
                     <div className="flex gap-2">
                         <button
-                            onClick={handleExportCSV}
+                            onClick={handleExportExcel}
                             disabled={isExporting}
                             className="btn-secondary flex items-center gap-2 disabled:opacity-50"
                         >
@@ -97,7 +102,7 @@ export default function SparePartsPage() {
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                                 />
                             </svg>
-                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export CSV'}</span>
+                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export Excel'}</span>
                         </button>
                         <button
                             onClick={handlePrintPDF}

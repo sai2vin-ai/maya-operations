@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTodayEntries, usePendingEntries, useWeighbridgeHistory, useMonthlyEntries } from '../hooks/useWeighbridge';
 import type { WeighbridgeEntry } from '../types';
 import { PageHeader, LoadingSpinner, ErrorAlert } from '../../../components/ui';
-import { formatWeighbridgeForExport, exportToCSV, printReport } from '../../reports/services/reportService';
+import {
+    formatWeighbridgeForExport,
+    exportToExcel,
+    printReport,
+    STATUS_COLORS,
+} from '../../reports/services/reportService';
 
 type ViewMode = 'today' | 'history';
 
@@ -133,12 +138,12 @@ export default function WeighbridgePage() {
 
     const currentMonth = new Date().toLocaleDateString([], { month: 'long', year: 'numeric' });
 
-    const handleExportCSV = () => {
+    const handleExportExcel = async () => {
         setIsExporting(true);
         try {
             const data = formatWeighbridgeForExport(filteredEntries);
             const label = viewMode === 'today' ? 'weighbridge_today' : `weighbridge_${startDate}_to_${endDate}`;
-            exportToCSV(data, label);
+            await exportToExcel(data, label, STATUS_COLORS.weighbridge);
         } finally {
             setIsExporting(false);
         }
@@ -150,7 +155,7 @@ export default function WeighbridgePage() {
             const data = formatWeighbridgeForExport(filteredEntries);
             const title =
                 viewMode === 'today' ? 'Weighbridge Report — Today' : `Weighbridge Report — ${startDate} to ${endDate}`;
-            printReport(title, data);
+            printReport(title, data, STATUS_COLORS.weighbridge);
         } finally {
             setIsExporting(false);
         }
@@ -169,7 +174,7 @@ export default function WeighbridgePage() {
                 actions={
                     <div className="flex gap-2">
                         <button
-                            onClick={handleExportCSV}
+                            onClick={handleExportExcel}
                             disabled={isExporting || filteredEntries.length === 0}
                             className="btn-secondary flex items-center gap-2 disabled:opacity-50"
                         >
@@ -181,7 +186,7 @@ export default function WeighbridgePage() {
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                                 />
                             </svg>
-                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export CSV'}</span>
+                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export Excel'}</span>
                         </button>
                         <button
                             onClick={handlePrintPDF}
