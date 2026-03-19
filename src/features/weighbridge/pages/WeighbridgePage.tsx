@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTodayEntries, usePendingEntries, useWeighbridgeHistory, useMonthlyEntries } from '../hooks/useWeighbridge';
 import type { WeighbridgeEntry } from '../types';
 import { PageHeader, LoadingSpinner, ErrorAlert } from '../../../components/ui';
+import { formatWeighbridgeForExport, exportToCSV, printReport } from '../../reports/services/reportService';
 
 type ViewMode = 'today' | 'history';
 
@@ -23,6 +24,7 @@ export default function WeighbridgePage() {
     const navigate = useNavigate();
     const [filter, setFilter] = useState<'all' | 'RM_IN' | 'FG_OUT'>('all');
     const [viewMode, setViewMode] = useState<ViewMode>('today');
+    const [isExporting, setIsExporting] = useState(false);
 
     // Date range for history view (default: last 7 days)
     const [startDate, setStartDate] = useState(() => {
@@ -131,6 +133,29 @@ export default function WeighbridgePage() {
 
     const currentMonth = new Date().toLocaleDateString([], { month: 'long', year: 'numeric' });
 
+    const handleExportCSV = () => {
+        setIsExporting(true);
+        try {
+            const data = formatWeighbridgeForExport(filteredEntries);
+            const label = viewMode === 'today' ? 'weighbridge_today' : `weighbridge_${startDate}_to_${endDate}`;
+            exportToCSV(data, label);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handlePrintPDF = () => {
+        setIsExporting(true);
+        try {
+            const data = formatWeighbridgeForExport(filteredEntries);
+            const title =
+                viewMode === 'today' ? 'Weighbridge Report — Today' : `Weighbridge Report — ${startDate} to ${endDate}`;
+            printReport(title, data);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <div>
             <PageHeader
@@ -141,6 +166,40 @@ export default function WeighbridgePage() {
                         : `${filteredEntries.length} entries found`
                 }
                 backTo="/dashboard"
+                actions={
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleExportCSV}
+                            disabled={isExporting || filteredEntries.length === 0}
+                            className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                />
+                            </svg>
+                            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export CSV'}</span>
+                        </button>
+                        <button
+                            onClick={handlePrintPDF}
+                            disabled={isExporting || filteredEntries.length === 0}
+                            className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                                />
+                            </svg>
+                            <span className="hidden sm:inline">Print / PDF</span>
+                        </button>
+                    </div>
+                }
             />
 
             <main className="p-4 max-w-6xl mx-auto">

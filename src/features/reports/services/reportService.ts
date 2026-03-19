@@ -245,6 +245,50 @@ export async function getSparePartsForExport(): Promise<Record<string, unknown>[
 }
 
 /**
+ * Format weighbridge entries for export (works with already-loaded data)
+ */
+export function formatWeighbridgeForExport(
+    entries: Array<{
+        entryNumber?: string;
+        entryType?: string;
+        vehicleNumber?: string;
+        driverName?: string;
+        partyName?: string;
+        materialName?: string;
+        grossWeight?: number;
+        tareWeight?: number;
+        netWeight?: number;
+        unit?: string;
+        status?: string;
+        notes?: string;
+        createdAt?: unknown;
+    }>,
+): Record<string, unknown>[] {
+    return entries.map((e) => {
+        let dateStr = '';
+        if (e.createdAt) {
+            const ts = e.createdAt as { toDate?: () => Date };
+            const date = ts.toDate ? ts.toDate() : new Date(e.createdAt as string | number);
+            dateStr = date.toLocaleString();
+        }
+        return {
+            'Entry #': e.entryNumber || '',
+            Type: e.entryType === 'RM_IN' ? 'Raw Material IN' : 'Finished Goods OUT',
+            Vehicle: e.vehicleNumber || '',
+            Driver: e.driverName || '',
+            'Supplier / Customer': e.partyName || '',
+            Material: e.materialName || '',
+            'Gross (KG)': e.grossWeight ?? '',
+            'Tare (KG)': e.tareWeight ?? '',
+            'Net (KG)': e.netWeight ?? '',
+            Status: e.status || '',
+            Date: dateStr,
+            Notes: e.notes || '',
+        };
+    });
+}
+
+/**
  * Generate printable HTML report and open print dialog
  */
 export function printReport(title: string, data: Record<string, unknown>[]): void {
