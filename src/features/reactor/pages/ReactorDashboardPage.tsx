@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getReactorAssets, createReactorAsset } from '../../asset-register/services/assetService';
+import { getReactorAssets } from '../../asset-register/services/assetService';
 import { getActiveBatch, getBatchStatusInfo, getMonthlyBatchCount } from '../services/batchService';
-import { useAuth } from '../../../contexts/AuthContext';
 import type { Asset } from '../../../types';
 import type { Batch } from '../types';
 
@@ -13,14 +12,9 @@ interface ReactorWithBatch extends Asset {
 
 export default function ReactorDashboardPage() {
     const navigate = useNavigate();
-    const { userData } = useAuth();
     const [reactors, setReactors] = useState<ReactorWithBatch[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [showAddReactor, setShowAddReactor] = useState(false);
-    const [newReactorNumber, setNewReactorNumber] = useState('');
-    const [newReactorName, setNewReactorName] = useState('');
-    const [adding, setAdding] = useState(false);
 
     const currentMonth = new Date().toLocaleDateString([], { month: 'long', year: 'numeric' });
 
@@ -49,23 +43,6 @@ export default function ReactorDashboardPage() {
             setError(err instanceof Error ? err.message : 'Failed to load reactors');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleAddReactor = async () => {
-        if (!newReactorNumber.trim() || !newReactorName.trim()) return;
-
-        try {
-            setAdding(true);
-            await createReactorAsset({ reactorNumber: newReactorNumber, name: newReactorName }, userData?.id || '');
-            setNewReactorNumber('');
-            setNewReactorName('');
-            setShowAddReactor(false);
-            await loadReactors();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add reactor');
-        } finally {
-            setAdding(false);
         }
     };
 
@@ -103,16 +80,6 @@ export default function ReactorDashboardPage() {
                             <p className="text-sm text-foreground-muted">{reactors.length} reactors configured</p>
                         </div>
                     </div>
-
-                    <button
-                        onClick={() => setShowAddReactor(!showAddReactor)}
-                        className="btn-secondary flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Reactor
-                    </button>
                 </div>
             </header>
 
@@ -121,36 +88,6 @@ export default function ReactorDashboardPage() {
                 {error && (
                     <div className="glass-card p-4 mb-4 border border-red-500/50 bg-red-500/10">
                         <p className="text-red-400">{error}</p>
-                    </div>
-                )}
-
-                {/* Add Reactor Form */}
-                {showAddReactor && (
-                    <div className="glass-card p-6 mb-4">
-                        <h3 className="text-lg font-semibold text-foreground mb-4">Add New Reactor</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <input
-                                type="text"
-                                placeholder="Reactor Number (e.g., M1)"
-                                value={newReactorNumber}
-                                onChange={(e) => setNewReactorNumber(e.target.value)}
-                                className="input-field"
-                            />
-                            <input
-                                type="text"
-                                placeholder="Reactor Name"
-                                value={newReactorName}
-                                onChange={(e) => setNewReactorName(e.target.value)}
-                                className="input-field"
-                            />
-                            <button
-                                onClick={handleAddReactor}
-                                disabled={adding || !newReactorNumber || !newReactorName}
-                                className="btn-primary"
-                            >
-                                {adding ? 'Adding...' : 'Add Reactor'}
-                            </button>
-                        </div>
                     </div>
                 )}
 
@@ -369,7 +306,10 @@ export default function ReactorDashboardPage() {
                             <span className="text-3xl">🔥</span>
                         </div>
                         <h3 className="text-foreground font-semibold mb-2">No Reactors Configured</h3>
-                        <p className="text-foreground-muted">Add your first reactor to get started</p>
+                        <p className="text-foreground-muted mb-4">Reactors are managed through the Asset Register</p>
+                        <button onClick={() => navigate('/assets/new?category=REACTOR')} className="btn-primary">
+                            Add Reactor in Asset Register
+                        </button>
                     </div>
                 )}
             </main>

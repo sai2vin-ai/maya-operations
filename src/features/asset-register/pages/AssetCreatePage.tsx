@@ -14,12 +14,13 @@ export default function AssetCreatePage() {
     const { data: allAssets = [] } = useAssets();
 
     const preselectedParentId = searchParams.get('parentId') || '';
+    const preselectedCategory = searchParams.get('category') || 'REACTOR';
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const [name, setName] = useState('');
-    const [category, setCategory] = useState('REACTOR');
+    const [category, setCategory] = useState(preselectedCategory);
     const [location, setLocation] = useState('');
     const [criticality, setCriticality] = useState<AssetCriticality>('MEDIUM');
     const [installationDate, setInstallationDate] = useState('');
